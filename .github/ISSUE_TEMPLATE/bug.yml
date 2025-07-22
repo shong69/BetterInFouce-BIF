@@ -2,7 +2,7 @@
 name: "🐛 Bug Report"
 description: "서비스에서 발생한 버그를 리포트합니다."
 title: "🐛 [Bug] "
-labels: ["bug"]
+labels: bug
 body:
   - type: textarea
     id: bug-description
