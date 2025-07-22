@@ -2,7 +2,7 @@
 name: "🚀 Epic"
 description: "대규모 기능 개발을 위한 Epic 이슈입니다."
 title: "🚀 [Epic] "
-labels: epic
+labels: [epic]
 body:
   - type: textarea
     id: description
