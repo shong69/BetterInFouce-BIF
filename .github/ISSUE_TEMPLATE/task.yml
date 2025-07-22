@@ -2,7 +2,7 @@
 name: "✅ Task"
 description: "Epic을 구성하는 개별 작업 단위입니다."
 title: "✅ [Task] "
-labels: ["task"]
+labels: task
 body:
   - type: textarea
     id: parent-epic
