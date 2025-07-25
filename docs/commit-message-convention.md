@@ -55,6 +55,6 @@ Closes #45
 | `refactor` | 리팩토링 (기능 변경 없음)   | `refactor: ♻useEffect 구조 개선` |
 | `test`     | 테스트 추가 및 수정       | `test: 감정일기 테스트 추가`          |
 | `chore`    | 빌드/패키지 설정 등 기타 수정 | `chore: ESLint 설정 추가`       |
-| `design`   |  CSS 등 사용자 UI 디자인 변경    | `design: App.jsx CSS 수정 |
+| `design`   |  CSS 등 사용자 UI 디자인 변경    | `design: App.jsx CSS 수정` |
 | `rename`   | 파일 또는 폴더명 변경/이동         | `rename: test.java -> index.java로 파일명 변경` |
 | `remove`   | 파일 삭제                          | `remove: test.java 삭제` |
