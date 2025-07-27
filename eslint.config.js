@@ -4,6 +4,7 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import prettier from "eslint-config-prettier";
 
 export default [
   {
@@ -46,6 +47,7 @@ export default [
       ],
       "prefer-const": "error",
       "no-var": "error",
+      curly: ["error", "all"],
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
       "react/jsx-uses-vars": "error",
@@ -54,7 +56,6 @@ export default [
       "react/jsx-pascal-case": "error",
       "react/jsx-no-target-blank": "error",
       "react/no-array-index-key": "warn",
-      "react/no-unused-prop-types": "warn",
       "react/prop-types": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
@@ -65,36 +66,22 @@ export default [
       ...jsxA11y.configs.recommended.rules,
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
-      curly: ["error", "all"],
-      "no-eval": "error",
-      "no-implied-eval": "error",
-      "no-new-func": "error",
-      quotes: [
-        "warn",
-        "double",
+      "react/function-component-definition": [
+        "error",
         {
-          avoidEscape: true,
+          namedComponents: "function-declaration",
         },
       ],
-      semi: ["warn", "always"],
     },
   },
   {
-    files: [
-      "*.config.js",
-      "*.config.mjs",
-      "eslint.config.js",
-      "vite.config.js",
-    ],
-
+    files: ["*.config.js", "*.config.mjs"],
     languageOptions: {
-      ecmaVersion: "latest",
       globals: globals.node,
-      sourceType: "module",
     },
     rules: {
       "no-console": "off",
-      "prefer-const": "warn",
     },
   },
+  prettier,
 ];
