@@ -7,7 +7,7 @@
 ## 2. 전체 패키지 구조
 
 `com.sage.bif`을 루트 패키지로 하며, 주요 모듈과 공통 기능들이 계층적으로 구성됩니다.
-
+```
 com.sage.bif/
 ├── user/                      # User 도메인 모듈 (사용자 관리)
 │   ├── controller/            # REST API 엔드포인트 정의
@@ -129,7 +129,7 @@ com.sage.bif/
 └── ai/               # AI 서비스 클라이언트 관련
 ├── AiModelClient.java      # AI 클라이언트 인터페이스
 └── AzureOpenAiClient.java  # Azure OpenAI 구현체
-
+```
 
 ## 3. 패키지별 상세 설명
 
