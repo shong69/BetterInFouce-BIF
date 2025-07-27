@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-본 문서는 `bif` 프로젝트의 백엔드 애플리케이션 패키지 구조를 정의합니다. 본 프로젝트는 **모듈러 모놀리식(Modular Monolith)** 아키텍처 패턴을 따르며, 각 비즈니스 도메인(User, Todo, Diary 등)이 독립적인 모듈로 구성됩니다. 이를 통해 단일 애플리케이션으로 배포되지만, 향후 마이크로서비스로의 전환 가능성을 염두에 둔 높은 응집도와 낮은 결합도를 목표로 합니다.
+본 문서는 `bif` 프로젝트의 백엔드 애플리케이션 패키지 구조를 정의합니다. 본 프로젝트는 **모듈러 모놀리식(Modular Monolith)** 아키텍처 패턴을 따르며, 각 비즈니스 도메인(User, Todo, Diary 등)이 독립적인 모듈로 구성됩니다. 
 
 ## 2. 전체 패키지 구조
 
@@ -103,32 +103,31 @@ com.sage.bif/
 ├── config/                   # 공통 설정 및 빈 정의
 │   ├── SecurityConfig.java   # Spring Security 설정
 │   ├── JpaConfig.java        # JPA 관련 추가 설정 (선택 사항)
-│   └── SwaggerConfig.java    # Springdoc OpenAPI (Swagger) 설정
 │
 └── common/                   # 공통 모듈 (재사용 가능한 기능)
-├── exception/            # 전역 예외 처리 및 에러 코드 정의
-│   ├── BaseException.java
-│   └── ErrorCode.java
-├── event/                # 공통 이벤트 및 이벤트 리스너
-│   ├── model/            # 공통/기반 이벤트 객체 (예: BaseEvent)
-│   │   └── BaseEvent.java
-│   └── listener/         # 애플리케이션 전체 이벤트 리스너
-│       └── ApplicationEventListener.java
-├── util/                 # 공통 유틸리티 클래스
-│   ├── DateUtils.java
-│   ├── JsonUtils.java
-│   └── ValidationUtils.java
-├── constants/            # 애플리케이션 전역 상수 정의
-│   ├── ApiConstants.java
-│   ├── ErrorMessages.java
-│   └── aiclient/
-│       └── AiClientConfig.java
-├── dto/                  # 공통 DTO (예: API 응답 Wrapper)
-│   └── ApiResponse.java
-└── client/               # 외부 클라이언트 연동 (AI 클라이언트 등)
-└── ai/               # AI 서비스 클라이언트 관련
-├── AiModelClient.java      # AI 클라이언트 인터페이스
-└── AzureOpenAiClient.java  # Azure OpenAI 구현체
+    ├── client/               # 외부 클라이언트 연동 (AI 클라이언트 등)
+    │   └── ai/               # AI 서비스 클라이언트 관련
+    │       ├── AiModelClient.java      # AI 클라이언트 인터페이스
+    │       └── AzureOpenAiClient.java  # Azure OpenAI 구현체
+    ├── constants/            # 애플리케이션 전역 상수 정의
+    │   ├── ApiConstants.java
+    │   ├── ErrorMessages.java
+    │   └── aiclient/
+    │       └── AiClientConfig.java
+    ├── dto/                  # 공통 DTO (예: API 응답 Wrapper)
+    │   └── ApiResponse.java
+    ├── event/                # 공통 이벤트 및 이벤트 리스너
+    │   ├── model/            # 공통/기반 이벤트 객체 (예: BaseEvent)
+    │   │   └── BaseEvent.java
+    │   └── listener/         # 애플리케이션 전체 이벤트 리스너
+    │       └── ApplicationEventListener.java
+    ├── exception/            # 전역 예외 처리 및 에러 코드 정의
+    │   ├── BaseException.java
+    │   └── ErrorCode.java
+    └── util/                 # 공통 유틸리티 클래스
+        ├── DateUtils.java
+        ├── JsonUtils.java
+        └── ValidationUtils.java
 ```
 
 ## 3. 패키지별 상세 설명
