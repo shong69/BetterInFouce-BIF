@@ -14,7 +14,7 @@ com.sage.bif/
 │   │   └── UserController.java
 │   ├── service/               # 비즈니스 로직 처리
 │   │   ├── UserService.java
-│   │   └── DefaultUserService.java
+│   │   └── UserServiceImpl.java
 │   ├── repository/            # 데이터베이스 접근 (JPA Repository)
 │   │   └── UserRepository.java
 │   ├── entity/                # JPA 엔티티 정의 (데이터베이스 테이블 매핑)
@@ -36,7 +36,7 @@ com.sage.bif/
 │   ├── controller/
 │   ├── service/
 │   │   ├── TodoService.java
-│   │   └── DefaultTodoService.java
+│   │   └── TodoServiceImpl.java
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
@@ -53,7 +53,7 @@ com.sage.bif/
 │   ├── controller/
 │   ├── service/
 │   │   ├── DiaryService.java
-│   │   └── DefaultDiaryService.java
+│   │   └── DiaryServiceImpl.java
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
@@ -70,7 +70,7 @@ com.sage.bif/
 │   ├── controller/
 │   ├── service/
 │   │   ├── SimulationService.java
-│   │   └── DefaultSimulationService.java
+│   │   └── SimulationServiceImpl.java
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
@@ -87,7 +87,7 @@ com.sage.bif/
 │   ├── controller/
 │   ├── service/
 │   │   ├── StatsService.java
-│   │   └── DefaultStatsService.java
+│   │   └── StatsServiceImpl.java
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
@@ -102,7 +102,7 @@ com.sage.bif/
 │
 ├── config/                   # 공통 설정 및 빈 정의
 │   ├── SecurityConfig.java   # Spring Security 설정
-│   ├── JpaConfig.java        # JPA 관련 추가 설정 (선택 사항)
+│   └── JpaConfig.java        # JPA 관련 추가 설정 (선택 사항)
 │
 └── common/                   # 공통 모듈 (재사용 가능한 기능)
     ├── client/               # 외부 클라이언트 연동 (AI 클라이언트 등)
