@@ -1,0 +1,132 @@
+spring:
+  application:
+    name: bif-prod
+  
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        use_sql_comments: false
+  
+  # MySQL 데이터베이스 설정 (운영용)
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bif}?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # Spring AI 설정 (Azure OpenAI)
+  ai:
+    azure:
+      openai:
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        api-key: ${AZURE_OPENAI_API_KEY}
+        deployment:
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
+  
+  # Spring Security 설정
+  security:
+    user:
+      name: ${ADMIN_USERNAME:admin}
+      password: ${ADMIN_PASSWORD:admin123}
+  
+  # 서버 설정
+  server:
+    port: ${SERVER_PORT:8080}
+    servlet:
+      context-path: /api
+    compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+      min-response-size: 1024
+  
+  # 로깅 설정 (운영용 최적화)
+  logging:
+    level:
+      root: WARN
+      com.sage.bif: INFO
+      org.springframework.web: WARN
+      org.hibernate.SQL: WARN
+      org.springframework.security: WARN
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+      file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    # 파일 로깅 설정 (일별 롤링)
+    file:
+      name: logs/bif-prod.log
+    # 로그백 설정 (롤링 파일)
+    logback:
+      rollingpolicy:
+        max-file-size: 50MB
+        max-history: 90
+        total-size-cap: 5GB
+        file-name-pattern: logs/bif-prod-%d{yyyy-MM-dd}.%i.log
+  
+  # 개발 도구 비활성화
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+    info:
+      title: "BIF API Documentation (PROD)"
+      description: "BIF (Business Intelligence Framework) REST API Documentation - Production Environment"
+      version: "1.0.0"
+      contact:
+        name: "BIF Production Team"
+        email: "prod@bif.com"
+        url: "https://bif.com"
+      license:
+        name: "MIT License"
+        url: "https://opensource.org/licenses/MIT"
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+    display-request-duration: false
+    filter: true
+  packages-to-scan: com.sage.bif
+  paths-to-match: /api/**
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# 애플리케이션 커스텀 설정
+app:
+  name: "BIF Production"
+  version: "1.0.0"
+  environment: "production"
+  debug: false
+
+# Azure MySQL Database 설정 (주석 처리 - 필요시 활성화)
+# spring:
+#   datasource:
+#     url: jdbc:mysql://${AZURE_MYSQL_HOST}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE}?useSSL=true&requireSSL=false&serverTimezone=UTC
+#     username: ${AZURE_MYSQL_USERNAME}@${AZURE_MYSQL_HOST}
+#     password: ${AZURE_MYSQL_PASSWORD}
+#     driver-class-name: com.mysql.cj.jdbc.Driver
+
+# Azure SQL Database 설정 (주석 처리 - 필요시 활성화)
+# spring:
+#   datasource:
+#     url: jdbc:sqlserver://${AZURE_SQL_HOST}.database.windows.net:1433;database=${AZURE_SQL_DATABASE};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+#     username: ${AZURE_SQL_USERNAME}
+#     password: ${AZURE_SQL_PASSWORD}
+#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver 
