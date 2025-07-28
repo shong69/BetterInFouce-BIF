@@ -1,3 +1,12 @@
+import Logo from "@components/ui/Logo";
+import Footer from "@components/common/Footer";
+
 export default function Login() {
-  return <div>Login</div>;
+  return (
+    <>
+      <Logo />
+      <div>Login</div>
+      <Footer />
+    </>
+  );
 }
