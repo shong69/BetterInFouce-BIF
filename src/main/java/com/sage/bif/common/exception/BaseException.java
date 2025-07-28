@@ -1,29 +1,26 @@
 package com.sage.bif.common.exception;
-
 import lombok.Getter;
 
 @Getter
-public class BaseException extends RuntimeException {
-    
+public class BaseException extends RuntimeException { // RuntimeException 상속
     private final ErrorCode errorCode;
-    
+    private final transient Object details;
+
     public BaseException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
+        this.details = null;
     }
-    
-    public BaseException(ErrorCode errorCode, String message) {
-        super(message);
+
+    public BaseException(ErrorCode errorCode, Object details) {
+        super(errorCode.getMessage());
         this.errorCode = errorCode;
+        this.details = details;
     }
-    
+
     public BaseException(ErrorCode errorCode, Throwable cause) {
         super(errorCode.getMessage(), cause);
         this.errorCode = errorCode;
+        this.details = cause != null ? cause.getMessage() : null; 
     }
-    
-    public BaseException(ErrorCode errorCode, String message, Throwable cause) {
-        super(message, cause);
-        this.errorCode = errorCode;
-    }
-} 
+}

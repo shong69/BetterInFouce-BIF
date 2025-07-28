@@ -1,18 +1,22 @@
 package com.sage.bif.common.exception;
 
 import lombok.Builder;
-import lombok.Data;
-
+import lombok.Getter;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.time.ZoneOffset;
 
-@Data
+@Getter
 @Builder
 public class ErrorResponse {
-    
-    private LocalDateTime timestamp;
-    private int status;
-    private String error;
-    private String message;
-    private Map<String, String> details;
-} 
+    private final String code;
+    private final String message;
+    private final Object details;
+    private final String timestamp;
+
+    public ErrorResponse(String code, String message, Object details) {
+        this.code = code;
+        this.message = message;
+        this.details = details;
+        this.timestamp = LocalDateTime.now(ZoneOffset.UTC).toString();
+    }
+}
