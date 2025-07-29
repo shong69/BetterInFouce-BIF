@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Todo from "@pages/Todo";
 import Login from "@pages/Login";
 import Diary from "@pages/Diary";
-import Simulation from "@pages/Simulation";
 import Profile from "@pages/Profile";
+import Simulation from "@pages/Simulation";
+import LoadingSpinner from "@components/ui/LoadingSpinner";
+import ToastNotification from "@components/ui/ToastNotification";
 
 function App() {
   return (
@@ -17,6 +19,9 @@ function App() {
           <Route path="/bif-profile" element={<Profile />} />
         </Routes>
       </BrowserRouter>
+
+      <LoadingSpinner />
+      <ToastNotification />
     </>
   );
 }
