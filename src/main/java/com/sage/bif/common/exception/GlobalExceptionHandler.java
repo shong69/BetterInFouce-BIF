@@ -24,7 +24,11 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ex.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage(), ex.getDetails()));
+                .body(ErrorResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .details(ex.getDetails())
+                        .build());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -45,7 +49,11 @@ public class GlobalExceptionHandler {
         log.warn("Validation Failed: {}. Errors: {}", ex.getMessage(), errors);
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage(), errors));
+                .body(ErrorResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .details(errors)
+                        .build());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -54,7 +62,11 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.COMMON_BAD_REQUEST;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage(), "Request body is malformed or missing. Please check JSON format."));
+                .body(ErrorResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .details("Request body is malformed or missing. Please check JSON format.")
+                        .build());
     }
 
 
@@ -64,7 +76,11 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.COMMON_NOT_FOUND;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage(), ex.getMessage()));
+                .body(ErrorResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .details(ex.getMessage())
+                        .build());
     }
 
     @ExceptionHandler(Exception.class)
@@ -73,6 +89,10 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.COMMON_INTERNAL_SERVER_ERROR;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage(), null));
+                .body(ErrorResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .details(null)
+                        .build());
     }
 }

@@ -106,7 +106,15 @@ public enum ErrorCode {
     STATS_MONTHLY_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_MONTHLY_ANALYSIS_FAILED", "월간 통계 분석에 실패했습니다."),
     STATS_EMOTION_AGGREGATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_EMOTION_AGGREGATION_FAILED", "감정 데이터 집계에 실패했습니다."),
     STATS_REPORT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_REPORT_GENERATION_FAILED", "통계 리포트 생성에 실패했습니다."),
-    STATS_DATA_INCONSISTENCY(HttpStatus.CONFLICT, "STATS_DATA_INCONSISTENCY", "통계 데이터에 불일치가 발견되었습니다.");
+    STATS_DATA_INCONSISTENCY(HttpStatus.CONFLICT, "STATS_DATA_INCONSISTENCY", "통계 데이터에 불일치가 발견되었습니다."),
+
+    // 추가된 누락된 상수들
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "잘못된 입력입니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+    USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_ALREADY_EXISTS", "이미 존재하는 사용자입니다."),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "접근 권한이 없습니다."),
+    SIMULATION_NOT_FOUND(HttpStatus.NOT_FOUND, "SIMULATION_NOT_FOUND", "시뮬레이션을 찾을 수 없습니다."),
+    STATS_NOT_FOUND(HttpStatus.NOT_FOUND, "STATS_NOT_FOUND", "통계를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
