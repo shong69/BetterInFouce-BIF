@@ -27,7 +27,7 @@ public class SubTodo {
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String title;
 
-    @Column(columnDefinition = "INT", nullable = false)
+    @Column(columnDefinition = "INT DEFAULT 0", nullable = false)
     private Integer sortOrder;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)

@@ -12,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -72,6 +73,10 @@ public class Todo {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "todoId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SubTodo> subTodos = new ArrayList<>();
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
     private Boolean isDeleted;
