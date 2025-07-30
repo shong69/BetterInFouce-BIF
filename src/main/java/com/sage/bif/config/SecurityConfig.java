@@ -17,15 +17,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+            .headers(headers -> headers.frameOptions().disable()) // H2 콘솔을 위한 프레임 옵션 비활성화
             .authorizeHttpRequests(authz -> authz
-                // Swagger UI 접근 허용
+                .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
-                // API 엔드포인트는 인증 필요
-                .requestMatchers("/api/**").authenticated()
-                // 기타 모든 요청은 허용
+                .requestMatchers("/api/**").permitAll() // 개발 중에는 모든 API 접근 허용
                 .anyRequest().permitAll()
             )
-            .httpBasic(httpBasic -> {});
+            .httpBasic(AbstractHttpConfigurer::disable); // HTTP Basic 인증 비활성화
         
         return http.build();
     }

@@ -8,12 +8,13 @@ spring:
   # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
   
   # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
   # datasource:
@@ -32,6 +33,8 @@ spring:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true
   
   # Azure Database for MySQL 설정
   # datasource:
@@ -68,11 +71,11 @@ spring:
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
   
-  # Security 설정
-  security:
-    user:
-      name: admin
-      password: admin123
+  # Security 설정 (개발 중 비활성화)
+  # security:
+  #   user:
+  #     name: admin
+  #     password: admin123
   
   # 개발 도구 설정
   devtools:
@@ -100,7 +103,7 @@ logging:
 # Swagger/OpenAPI 설정
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
     info:
       title: "BIF API Documentation"
       description: "BIF (Better In Focus) REST API Documentation"
