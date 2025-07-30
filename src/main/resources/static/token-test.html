@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>OAuth2 소셜 로그인 테스트</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #fafbfc; }
+        .oauth-button {
+            display: block;
+            margin: 10px 0;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            width: 200px;
+        }
+        .oauth-button:hover { background: #0056b3; }
+        .kakao { background: #FEE500; color: #000; }
+        .kakao:hover { background: #E6CF00; }
+        .naver { background: #03C75A; }
+        .naver:hover { background: #02A94A; }
+        .google { background: #4285F4; }
+        .google:hover { background: #3367D6; }
+        #result {
+            padding: 20px;
+            background: #eee;
+            margin-top: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .existing-user {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .new-user {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+<h2>OAuth2 소셜 로그인 테스트</h2>
+<p>아래 버튼을 클릭하여 소셜 로그인을 테스트하세요:</p>
+
+<a href="/api/oauth2/authorization/kakao" class="oauth-button kakao">카카오 로그인</a>
+<a href="/api/oauth2/authorization/naver" class="oauth-button naver">네이버 로그인</a>
+<a href="/api/oauth2/authorization/google" class="oauth-button google">구글 로그인</a>
+
+<div id="result"></div>
+
+<script>
+    // URL 파라미터에서 토큰 확인
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('accessToken');
+        const provider = urlParams.get('provider');
+        const email = urlParams.get('email');
+        const status = urlParams.get('status');
+
+        console.log('URL 파라미터 확인:', { token, provider, email, status });
+
+        if (token) {
+            const resultDiv = document.getElementById('result');
+            let message = '';
+
+            if (status === 'existing') {
+                resultDiv.className = 'existing-user';
+                message = '기존 사용자 로그인 성공!\n' +
+                         'Provider: ' + provider + '\n' +
+                         'Email: ' + email + '\n' +
+                         'Access Token: ' + token + '\n\n' +
+                         '이미 가입된 사용자입니다. 바로 서비스를 이용할 수 있습니다.';
+            } else {
+                resultDiv.className = 'new-user';
+                message = '신규 사용자 로그인 성공!\n' +
+                         'Provider: ' + provider + '\n' +
+                         'Email: ' + email + '\n' +
+                         'Access Token: ' + token + '\n\n' +
+                         '회원가입이 완료되었습니다. 이제 서비스를 이용할 수 있습니다.';
+            }
+
+            resultDiv.innerHTML = message;
+        } else {
+            document.getElementById('result').innerHTML =
+                '로그인 대기 중...\n' +
+                '위의 소셜 로그인 버튼을 클릭하세요.';
+        }
+    };
+</script>
+</body>
+</html>

@@ -112,7 +112,7 @@ springdoc:
     display-request-duration: true
     filter: true
   packages-to-scan: com.sage.bif
-  paths-to-match: /api/**
+  paths-to-match: /**
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
