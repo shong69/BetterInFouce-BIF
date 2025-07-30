@@ -6,14 +6,14 @@ spring:
     name: bif
   
   # JPA 설정
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        dialect: org.hibernate.dialect.H2Dialect
   
   # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
   # datasource:
@@ -64,7 +64,7 @@ spring:
     azure:
       openai:
         endpoint: ${AZURE_OPENAI_ENDPOINT:https://your-resource.openai.azure.com}
-        api-key: ${AZURE_OPENAI_API_KEY:your-api-key}
+        api-key: ${AZURE_OPENAI_API_KEY:}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
   
@@ -97,28 +97,20 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Swagger/OpenAPI 설정
 springdoc:
   api-docs:
-    path: /api-docs
-    info:
-      title: "BIF API Documentation"
-      description: "BIF (Better In Focus) REST API Documentation"
-      version: "1.0.0"
-      contact:
-        name: "BIF Development Team"
-        email: "dev@bif.com"
-        url: "https://bif.com"
+    enabled: true
+
   swagger-ui:
+    enabled: true
     path: /swagger-ui.html
+    url: v3/api-docs
     operations-sorter: method
     tags-sorter: alpha
     doc-expansion: none
     display-request-duration: true
     filter: true
   packages-to-scan: com.sage.bif
-  paths-to-match: /api/**
+  paths-to-match: /**
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-
-

@@ -19,7 +19,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> authz
                 // Swagger UI 접근 허용
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/api/api-docs").permitAll()
                 // API 엔드포인트는 인증 필요
                 .requestMatchers("/api/**").authenticated()
                 // 기타 모든 요청은 허용
