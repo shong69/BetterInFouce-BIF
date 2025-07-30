@@ -9,9 +9,10 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "todos")
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Todo {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long todoId;
@@ -34,7 +35,7 @@ public class Todo {
     private String userInput;
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
-    private String aiTitle;
+    private String title;
 
     @Enumerated(EnumType.STRING)
     private TodoTypes type;
@@ -42,16 +43,19 @@ public class Todo {
     @Enumerated(EnumType.STRING)
     private RepeatFrequency repeatFrequency;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "todo_repeat_days", joinColumns = @JoinColumn(name = "todo_id"))
     @Enumerated(EnumType.STRING)
-    private RepeatDays repeatDays;
+    @Column(name = "repeat_day")
+    private List<RepeatDays> repeatDays;
 
     @Column(columnDefinition = "DATE")
-    private Date dueDate;
+    private LocalDate dueDate;
 
     @Column(columnDefinition = "TIME")
-    private Time dueTime;
+    private LocalTime dueTime;
 
-    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE" ,nullable = false)
+    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE", nullable = false)
     private Boolean notificationEnabled;
 
     @Column(columnDefinition = "INT DEFAULT 0", nullable = false)
@@ -72,4 +76,4 @@ public class Todo {
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
     private Boolean isDeleted;
 
-} 
+}
