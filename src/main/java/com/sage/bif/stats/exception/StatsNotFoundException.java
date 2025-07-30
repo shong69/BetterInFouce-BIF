@@ -5,15 +5,15 @@ import com.sage.bif.common.exception.ErrorCode;
 
 public class StatsNotFoundException extends BaseException {
     
-    public StatsNotFoundException(Long statsId) {
+    public StatsNotFoundException(final Long statsId) {
         super(ErrorCode.STATS_NOT_FOUND, "Stats not found with id: " + statsId);
     }
     
-    public StatsNotFoundException(Long userId, Long statsId) {
+    public StatsNotFoundException(final Long userId, final Long statsId) {
         super(ErrorCode.STATS_NOT_FOUND, "Stats not found with id: " + statsId + " for user: " + userId);
     }
     
-    public StatsNotFoundException(ErrorCode errorCode, String message) {
+    public StatsNotFoundException(final ErrorCode errorCode, final String message) {
         super(errorCode, message);
     }
 } 
