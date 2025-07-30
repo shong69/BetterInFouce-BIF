@@ -23,10 +23,10 @@ public class TodoUpdateRequest {
 
     @NotBlank(message = "제목은 필수입니다")
     private String title;
-    
+
     @NotNull(message = "Todo 타입은 필수입니다")
     private TodoTypes type;
-    
+
     private RepeatFrequency repeatFrequency;
     private List<RepeatDays> repeatDays;
     private LocalDate dueDate;
@@ -36,4 +36,5 @@ public class TodoUpdateRequest {
 
     @Valid
     private List<SubTodoUpdateRequest> subTodos;
+
 }
