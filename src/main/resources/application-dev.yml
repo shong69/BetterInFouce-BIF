@@ -137,7 +137,7 @@ app:
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
     info:
       title: "BIF API Documentation (DEV)"
       description: "BIF (Business Intelligence Framework) REST API Documentation - Development Environment"
