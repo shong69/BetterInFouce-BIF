@@ -25,11 +25,7 @@ public interface StatsRepository extends JpaRepository<Stats, Long> {
     @Query("SELECT s FROM Stats s WHERE s.bifId = :bifId ORDER BY s.year DESC, s.month DESC LIMIT :limit")
     List<Stats> findRecentStatsByBifId(@Param("bifId") final Long bifId, @Param("limit") final int limit);
 
-    @Query("SELECT s FROM Stats s WHERE s.bifId = :bifId AND s.isCurrentMonth = true")
-    Optional<Stats> findCurrentMonthStats(@Param("bifId") final Long bifId);
-
-    @Query("SELECT s FROM Stats s WHERE s.bifId = :bifId AND s.isCurrentMonth = false ORDER BY s.year DESC, s.month DESC")
-    List<Stats> findPastMonthStats(@Param("bifId") final Long bifId);
+    // isCurrentMonth 컬럼이 제거되어 해당 메서드들도 제거
 
     @Query("SELECT s FROM Stats s WHERE s.bifId = :bifId ORDER BY s.year DESC, s.month DESC")
     List<Stats> findByBifIdOrderByYearMonthDesc(@Param("bifId") final Long bifId);

@@ -2,13 +2,14 @@ package com.sage.bif.stats.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sage.bif.common.util.JsonUtils;
 import com.sage.bif.stats.dto.response.GuardianStatsResponse;
 import com.sage.bif.stats.dto.response.StatsResponse;
 import com.sage.bif.stats.entity.EmotionAnalysisTemplate;
 import com.sage.bif.stats.entity.EmotionType;
+import com.sage.bif.stats.entity.GuardianAdviceTemplate;
 import com.sage.bif.stats.entity.Stats;
 import com.sage.bif.stats.repository.EmotionAnalysisTemplateRepository;
+import com.sage.bif.stats.repository.GuardianAdviceTemplateRepository;
 import com.sage.bif.stats.repository.StatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class StatsServiceImpl implements StatsService {
 
     private final StatsRepository statsRepository;
     private final EmotionAnalysisTemplateRepository templateRepository;
+    private final GuardianAdviceTemplateRepository guardianAdviceTemplateRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -43,36 +45,7 @@ public class StatsServiceImpl implements StatsService {
             return getMonthlyStats(username);
         }
 
-        final Stats statsData = stats.get();
-        
-        try {
-            final Map<String, Integer> emotionCounts = objectMapper.readValue(statsData.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-            final List<Map<String, Object>> topKeywordsData = objectMapper.readValue(statsData.getTopKeywords(), new TypeReference<List<Map<String, Object>>>() {});
-
-            final List<StatsResponse.EmotionRatio> emotionRatio = emotionCounts.entrySet().stream()
-                    .map(entry -> StatsResponse.EmotionRatio.builder()
-                            .emotion(EmotionType.valueOf(entry.getKey().toUpperCase()))
-                            .value(entry.getValue())
-                            .build())
-                    .collect(Collectors.toList());
-
-            final List<String> topKeywords = topKeywordsData.stream()
-                    .map(keyword -> (String) keyword.get("keyword"))
-                    .collect(Collectors.toList());
-
-            final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, year, month);
-
-            return StatsResponse.builder()
-                    .analysisText(statsData.getEmotionAnalysisText())
-                    .emotionRatio(emotionRatio)
-                    .topKeywords(topKeywords)
-                    .monthlyChange(monthlyChange)
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error parsing emotion analysis data for bifId: {}, year: {}, month: {}", bifId, year, month, e);
-            throw new RuntimeException("Failed to parse emotion analysis data", e);
-        }
+        return buildStatsResponse(stats.get(), bifId, year, month);
     }
 
     @Override
@@ -80,38 +53,80 @@ public class StatsServiceImpl implements StatsService {
     public GuardianStatsResponse getGuardianStats(final String username) {
         final Long guardianId = getGuardianIdFromUsername(username);
         final Long bifId = getBifIdFromGuardianId(guardianId);
-        final StatsResponse bifStats = getMonthlyStats(username);
+        
+        // Guardian은 연결된 BIF의 username이 아닌 BIF ID로 통계 조회
+        final StatsResponse bifStats = getMonthlyStatsByBifId(bifId);
         
         final String bifNickname = getBifNickname(bifId);
-        final String advice = bifStats.getAnalysisText();
-        final String warning = generateWarningMessage(bifStats.getEmotionRatio());
+        final String advice = getGuardianAdviceFromStats(bifId);
 
         return GuardianStatsResponse.builder()
                 .bifNickname(bifNickname)
                 .advice(advice)
-                .warning(warning)
                 .emotionRatio(bifStats.getEmotionRatio())
                 .monthlyChange(bifStats.getMonthlyChange())
                 .build();
     }
+    
+    /**
+     * BIF ID로 직접 월별 통계 조회 (보호자용)
+     */
+    private StatsResponse getMonthlyStatsByBifId(final Long bifId) {
+        final Integer year = getCurrentYear();
+        final Integer month = getCurrentMonth();
+        
+        final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+        
+        if (stats.isEmpty()) {
+            generateMonthlyStats(bifId, year, month);
+            return getMonthlyStatsByBifId(bifId);
+        }
+
+        return buildStatsResponse(stats.get(), bifId, year, month);
+    }
 
     @Override
     public void generateMonthlyStats(final Long bifId, final Integer year, final Integer month) {
+        // 전월 데이터를 기반으로 감정 분석 텍스트와 보호자 조언 생성
         final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
-        final List<Map<String, Object>> topKeywords = calculateTopKeywords(bifId, year, month);
         final String analysisText = generateAnalysisTextFromTemplate(emotionCounts);
+        final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
 
         final Stats stats = Stats.builder()
                 .bifId(bifId)
                 .year(year)
                 .month(month)
                 .emotionAnalysisText(analysisText)
-                .emotionCounts(JsonUtils.toJson(emotionCounts))
-                .topKeywords(JsonUtils.toJson(topKeywords))
-                .isCurrentMonth(month.equals(getCurrentMonth()) && year.equals(getCurrentYear()))
+                .guardianAdviceText(guardianAdvice)
+                .emotionCounts(null)  // 일기 작성 전까지는 NULL
+                .topKeywords(null)    // 일기 작성 전까지는 NULL
                 .build();
 
         statsRepository.save(stats);
+    }
+    
+    @Override
+    public void generateMonthlyEmotionAnalysis(final Long bifId, final Integer year, final Integer month) {
+        // 기존 통계 데이터가 있는지 확인
+        final Optional<Stats> existingStats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+        
+        if (existingStats.isPresent()) {
+            // 기존 통계 데이터가 있으면 감정 분석 텍스트와 보호자 조언만 업데이트
+            final Stats stats = existingStats.get();
+            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
+            final String analysisText = generateAnalysisTextFromTemplate(emotionCounts);
+            final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
+            
+            stats.setEmotionAnalysisText(analysisText);
+            stats.setGuardianAdviceText(guardianAdvice);
+            statsRepository.save(stats);
+            
+            log.info("BIF ID {}의 {}년 {}월 감정 분석 텍스트와 보호자 조언 업데이트 완료", bifId, year, month);
+        } else {
+            // 기존 통계 데이터가 없으면 전체 통계 생성
+            log.warn("BIF ID {}의 {}년 {}월 통계 데이터가 없어 전체 통계를 생성합니다.", bifId, year, month);
+            generateMonthlyStats(bifId, year, month);
+        }
     }
 
     private Map<EmotionType, Integer> calculateEmotionCounts(final Long bifId, final Integer year, final Integer month) {
@@ -190,7 +205,7 @@ public class StatsServiceImpl implements StatsService {
 
         final double dominantRatio = ratios.get(dominantEmotion);
         
-        // 템플릿 기반 분석 시도
+        // 템플릿 기반 분석 시도 (emotion_analysis_template 테이블 활용)
         final String okayRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.OKAY, 0.0));
         final String goodRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GOOD, 0.0));
         final String angryRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.ANGRY, 0.0));
@@ -200,8 +215,13 @@ public class StatsServiceImpl implements StatsService {
         final Optional<EmotionAnalysisTemplate> template = templateRepository.findByEmotionRanges(okayRange, goodRange, angryRange, downRange, greatRange);
 
         if (template.isPresent()) {
+            log.debug("Found emotion analysis template for ranges: okay={}, good={}, angry={}, down={}, great={}", 
+                     okayRange, goodRange, angryRange, downRange, greatRange);
             return template.get().getAnalysisText();
         }
+
+        log.warn("No emotion analysis template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback analysis.", 
+                okayRange, goodRange, angryRange, downRange, greatRange);
 
         // 템플릿이 없으면 통계 기반으로 분석 텍스트 생성
         return generateStatisticsBasedAnalysisText(emotionCounts, ratios, dominantEmotion, dominantRatio);
@@ -273,110 +293,160 @@ public class StatsServiceImpl implements StatsService {
 
         final List<StatsResponse.MonthlyChange> monthlyChange = new ArrayList<>();
 
-        if (currentStats.isPresent()) {
-            try {
-                final Map<String, Integer> currentCounts = objectMapper.readValue(currentStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-                final int currentTotal = currentCounts.values().stream().mapToInt(Integer::intValue).sum();
+        try {
+            // 현재 달과 지난달 감정 데이터 파싱
+            final Map<String, Integer> currentCounts = currentStats.isPresent() ?
+                    objectMapper.readValue(currentStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {}) :
+                    new HashMap<>();
+            
+            final Map<String, Integer> lastCounts = lastStats.isPresent() ?
+                    objectMapper.readValue(lastStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {}) :
+                    new HashMap<>();
+
+            // 각 감정별로 월별 변화 계산
+            for (EmotionType emotion : EmotionType.values()) {
+                final String emotionKey = emotion.name();
+                final Integer currentValue = currentCounts.getOrDefault(emotionKey, 0);
+                final Integer previousValue = lastCounts.getOrDefault(emotionKey, 0);
+                
+                // 변화율 계산 (지난달 기준)
+                final Double changePercentage = calculateChangePercentage(previousValue, currentValue);
 
                 monthlyChange.add(StatsResponse.MonthlyChange.builder()
-                        .month("이번달")
-                        .value(currentTotal)
+                        .month("감정별 변화")
+                        .emotion(emotion)
+                        .value(currentValue)
+                        .previousValue(previousValue)
+                        .changePercentage(changePercentage)
                         .build());
-            } catch (Exception e) {
-                log.error("Error parsing current month emotion counts", e);
             }
-        }
 
-        if (lastStats.isPresent()) {
-            try {
-                final Map<String, Integer> lastCounts = objectMapper.readValue(lastStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-                final int lastTotal = lastCounts.values().stream().mapToInt(Integer::intValue).sum();
-
+        } catch (Exception e) {
+            log.error("Error calculating monthly emotion changes for bifId: {}, year: {}, month: {}", bifId, year, month, e);
+            
+            // 오류 발생 시 빈 리스트 반환하는 대신 기본 데이터라도 제공
+            for (EmotionType emotion : EmotionType.values()) {
                 monthlyChange.add(StatsResponse.MonthlyChange.builder()
-                        .month("지난달")
-                        .value(lastTotal)
+                        .month("감정별 변화")
+                        .emotion(emotion)
+                        .value(0)
+                        .previousValue(0)
+                        .changePercentage(0.0)
                         .build());
-            } catch (Exception e) {
-                log.error("Error parsing last month emotion counts", e);
             }
         }
 
         return monthlyChange;
     }
 
+    /**
+     * 변화율 계산 메소드
+     */
+    private Double calculateChangePercentage(final Integer previousValue, final Integer currentValue) {
+        if (previousValue == 0) {
+            return currentValue > 0 ? 100.0 : 0.0; // 지난달이 0이고 이번달이 있으면 100% 증가
+        }
+        return ((double) (currentValue - previousValue) / previousValue) * 100.0;
+    }
+
     private Long getBifIdFromUsername(final String username) {
-        // 실제 사용자 서비스에서 BIF ID 조회 로직 구현
-        return 1L;
+        // todo: 실제 사용자 서비스 완성 후 구현 필요
+        // 현재는 username을 기반으로 더미 ID 생성 (개발/테스트용)
+        if (username == null || username.trim().isEmpty()) {
+            log.warn("Username is null or empty, using default BIF ID");
+            return 1L;
+        }
+        
+        // username 해시를 이용한 더미 ID 생성 (일관성 보장)
+        final Long dummyId = Math.abs((long) username.hashCode()) % 1000 + 1;
+        log.debug("Generated dummy BIF ID {} for username: {}", dummyId, username);
+        return dummyId;
     }
     
     private Long getGuardianIdFromUsername(final String username) {
-        // 실제 사용자 서비스에서 보호자 ID 조회 로직 구현
-        return 1L;
+        // todo: 실제 사용자 서비스 완성 후 구현 필요
+        if (username == null || username.trim().isEmpty()) {
+            log.warn("Username is null or empty, using default Guardian ID");
+            return 1L;
+        }
+        
+        // Guardian은 BIF ID와 다른 범위의 ID 사용 (2000~2999)
+        final Long dummyId = Math.abs((long) username.hashCode()) % 1000 + 2000;
+        log.debug("Generated dummy Guardian ID {} for username: {}", dummyId, username);
+        return dummyId;
     }
 
     private Long getBifIdFromGuardianId(final Long guardianId) {
-        // 실제 보호자-BIF 연동 로직 구현
-        return 1L;
+        // todo: 실제 보호자-BIF 관계 테이블에서 조회 로직 구현 필요
+        if (guardianId == null) {
+            log.warn("Guardian ID is null, using default BIF ID");
+            return 1L;
+        }
+        
+        // 더미 로직: Guardian ID에서 BIF ID 매핑 (개발/테스트용)
+        // 실제로는 guardian_bif_relationship 테이블에서 조회해야 함
+        final Long dummyBifId = (guardianId - 2000) % 1000 + 1;
+        log.debug("Mapped Guardian ID {} to dummy BIF ID {}", guardianId, dummyBifId);
+        return dummyBifId;
     }
 
     private String getBifNickname(final Long bifId) {
-    //  실제 사용자 서비스에서 BIF 닉네임 조회 로직 구현
-        return "BIF";
-    }
-
-    private String generateWarningMessage(final List<StatsResponse.EmotionRatio> emotionRatio) {
-        // 지난달과 이번달 감정 비율 비교
-        final Integer lastMonth = getCurrentMonth() == 1 ? 12 : getCurrentMonth() - 1;
-        final Integer lastYear = getCurrentMonth() == 1 ? getCurrentYear() - 1 : getCurrentYear();
-        
-        final Optional<Stats> lastMonthStats = statsRepository.findByBifIdAndYearAndMonth(1L, lastYear, lastMonth);
-        
-        if (lastMonthStats.isEmpty()) {
-            return null; // 지난달 데이터가 없으면 경고 메시지 생성하지 않음
+        // todo: 실제 사용자 서비스에서 BIF 닉네임 조회 로직 구현 필요
+        if (bifId == null) {
+            log.warn("BIF ID is null, using default nickname");
+            return "BIF";
         }
         
-        try {
-            final Map<String, Integer> lastMonthCounts = objectMapper.readValue(lastMonthStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-            final int lastMonthTotal = lastMonthCounts.values().stream().mapToInt(Integer::intValue).sum();
-            
-            // 이번달 감정 비율 계산
-            final int currentTotal = emotionRatio.stream().mapToInt(StatsResponse.EmotionRatio::getValue).sum();
-            
-            final Map<String, Double> currentRatios = emotionRatio.stream()
-                    .collect(Collectors.toMap(
-                            ratio -> ratio.getEmotion().name(),
-                            ratio -> (double) ratio.getValue() / currentTotal * 100
-                    ));
-            
-            final Map<String, Double> lastMonthRatios = lastMonthCounts.entrySet().stream()
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> (double) entry.getValue() / lastMonthTotal * 100
-                    ));
-            
-            // 우울/불안 감정 증가 체크
-            final double currentDownRatio = currentRatios.getOrDefault("DOWN", 0.0);
-            final double lastMonthDownRatio = lastMonthRatios.getOrDefault("DOWN", 0.0);
-            
-            final double currentAngryRatio = currentRatios.getOrDefault("ANGRY", 0.0);
-            final double lastMonthAngryRatio = lastMonthRatios.getOrDefault("ANGRY", 0.0);
-            
-            final double downIncrease = currentDownRatio - lastMonthDownRatio;
-            final double angryIncrease = currentAngryRatio - lastMonthAngryRatio;
-            
-            if (downIncrease > 20.0) {
-                return String.format("우울 및 불안 감정 수치가 지난달에 비해 %.1f%% 증가했습니다. 주의가 필요합니다.", downIncrease);
-            }
-            
-            if (angryIncrease > 20.0) {
-                return String.format("화난 감정 수치가 지난달에 비해 %.1f%% 증가했습니다. 주의가 필요합니다.", angryIncrease);
-            }
-            
-            return null;
-            
-        } catch (Exception e) {
-            log.error("Error generating warning message", e);
-            return null;
+        // 더미 닉네임 생성 (개발/테스트용)
+        final String dummyNickname = "BIF_" + bifId;
+        log.debug("Generated dummy nickname {} for BIF ID {}", dummyNickname, bifId);
+        return dummyNickname;
+    }
+    
+    /**
+     * 사용자 서비스 연동을 위한 헬퍼 메소드들
+     * todo: 사용자 서비스 완성 후 실제 구현으로 교체
+     */
+    private boolean isValidUsername(final String username) {
+        return username != null && !username.trim().isEmpty() && username.length() >= 3;
+    }
+    
+    @SuppressWarnings("unused")
+    private boolean isUserExists(final String username) {
+        // todo: 실제 사용자 존재 여부 확인 로직 구현
+        // 사용자 서비스 완성 후 활용 예정
+        return isValidUsername(username); // 임시로 유효성만 체크
+    }
+    
+    /**
+     * 키워드 데이터 리스트 생성 헬퍼 메소드
+     */
+    private List<StatsResponse.KeywordData> createKeywordDataList(final List<Map<String, Object>> topKeywordsData) {
+        return topKeywordsData.stream()
+                .map(keyword -> StatsResponse.KeywordData.builder()
+                        .keyword((String) keyword.get("keyword"))
+                        .count((Integer) keyword.get("count"))
+                        .rank(topKeywordsData.indexOf(keyword) + 1)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    
+
+    
+    /**
+     * 기본 보호자 조언 생성 (템플릿이 없을 때 사용)
+     */
+    private String generateFallbackGuardianAdvice(final Map<String, Double> ratios) {
+        final double positiveRatio = ratios.getOrDefault("GOOD", 0.0) + ratios.getOrDefault("GREAT", 0.0);
+        final double negativeRatio = ratios.getOrDefault("ANGRY", 0.0) + ratios.getOrDefault("DOWN", 0.0);
+        
+        if (positiveRatio > 60.0) {
+            return "BIF가 매우 긍정적인 감정을 많이 느끼고 있습니다. 이런 좋은 기분을 유지할 수 있도록 지지해주세요.";
+        } else if (negativeRatio > 40.0) {
+            return "BIF가 부정적인 감정을 많이 경험하고 있습니다. 따뜻한 관심과 대화를 통해 도움을 주세요.";
+        } else {
+            return "BIF가 균형잡힌 감정 상태를 유지하고 있습니다. 이런 안정적인 상태를 지지해주세요.";
         }
     }
     
@@ -386,5 +456,98 @@ public class StatsServiceImpl implements StatsService {
     
     private Integer getCurrentYear() {
         return LocalDateTime.now().getYear();
+    }
+    
+    /**
+     * Stats 엔티티를 StatsResponse로 변환하는 공통 메서드
+     */
+    private StatsResponse buildStatsResponse(final Stats statsData, final Long bifId, final Integer year, final Integer month) {
+        try {
+            // 감정 통계와 키워드가 NULL인 경우 처리
+            List<StatsResponse.EmotionRatio> emotionRatio = new ArrayList<>();
+            List<StatsResponse.KeywordData> topKeywords = new ArrayList<>();
+            
+            if (statsData.getEmotionCounts() != null) {
+                final Map<String, Integer> emotionCounts = objectMapper.readValue(statsData.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
+                emotionRatio = emotionCounts.entrySet().stream()
+                        .map(entry -> StatsResponse.EmotionRatio.builder()
+                                .emotion(EmotionType.valueOf(entry.getKey().toUpperCase()))
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toList());
+            }
+            
+            // calculateTopKeywords 메소드를 사용하여 키워드 데이터 처리
+            final List<Map<String, Object>> topKeywordsData = calculateTopKeywords(bifId, year, month);
+            topKeywords = createKeywordDataList(topKeywordsData);
+
+            final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, year, month);
+
+            return StatsResponse.builder()
+                    .analysisText(statsData.getEmotionAnalysisText())
+                    .emotionRatio(emotionRatio)
+                    .topKeywords(topKeywords)
+                    .monthlyChange(monthlyChange)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error parsing emotion analysis data for bifId: {}, year: {}, month: {}", bifId, year, month, e);
+            throw new RuntimeException("Failed to parse emotion analysis data", e);
+        }
+    }
+    
+    /**
+     * 보호자 조언을 Stats 테이블에서 가져오기
+     */
+    private String getGuardianAdviceFromStats(final Long bifId) {
+        final Integer year = getCurrentYear();
+        final Integer month = getCurrentMonth();
+        
+        final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+        if (stats.isPresent()) {
+            return stats.get().getGuardianAdviceText();
+        }
+        
+        // 저장된 조언이 없으면 실시간으로 생성
+        return generateGuardianAdviceFromTemplate(calculateEmotionCounts(bifId, year, month));
+    }
+    
+    /**
+     * 보호자 조언 템플릿에서 조언 생성 (generateGuardianAdvice와 동일한 로직)
+     */
+    private String generateGuardianAdviceFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
+        final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) {
+            return "BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
+        }
+        
+        // 감정 비율 계산
+        final Map<String, Double> ratios = emotionCounts.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().name(),
+                        entry -> (double) entry.getValue() / total * 100
+                ));
+        
+        // 템플릿 기반 조언 생성 (guardian_advice_template 테이블 활용)
+        final String okayRange = getRangeForPercentage(ratios.getOrDefault("OKAY", 0.0));
+        final String goodRange = getRangeForPercentage(ratios.getOrDefault("GOOD", 0.0));
+        final String angryRange = getRangeForPercentage(ratios.getOrDefault("ANGRY", 0.0));
+        final String downRange = getRangeForPercentage(ratios.getOrDefault("DOWN", 0.0));
+        final String greatRange = getRangeForPercentage(ratios.getOrDefault("GREAT", 0.0));
+        
+        final Optional<GuardianAdviceTemplate> adviceTemplate = guardianAdviceTemplateRepository.findByEmotionRanges(
+                okayRange, goodRange, angryRange, downRange, greatRange);
+        
+        if (adviceTemplate.isPresent()) {
+            log.debug("Found guardian advice template for ranges: okay={}, good={}, angry={}, down={}, great={}", 
+                     okayRange, goodRange, angryRange, downRange, greatRange);
+            return adviceTemplate.get().getAdviceText();
+        }
+        
+        log.warn("No guardian advice template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback advice.", 
+                okayRange, goodRange, angryRange, downRange, greatRange);
+        
+        // 템플릿이 없으면 기본 조언 생성
+        return generateFallbackGuardianAdvice(ratios);
     }
 }

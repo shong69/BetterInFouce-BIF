@@ -18,7 +18,7 @@ public class StatsResponse {
     
     private List<EmotionRatio> emotionRatio;
     
-    private List<String> topKeywords;
+    private List<KeywordData> topKeywords;
     
     private List<MonthlyChange> monthlyChange;
 
@@ -37,6 +37,19 @@ public class StatsResponse {
     @AllArgsConstructor
     public static class MonthlyChange {
         private String month;
+        private EmotionType emotion;
         private Integer value;
+        private Integer previousValue;
+        private Double changePercentage;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class KeywordData {
+        private String keyword;
+        private Integer count;
+        private Integer rank;
     }
 } 

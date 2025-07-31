@@ -10,4 +10,10 @@ public interface StatsService {
     GuardianStatsResponse getGuardianStats(final String username);
 
     void generateMonthlyStats(final Long bifId, final Integer year, final Integer month);
+    
+    /**
+     * 감정 분석 텍스트만 생성 (매월 1일 자정 스케줄링용)
+     * 요구사항: 감정 분석은 매월 1일 자정에 진행한다
+     */
+    void generateMonthlyEmotionAnalysis(final Long bifId, final Integer year, final Integer month);
 }
