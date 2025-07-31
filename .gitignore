@@ -86,4 +86,4 @@ set-env.sh
 
 # Logs
 *.log
-logs/
+/logs
