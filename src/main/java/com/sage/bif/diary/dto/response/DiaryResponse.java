@@ -6,16 +6,17 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+import com.sage.bif.diary.model.Emotion;
+
 @Getter
 @Setter
 @Builder
 public class DiaryResponse {
     private Long id;
-    private String title;
+    private Emotion emotion;
     private String content;
     private Long userId;
     private String aiFeedback;
-    private String emotionAnalysis;
-    private String summary;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 } 

@@ -1,37 +1,82 @@
 package com.sage.bif.config;
 
+import com.sage.bif.common.jwt.JwtAuthenticationFilter;
+import com.sage.bif.common.jwt.JwtTokenProvider;
+import com.sage.bif.common.oauth.OAuth2AuthenticationFailureHandler;
+import com.sage.bif.common.oauth.OAuth2AuthenticationSuccessHandler;
+import com.sage.bif.common.oauth.OAuth2UserServiceImpl;
+import com.sage.bif.user.service.BifService;
+import com.sage.bif.user.service.GuardianService;
+import com.sage.bif.user.service.SocialLoginService;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class SecurityConfig {
-    
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler(JwtTokenProvider jwtTokenProvider,
+                                                                                 SocialLoginService socialLoginService,
+                                                                                 BifService bifService,
+                                                                                 GuardianService guardianService) {
+        return new OAuth2AuthenticationSuccessHandler(jwtTokenProvider, socialLoginService, bifService, guardianService);
+    }
+
+    @Bean
+    public OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler() {
+        return new OAuth2AuthenticationFailureHandler();
+    }
+
+    @Bean
+    public OAuth2UserServiceImpl oAuth2UserServiceImpl() {
+        return new OAuth2UserServiceImpl();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2UserServiceImpl oAuth2UserServiceImpl,
+                                                   OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+                                                   OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler,
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(authz -> authz
-                // Swagger UI 접근 허용
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/api/api-docs").permitAll()
-                // API 엔드포인트는 인증 필요
-                .requestMatchers("/api/**").authenticated()
-                // 기타 모든 요청은 허용
-                .anyRequest().permitAll()
-            )
-            .httpBasic(httpBasic -> {});
-        
+                .csrf(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(authorization -> authorization
+                        .requestMatchers("/api/auth/admin-login", "/api/oauth2/**").permitAll()
+                        .requestMatchers("/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/api/auth/register/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        //로그인 프론트 생성 뒤 연결
+//                    .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oAuth2UserServiceImpl)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
+                )
+                .httpBasic(httpBasic -> {});
+
         return http.build();
     }
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-} 
+}

@@ -1,98 +1,213 @@
 package com.sage.bif.user.controller;
 
-// import com.sage.bif.common.dto.ApiResponse;
-// import com.sage.bif.common.exception.BaseException;
-// import com.sage.bif.common.exception.ErrorCode;
-// import com.sage.bif.user.dto.request.UserCreateRequest;
-// import com.sage.bif.user.dto.response.UserResponse;
-// import io.swagger.v3.oas.annotations.Operation;
-// import io.swagger.v3.oas.annotations.Parameter;
-// import io.swagger.v3.oas.annotations.media.Content;
-// import io.swagger.v3.oas.annotations.media.Schema;
-// import io.swagger.v3.oas.annotations.tags.Tag;
-// import jakarta.validation.Valid;
+import com.sage.bif.common.dto.ApiResponse;
+import com.sage.bif.common.jwt.JwtTokenProvider;
+import com.sage.bif.user.dto.request.SocialRegistrationRequest;
+import com.sage.bif.user.dto.response.BifResponse;
+import com.sage.bif.user.dto.response.GuardianResponse;
+import com.sage.bif.user.service.BifService;
+import com.sage.bif.user.service.GuardianService;
+import com.sage.bif.user.service.SocialLoginService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-// import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/users")
-// @Tag(name = "User Management", description = "사용자 관리 API")
+@RequestMapping("/auth")
+@Tag(name = "User Management", description = "사용자 관리 API")
+@RequiredArgsConstructor
 public class UserController {
-    
-    // @GetMapping("/{id}")
-    // @Operation(summary = "사용자 조회", description = "ID로 사용자 정보를 조회합니다. (200: 성공, 400: 잘못된 요청/사용자 없음, 500: 서버 오류)")
-    // public ResponseEntity<ApiResponse<UserResponse>> getUser(
-    //     @Parameter(description = "사용자 ID", required = true) @PathVariable Long id) {
-        
-    //     // 실제 예외 처리가 작동하는 시나리오
-    //     if (id <= 0) {
-    //         log.info("BaseException 발생: INVALID_INPUT");
-    //         throw new BaseException(ErrorCode.INVALID_INPUT, "사용자 ID는 0보다 커야 합니다. 입력된 ID: " + id);
-    //     }
-        
-    //     // 존재하지 않는 사용자 ID로 테스트 (ID가 999인 경우)
-    //     if (id == 999) {
-    //         log.info("BaseException 발생: USER_NOT_FOUND");
-    //         throw new BaseException(ErrorCode.USER_NOT_FOUND, "사용자 ID " + id + "를 찾을 수 없습니다");
-    //     }
-        
-    //     // 서버 오류 시뮬레이션 (ID가 500인 경우)
-    //     if (id == 500) {
-    //         log.info("RuntimeException 발생: 데이터베이스 연결 오류");
-    //         throw new RuntimeException("데이터베이스 연결 오류");
-    //     }
-        
-    //     // 정상적인 경우
-    //     UserResponse user = new UserResponse();
-    //     user.setId(id);
-    //     user.setName("테스트 사용자 " + id);
-    //     user.setEmail("user" + id + "@example.com");
-        
-    //     return ResponseEntity.ok(ApiResponse.success(user, "사용자 조회 성공"));
-    // }
-    
-    // @PostMapping
-    // @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다. (201: 성공, 400: 잘못된 요청/중복 사용자)")
-    // public ResponseEntity<ApiResponse<UserResponse>> createUser(
-    //     @Parameter(description = "사용자 정보", required = true) 
-    //     @Valid @RequestBody UserCreateRequest userRequest) {
-        
-    //     // 중복 이메일 체크 시뮬레이션
-    //     if ("duplicate@example.com".equals(userRequest.getEmail())) {
-    //         throw new BaseException(ErrorCode.USER_ALREADY_EXISTS, "이미 존재하는 이메일입니다: " + userRequest.getEmail());
-    //     }
-        
-    //     // 정상적인 경우
-    //     UserResponse createdUser = UserResponse.builder()
-    //         .id(1L)
-    //         .name(userRequest.getName())
-    //         .email(userRequest.getEmail())
-    //         .build();
-            
-    //     return ResponseEntity.status(201)
-    //         .body(ApiResponse.success(createdUser, "사용자 등록 성공"));
-    // }
-    
-    // @GetMapping
-    // @Operation(summary = "사용자 목록 조회", description = "모든 사용자 목록을 조회합니다. (200: 성공, 400: 권한 없음)")
-    // public ResponseEntity<ApiResponse<java.util.List<UserResponse>>> getAllUsers() {
-        
-    //     // 권한 체크 시뮬레이션 (관리자만 접근 가능)
-    //     // 실제로는 SecurityContext에서 사용자 권한을 확인
-    //     boolean isAdmin = false; // 테스트용
-        
-    //     if (!isAdmin) {
-    //         throw new BaseException(ErrorCode.FORBIDDEN, "사용자 목록 조회 권한이 없습니다");
-    //     }
-        
-    //     // 정상적인 경우
-    //     java.util.List<UserResponse> users = java.util.List.of(
-    //         UserResponse.builder().id(1L).name("사용자1").email("user1@example.com").build(),
-    //         UserResponse.builder().id(2L).name("사용자2").email("user2@example.com").build()
-    //     );
-        
-    //     return ResponseEntity.ok(ApiResponse.success(users, "사용자 목록 조회 성공"));
-    // }
-} 
+
+    // 상수 정의
+    private static final String ACCESS_TOKEN_KEY = "accessToken";
+    private static final String REFRESH_TOKEN_KEY = "refreshToken";
+    private static final String BIF_KEY = "bif";
+    private static final String GUARDIAN_KEY = "guardian";
+
+    private final BifService bifService;
+    private final GuardianService guardianService;
+    private final SocialLoginService socialLoginService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @PostMapping("/register/bif")
+    @Operation(summary = "소셜 로그인으로 BIF 회원가입", description = "소셜 로그인 정보를 사용하여 BIF 회원을 등록합니다. 닉네임과 연결 코드는 자동 생성됩니다.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerBifBySocial(
+            @Valid @RequestBody SocialRegistrationRequest request) {
+
+        try {
+            var bif = bifService.registerBySocialId(request.getSocialId(), request.getEmail());
+            BifResponse response = BifResponse.from(bif);
+
+            // 소셜 로그인 정보 조회 (isPresent 체크 추가)
+            var socialLoginOpt = socialLoginService.findBySocialId(request.getSocialId());
+            if (socialLoginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponse.error("소셜 로그인 정보를 찾을 수 없습니다."));
+            }
+            var socialLogin = socialLoginOpt.get();
+
+            // Access Token 생성 (BIF 역할)
+            String accessToken = jwtTokenProvider.generateAccessToken(
+                    request.getEmail(),
+                    JwtTokenProvider.UserRole.BIF,
+                    bif.getBifId(),
+                    bif.getNickname(),
+                    socialLogin.getProvider().name(),
+                    socialLogin.getProviderUniqueId()
+            );
+
+            // Refresh Token 생성 및 저장
+            String refreshToken = jwtTokenProvider.generateRefreshToken(request.getEmail());
+            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+
+            // 응답 데이터 구성
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put(BIF_KEY, response);
+            responseData.put(ACCESS_TOKEN_KEY, accessToken);
+            responseData.put(REFRESH_TOKEN_KEY, refreshToken);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(responseData, "BIF 회원가입 성공"));
+
+        } catch (Exception e) {
+            log.error("BIF 회원가입 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("BIF 회원가입 실패: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/register/guardian")
+    @Operation(summary = "소셜 로그인으로 보호자 회원가입", description = "소셜 로그인 정보와 연결 코드를 사용하여 보호자를 등록합니다. 닉네임은 자동 생성됩니다.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerGuardianBySocial(
+            @Valid @RequestBody SocialRegistrationRequest request) {
+
+        try {
+            var guardian = guardianService.registerBySocialId(
+                    request.getSocialId(),
+                    request.getEmail(),
+                    request.getConnectionCode()
+            );
+            GuardianResponse response = GuardianResponse.from(guardian);
+
+            // 소셜 로그인 정보 조회 (isPresent 체크 추가)
+            var socialLoginOpt = socialLoginService.findBySocialId(request.getSocialId());
+            if (socialLoginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponse.error("소셜 로그인 정보를 찾을 수 없습니다."));
+            }
+            var socialLogin = socialLoginOpt.get();
+
+            // Access Token 생성 (GUARDIAN 역할)
+            String accessToken = jwtTokenProvider.generateAccessToken(
+                    request.getEmail(),
+                    JwtTokenProvider.UserRole.GUARDIAN,
+                    guardian.getBif().getBifId(), // 연결된 BIF ID
+                    guardian.getNickname(),
+                    socialLogin.getProvider().name(),
+                    socialLogin.getProviderUniqueId()
+            );
+
+            // Refresh Token 생성 및 저장
+            String refreshToken = jwtTokenProvider.generateRefreshToken(request.getEmail());
+            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+
+            // 응답 데이터 구성
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put(GUARDIAN_KEY, response);
+            responseData.put(ACCESS_TOKEN_KEY, accessToken);
+            responseData.put(REFRESH_TOKEN_KEY, refreshToken);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(responseData, "보호자 회원가입 성공"));
+
+        } catch (Exception e) {
+            log.error("보호자 회원가입 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("보호자 회원가입 실패: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Access Token 갱신", description = "Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> refreshToken(
+            @RequestParam Long socialId,
+            @RequestParam String refreshToken) {
+
+        try {
+            // Refresh Token 유효성 검증
+            if (!socialLoginService.validateRefreshToken(socialId, refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("유효하지 않은 Refresh Token입니다."));
+            }
+
+            // 소셜 로그인 정보 조회 (isPresent 체크 추가)
+            var socialLoginOpt = socialLoginService.findBySocialId(socialId);
+            if (socialLoginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("사용자 정보를 찾을 수 없습니다."));
+            }
+            var socialLogin = socialLoginOpt.get();
+
+            // BIF/Guardian 정보 조회하여 새로운 Access Token 생성
+            var bif = bifService.findBySocialId(socialId);
+            if (bif.isPresent()) {
+                // BIF 회원
+                String newAccessToken = jwtTokenProvider.generateAccessToken(
+                        socialLogin.getEmail(),
+                        JwtTokenProvider.UserRole.BIF,
+                        bif.get().getBifId(),
+                        bif.get().getNickname(),
+                        socialLogin.getProvider().name(),
+                        socialLogin.getProviderUniqueId()
+                );
+
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put(ACCESS_TOKEN_KEY, newAccessToken);
+                responseData.put(REFRESH_TOKEN_KEY, refreshToken);
+
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.success(responseData, "Access Token 갱신 성공"));
+            } else {
+                // Guardian 회원
+                var guardian = guardianService.findBySocialId(socialId);
+                if (guardian.isPresent()) {
+                    String newAccessToken = jwtTokenProvider.generateAccessToken(
+                            socialLogin.getEmail(),
+                            JwtTokenProvider.UserRole.GUARDIAN,
+                            guardian.get().getBif().getBifId(),
+                            guardian.get().getNickname(),
+                            socialLogin.getProvider().name(),
+                            socialLogin.getProviderUniqueId()
+                    );
+
+                    Map<String, Object> responseData = new HashMap<>();
+                    responseData.put(ACCESS_TOKEN_KEY, newAccessToken);
+                    responseData.put(REFRESH_TOKEN_KEY, refreshToken);
+
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .body(ApiResponse.success(responseData, "Access Token 갱신 성공"));
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("사용자 정보를 찾을 수 없습니다."));
+
+        } catch (Exception e) {
+            log.error("Access Token 갱신 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Access Token 갱신 실패: " + e.getMessage()));
+        }
+    }
+}

@@ -34,7 +34,7 @@ spring:
         endpoint: ${AZURE_OPENAI_ENDPOINT}
         api-key: ${AZURE_OPENAI_API_KEY}
         deployment:
-          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
   
   # Spring Security 설정
   security:
@@ -80,6 +80,33 @@ spring:
       enabled: false
     livereload:
       enabled: false
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+    info:
+      title: "BIF API Documentation (PROD)"
+      description: "BIF (Business Intelligence Framework) REST API Documentation - Production Environment"
+      version: "1.0.0"
+      contact:
+        name: "BIF Production Team"
+        email: "prod@bif.com"
+        url: "https://bif.com"
+      license:
+        name: "MIT License"
+        url: "https://opensource.org/licenses/MIT"
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+    display-request-duration: false
+    filter: true
+  packages-to-scan: com.sage.bif
+  paths-to-match: /api/**
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 # 애플리케이션 커스텀 설정
 app:

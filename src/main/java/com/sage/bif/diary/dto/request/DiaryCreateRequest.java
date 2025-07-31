@@ -1,5 +1,10 @@
 package com.sage.bif.diary.dto.request;
 
+import java.time.LocalDateTime;
+
+import com.sage.bif.diary.model.Emotion;
+import com.sage.bif.user.entity.Bif;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -9,12 +14,15 @@ import lombok.Setter;
 @Setter
 public class DiaryCreateRequest {
     
-    @NotBlank(message = "제목은 필수입니다.")
-    private String title;
-    
+    @NotNull(message = "감정은 필수입니다.")
+    private Emotion emotion;
+
     @NotBlank(message = "내용은 필수입니다.")
     private String content;
     
-    @NotNull(message = "사용자 ID는 필수입니다.")
-    private Long userId;
-} 
+    @NotNull(message = "사용자는 필수입니다.")
+    private Bif user;
+    
+    @NotNull(message = "날짜는 필수입니다.")
+    private LocalDateTime date;
+}

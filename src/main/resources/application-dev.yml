@@ -2,16 +2,18 @@ spring:
   application:
     name: bif-dev
 
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#        dialect: org.hibernate.dialect.H2Dialect
-#        use_sql_comments: true
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        use_sql_comments: true
 
+  # H2 데이터베이스 설정 (개발용)
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
@@ -29,65 +31,81 @@ spring:
       settings:
         web-allow-others: true
 
-  # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
+    # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
   # datasource:
   #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
   #   username: root
   #   password: password
   #   driver-class-name: com.mysql.cj.jdbc.Driver
 
+
+  ai:
+    azure:
+      openai:
+        endpoint: https://${AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com
+        api-key: ${AZURE_OPENAI_API_KEY}
+        deployment:
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+
+  # Spring Security 설정
   security:
     user:
       name: admin
       password: admin123
 
+  # 서버 설정
+  server:
+    port: 8080
+    servlet:
+      context-path: /api
+
+  # 로깅 설정 (개발용 상세 로깅)
+  logging:
+    level:
+      root: INFO
+      com.sage.bif: DEBUG
+      org.springframework.web: DEBUG
+      org.hibernate.SQL: DEBUG
+      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+      org.springframework.security: DEBUG
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+      file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    # 파일 로깅 설정 (일별 롤링)
+    file:
+      name: logs/bif-dev.log
+    # 로그백 설정 (롤링 파일)
+    logback:
+      rollingpolicy:
+        max-file-size: 10MB
+        max-history: 30
+        total-size-cap: 1GB
+        file-name-pattern: logs/bif-dev-%d{yyyy-MM-dd}.%i.log
+
+  # 개발 도구
   devtools:
     restart:
       enabled: true
     livereload:
       enabled: true
 
-  # Spring AI Azure OpenAI 설정
-  ai:
-    azure:
-      openai:
-        api-key: ${AZURE_OPENAI_API_KEY}
-        endpoint: https://${AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com
-        deployment-name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
-
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-
-logging:
-  level:
-    root: INFO
-    com.sage.bif: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/bif-dev.log
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 30
-      total-size-cap: 1GB
-      file-name-pattern: logs/bif-dev-%d{yyyy-MM-dd}.%i.log
-
-
+# Swagger/OpenAPI 설정
 springdoc:
   api-docs:
-    enabled: true
+    path: /api-docs
+    info:
+      title: "BIF API Documentation (DEV)"
+      description: "BIF (Business Intelligence Framework) REST API Documentation - Development Environment"
+      version: "1.0.0"
+      contact:
+        name: "BIF Development Team"
+        email: "dev@bif.com"
+        url: "https://bif.com"
+      license:
+        name: "MIT License"
+        url: "https://opensource.org/licenses/MIT"
   swagger-ui:
-    enabled: true
     path: /swagger-ui.html
-    url: v3/api-docs
     operations-sorter: method
     tags-sorter: alpha
     doc-expansion: none
@@ -97,3 +115,10 @@ springdoc:
   paths-to-match: /**
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# 애플리케이션 커스텀 설정
+app:
+  name: "BIF Development"
+  version: "1.0.0"
+  environment: "development"
+  debug: true

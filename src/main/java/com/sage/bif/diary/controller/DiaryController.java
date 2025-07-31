@@ -1,12 +1,13 @@
 package com.sage.bif.diary.controller;
 
-import com.sage.bif.common.client.ai.AiServiceClient;
-import com.sage.bif.common.client.ai.AiSettings;
-import com.sage.bif.common.client.ai.dto.AiRequest;
-import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.diary.dto.request.DiaryCreateRequest;
+import com.sage.bif.diary.dto.request.MonthlySummaryRequest;
 import com.sage.bif.diary.dto.response.DiaryResponse;
+import com.sage.bif.diary.dto.response.MonthlySummaryResponse;
 import com.sage.bif.diary.service.DiaryService;
+import com.sage.bif.user.entity.Bif;
+import com.sage.bif.user.repository.BifRepository;
+import com.sage.bif.diary.model.Emotion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/diaries")
@@ -22,7 +24,14 @@ import jakarta.validation.Valid;
 public class DiaryController {
 
     private final DiaryService diaryService;
-    private final AiServiceClient aiServiceClient;
+    private final BifRepository bifRepository;
+
+    @GetMapping("/monthly-summary")
+    @Operation(summary="월간 요약 조회 (GET)", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
+    public ResponseEntity<MonthlySummaryResponse> getMonthlySummaryGet(@Valid @ModelAttribute MonthlySummaryRequest request) {
+        MonthlySummaryResponse response = diaryService.getMonthlySummary(request);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     @Operation(summary = "일기 생성", description = "새로운 일기를 생성하고 AI 피드백을 제공합니다.")
@@ -30,72 +39,32 @@ public class DiaryController {
         DiaryResponse response = diaryService.createDiary(request);
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/azure-key")
-    public String checkAzureKey() {
-        String apiKey = System.getenv("AZURE_OPENAI_API_KEY");
-        System.out.println("AZURE_OPENAI_API_KEY = " + apiKey);  // 임시 확인용
-        return apiKey != null ? "OK: " + apiKey : "환경변수 없음";
-    }
-    @GetMapping("/test")
-    @Operation(summary = "AI 응답 테스트", description = "기본 일기 피드백 AI 응답을 테스트합니다.")
-    public ResponseEntity<String> testAiResponse(){
-        try {
-            AiRequest request = new AiRequest("오늘은 너무 재밋는 하루였다~~");
-            AiResponse response = aiServiceClient.generate(request, AiSettings.DIARY_FEEDBACK);
-            return ResponseEntity.ok("AI 응답: " + response.getContent());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("AI 응답 오류: " + e.getMessage());
-        }
+
+    @PatchMapping("/{diaryId}")
+    @Operation(summary = "일기 내용 수정", description = "기존 일기의 내용을 수정합니다.")
+    public ResponseEntity<DiaryResponse> updateDiary(@PathVariable Long diaryId, @RequestBody String content) {
+        DiaryResponse response = diaryService.updateDiaryContent(diaryId, content);
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/test-ai")
-    @Operation(summary = "커스텀 AI 응답 테스트", description = "사용자 입력에 대한 AI 응답을 테스트합니다.")
-    public ResponseEntity<String> testCustomAiResponse(@RequestBody String userInput){
-        try {
-            AiRequest request = new AiRequest(userInput);
-            AiResponse response = aiServiceClient.generate(request, AiSettings.DIARY_FEEDBACK);
-            return ResponseEntity.ok("AI 응답: " + response.getContent());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("AI 응답 오류: " + e.getMessage());
-        }
-    }
+    // 테스트용 일기 생성 (기존 사용자 ID 사용)
+    @PostMapping("/test/create")
+    @Operation(summary = "테스트용 일기 생성", description = "기존 사용자 ID를 사용해서 일기를 작성합니다.")
+    public ResponseEntity<DiaryResponse> createTestDiary(@RequestParam String content, 
+                                                       @RequestParam Emotion emotion,
+                                                       @RequestParam Long userId) {
+        // 기존 사용자 조회
+        Bif user = bifRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
 
-    @GetMapping("/test-ai-settings")
-    @Operation(summary = "AI 설정 테스트", description = "다양한 AI 설정으로 응답을 테스트합니다.")
-    public ResponseEntity<String> testAiSettings(){
-        try {
-            AiRequest request = new AiRequest("오늘은 스트레스가 많았지만 새로운 것을 배웠다.");
-            
-            // 기본 설정으로 테스트
-            AiResponse defaultResponse = aiServiceClient.generate(request);
-            
-            // 일기 피드백 설정으로 테스트
-            AiResponse diaryResponse = aiServiceClient.generate(request, AiSettings.DIARY_FEEDBACK);
-            
-            // 할일 우선순위 설정으로 테스트
-            AiResponse todoResponse = aiServiceClient.generate(request, AiSettings.TODO_PRIORITY);
-            
-            StringBuilder result = new StringBuilder();
-            result.append("=== 기본 설정 응답 ===\n").append(defaultResponse.getContent()).append("\n\n");
-            result.append("=== 일기 피드백 응답 ===\n").append(diaryResponse.getContent()).append("\n\n");
-            result.append("=== 할일 우선순위 응답 ===\n").append(todoResponse.getContent());
-            
-            return ResponseEntity.ok(result.toString());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("AI 설정 테스트 오류: " + e.getMessage());
-        }
-    }
+        // 일기 생성 요청
+        DiaryCreateRequest request = new DiaryCreateRequest();
+        request.setContent(content);
+        request.setEmotion(emotion);
+        request.setUser(user);
+        request.setDate(LocalDateTime.now());
 
-    @GetMapping("/test-connection")
-    @Operation(summary = "AI 서비스 연결 테스트", description = "AI 서비스 연결 상태를 확인합니다.")
-    public ResponseEntity<String> testAiConnection(){
-        try {
-            // 간단한 테스트 요청
-            AiRequest request = new AiRequest("안녕하세요");
-            AiResponse response = aiServiceClient.generate(request);
-            return ResponseEntity.ok("AI 서비스 연결 성공! 응답: " + response.getContent());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("AI 서비스 연결 실패: " + e.getMessage());
-        }
+        DiaryResponse response = diaryService.createDiary(request);
+        return ResponseEntity.ok(response);
     }
 } 

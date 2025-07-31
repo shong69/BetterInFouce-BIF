@@ -1,25 +1,19 @@
 package com.sage.bif.common.exception;
 
-import com.sage.bif.diary.controller.DiaryController;
-import com.sage.bif.simulation.controller.SimulationController;
-import com.sage.bif.stats.controller.StatsController;
-import com.sage.bif.todo.controller.TodoController;
-import com.sage.bif.user.controller.UserController;
 import io.swagger.v3.oas.annotations.Hidden;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @Hidden
 @RestControllerAdvice
 public class GlobalExceptionHandler {

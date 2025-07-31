@@ -9,52 +9,45 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "social_login")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class User {
-    
+public class SocialLogin {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(unique = true, nullable = false)
+    @Column(name = "social_id")
+    private Long socialId;
+
+    @Column(name = "email", nullable = false, unique = true, length = 50)
     private String email;
-    
-    @Column(nullable = false)
-    private String password;
-    
-    @Column(nullable = false)
-    private String name;
-    
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
+
+    @Column(name = "provider", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserStatus status;
-    
+    private SocialProvider provider;
+
+    @Column(name = "provider_unique_id", nullable = false, unique = true, length = 255)
+    private String providerUniqueId;
+
+    @Column(name = "refresh_token", length = 500)
+    private String refreshToken;
+
+    @Column(name = "refresh_token_expires_at")
+    private LocalDateTime refreshTokenExpiresAt;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
-    public enum UserRole {
-        USER, ADMIN
+
+    public enum SocialProvider {
+        GOOGLE, KAKAO, NAVER
     }
-    
-    public enum UserStatus {
-        ACTIVE, INACTIVE, SUSPENDED
-    }
-} 
+}
