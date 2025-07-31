@@ -70,6 +70,10 @@ public class SecurityConfig {
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler(oAuth2AuthenticationFailureHandler)
+                        .authenticationEntryPoint(oAuth2AuthenticationFailureHandler)
+                )
                 .httpBasic(httpBasic -> {});
 
         return http.build();
