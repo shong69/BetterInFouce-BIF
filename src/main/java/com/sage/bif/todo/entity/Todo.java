@@ -3,7 +3,7 @@ package com.sage.bif.todo.entity;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
-import com.sage.bif.user.entity.User;
+import com.sage.bif.user.entity.Bif;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,7 +30,7 @@ public class Todo {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bif_id")
-    private User bifId;
+    private Bif bifId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String userInput;
@@ -57,13 +57,16 @@ public class Todo {
     private LocalTime dueTime;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE", nullable = false)
-    private Boolean notificationEnabled;
+    @Builder.Default
+    private Boolean notificationEnabled = true;
 
     @Column(columnDefinition = "INT DEFAULT 0", nullable = false)
-    private Integer notificationTime;
+    @Builder.Default
+    private Integer notificationTime = 0;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
-    private Boolean isCompleted;
+    @Builder.Default
+    private Boolean isCompleted = false;
 
     @Column(columnDefinition = "DATETIME")
     private LocalDateTime completedAt;
@@ -79,6 +82,7 @@ public class Todo {
     private List<SubTodo> subTodos = new ArrayList<>();
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
-    private Boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
 }

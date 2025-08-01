@@ -25,7 +25,7 @@ public class SubTodoServiceImpl implements SubTodoService {
 
         SubTodo subTodo = subTodoRepository.findById(subTodoId).orElseThrow(() -> new SubTodoNotFoundException(subTodoId));
 
-        if (!subTodo.getTodoId().getBifId().getId().equals(bifId)) {
+        if (!subTodo.getTodoId().getBifId().getBifId().equals(bifId)) {
             throw new UnauthorizedSubTodoAccessException(bifId, subTodoId);
         }
 
@@ -44,7 +44,7 @@ public class SubTodoServiceImpl implements SubTodoService {
 
         SubTodo subTodo = subTodoRepository.findById(subTodoId).orElseThrow(() -> new SubTodoNotFoundException(subTodoId));
 
-        if (!subTodo.getTodoId().getBifId().getId().equals(bifId)) {
+        if (!subTodo.getTodoId().getBifId().getBifId().equals(bifId)) {
             throw new UnauthorizedSubTodoAccessException(bifId, subTodoId);
         }
 

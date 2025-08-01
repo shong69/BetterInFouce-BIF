@@ -9,14 +9,14 @@ import com.sage.bif.todo.dto.response.TodoUpdatePageResponse;
 import com.sage.bif.todo.entity.SubTodo;
 import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.TodoTypes;
-import com.sage.bif.todo.repository.SubTodoRepository;
-import com.sage.bif.todo.repository.TodoRepository;
-import com.sage.bif.user.entity.User;
-import com.sage.bif.user.repository.UserRepository;
+import com.sage.bif.todo.exception.TodoCompletionException;
 import com.sage.bif.todo.exception.TodoNotFoundException;
 import com.sage.bif.todo.exception.UnauthorizedTodoAccessException;
-import com.sage.bif.todo.exception.TodoCompletionException;
 import com.sage.bif.todo.exception.UserNotFoundException;
+import com.sage.bif.todo.repository.SubTodoRepository;
+import com.sage.bif.todo.repository.TodoRepository;
+import com.sage.bif.user.entity.Bif;
+import com.sage.bif.user.repository.BifRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,21 +31,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TodoServiceImpl implements TodoService {
 
-    private final UserRepository userRepository;
+    private final BifRepository bifRepository;
     private final TodoRepository todoRepository;
     private final SubTodoRepository subTodoRepository;
 
-    private final SubTodoService subTodoService;
     private final RoutineCompletionService routineCompletionService;
 
     @Override
     @Transactional
     public TodoListResponse createTodoByAi(Long bifId, AiTodoCreateRequest request) {
 
-        User user = userRepository.findById(bifId).orElseThrow(() -> new UserNotFoundException(bifId));
+        Bif bif = bifRepository.findById(bifId).orElseThrow(() -> new UserNotFoundException(bifId));
+
+
 
         Todo newTodo = Todo.builder()
-                .bifId(user)
+                .bifId(bif)
                 .userInput(request.getUserInput())
                 .title("")
                 .type(TodoTypes.TASK)
@@ -104,7 +105,7 @@ public class TodoServiceImpl implements TodoService {
         List<SubTodo> existingSubTodos = todo.getSubTodos() != null ?
                 todo.getSubTodos().stream()
                         .filter(subTodo -> !subTodo.getIsDeleted())
-                        .collect(Collectors.toList()) :
+                        .toList() :
                 Collections.emptyList();
 
         if (requestSubTodos == null || requestSubTodos.isEmpty()) {
@@ -116,7 +117,7 @@ public class TodoServiceImpl implements TodoService {
                 .collect(Collectors.toMap(SubTodo::getSubTodoId, Function.identity()));
 
         Set<Long> requestSubTodoIds = requestSubTodos.stream()
-                .map(req -> req.getSubTodoId())
+                .map(SubTodoUpdateRequest::getSubTodoId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -214,7 +215,7 @@ public class TodoServiceImpl implements TodoService {
 
     private void validateUserPermission(Todo todo, Long bifId) {
 
-        if (!todo.getBifId().getId().equals(bifId)) {
+        if (!todo.getBifId().getBifId().equals(bifId)) {
             throw new UnauthorizedTodoAccessException(bifId, todo.getTodoId());
         }
 

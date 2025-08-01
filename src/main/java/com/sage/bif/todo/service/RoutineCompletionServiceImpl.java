@@ -26,7 +26,7 @@ public class RoutineCompletionServiceImpl implements RoutineCompletionService {
 
         Todo todo = todoRepository.findById(todoId).orElseThrow(() -> new TodoNotFoundException(todoId));
 
-        if (!todo.getBifId().getId().equals(bifId)) {
+        if (!todo.getBifId().getBifId().equals(bifId)) {
             throw new UnauthorizedTodoAccessException(bifId, todoId);
         }
 
@@ -48,7 +48,7 @@ public class RoutineCompletionServiceImpl implements RoutineCompletionService {
 
         Todo todo = todoRepository.findById(todoId).orElseThrow(() -> new TodoNotFoundException(todoId));
 
-        if (!todo.getBifId().getId().equals(bifId)) {
+        if (!todo.getBifId().getBifId().equals(bifId)) {
             throw new UnauthorizedTodoAccessException(bifId, todoId);
         }
 
