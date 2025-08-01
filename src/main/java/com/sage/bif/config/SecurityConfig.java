@@ -24,7 +24,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").permitAll() // 개발 중에는 모든 API 접근 허용
                 .anyRequest().permitAll()
             )
-            .httpBasic(AbstractHttpConfigurer::disable); // HTTP Basic 인증 비활성화
+            .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
+            .anonymous(AbstractHttpConfigurer::disable); // 익명 인증 비활성화 (개발용)
         
         return http.build();
     }

@@ -16,7 +16,17 @@ import java.util.Optional;
  */
 @Configuration
 @EnableJpaRepositories(basePackages = "com.sage.bif")
+@EnableJpaAuditing
 public class JpaConfig {
     
-
+    @Bean
+    public AuditorAware<String> auditorProvider() {
+        return () -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return Optional.of("system");
+            }
+            return Optional.of(authentication.getName());
+        };
+    }
 } 

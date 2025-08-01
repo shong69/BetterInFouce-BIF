@@ -17,7 +17,7 @@ spring:
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
-    password: 
+    password:
     driver-class-name: org.h2.Driver
     hikari:
       maximum-pool-size: 10
@@ -30,7 +30,7 @@ spring:
       path: /h2-console
       settings:
         web-allow-others: true
-        
+
     # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
   # datasource:
   #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
@@ -92,7 +92,7 @@ spring:
 # Swagger/OpenAPI 설정
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /swagger-ui.html
     info:
       title: "BIF API Documentation (DEV)"
       description: "BIF (Business Intelligence Framework) REST API Documentation - Development Environment"
@@ -112,7 +112,8 @@ springdoc:
     display-request-duration: true
     filter: true
   packages-to-scan: com.sage.bif
-  paths-to-match: /api/**
+#  paths-to-match: /api/**
+  paths-to-match: /**
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 

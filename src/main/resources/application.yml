@@ -15,19 +15,19 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
-  
+
   # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
   # datasource:
   #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
   #   username: root
   #   password: password
   #   driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   # H2 데이터베이스 설정 (개발용)
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
-    password: 
+    password:
     driver-class-name: org.h2.Driver
   h2:
     console:
@@ -35,7 +35,7 @@ spring:
       path: /h2-console
       settings:
         web-allow-others: true
-  
+
   # Azure Database for MySQL 설정
   # datasource:
   #   url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
@@ -48,8 +48,8 @@ spring:
   #     connection-timeout: 30000
   #     idle-timeout: 600000
   #     max-lifetime: 1800000
-  
-  # Azure SQL Database 설정 
+
+  # Azure SQL Database 설정
   # datasource:
   #   url: jdbc:sqlserver://${AZURE_SQL_SERVER_NAME}.database.windows.net:1433;database=${AZURE_SQL_DATABASE_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
   #   username: ${AZURE_SQL_USERNAME}
@@ -61,7 +61,7 @@ spring:
   #     connection-timeout: 30000
   #     idle-timeout: 600000
   #     max-lifetime: 1800000
-  
+
   # Spring AI 설정 (Azure OpenAI)
   ai:
     azure:
@@ -70,13 +70,13 @@ spring:
         api-key: ${AZURE_OPENAI_API_KEY:your-api-key}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
-  
+
   # Security 설정 (개발 중 비활성화)
   # security:
   #   user:
   #     name: admin
   #     password: admin123
-  
+
   # 개발 도구 설정
   devtools:
     restart:
@@ -120,7 +120,8 @@ springdoc:
     display-request-duration: true
     filter: true
   packages-to-scan: com.sage.bif
-  paths-to-match: /api/**
+#  paths-to-match: /api/**
+  paths-to-match: /**
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
