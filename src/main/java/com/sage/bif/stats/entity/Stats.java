@@ -3,12 +3,13 @@ package com.sage.bif.stats.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "emotion_analysis")
+@Table(name = "emotion_statistics")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,20 +20,20 @@ public class Stats {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "analysis_id")
+    @Column(name = "statistics_id")
     private Long id;
 
     @Column(name = "bif_id", nullable = false)
     private Long bifId;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "year_value", nullable = false)
     private Integer year;
 
     @Column(name = "month_value", nullable = false)
     private Integer month;
 
-    @Column(name = "emotion_analysis_text", columnDefinition = "TEXT", nullable = false)
-    private String emotionAnalysisText;
+    @Column(name = "emotion_statistics_text", columnDefinition = "TEXT", nullable = false)
+    private String emotionStatisticsText;
 
     @Column(name = "guardian_advice_text", columnDefinition = "TEXT", nullable = false)
     private String guardianAdviceText;
@@ -47,6 +48,7 @@ public class Stats {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 } 

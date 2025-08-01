@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "emotion_analysis_template")
+@Table(name = "emotion_statistics_template")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmotionAnalysisTemplate {
+public class EmotionStatisticsTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +31,6 @@ public class EmotionAnalysisTemplate {
     @Column(name = "great_range", nullable = false)
     private String greatRange;
 
-    @Column(name = "analysis_text", columnDefinition = "TEXT", nullable = false)
-    private String analysisText;
+    @Column(name = "statistics_text", columnDefinition = "TEXT", nullable = false)
+    private String statisticsText;
 } 

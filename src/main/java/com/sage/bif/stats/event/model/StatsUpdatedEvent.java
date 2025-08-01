@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class StatsUpdatedEvent extends BaseEvent {
     
-    private final Stats stats;
+    private final transient Stats stats;
     private final Long userId;
     private final String updateType;
     private final String updateReason;

@@ -4,15 +4,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sage.bif.stats.dto.response.GuardianStatsResponse;
 import com.sage.bif.stats.dto.response.StatsResponse;
-import com.sage.bif.stats.entity.EmotionAnalysisTemplate;
+import com.sage.bif.stats.entity.EmotionStatisticsTemplate;
 import com.sage.bif.stats.entity.EmotionType;
 import com.sage.bif.stats.entity.GuardianAdviceTemplate;
 import com.sage.bif.stats.entity.Stats;
-import com.sage.bif.stats.repository.EmotionAnalysisTemplateRepository;
+import com.sage.bif.stats.exception.StatsDataParseException;
+import com.sage.bif.stats.repository.EmotionStatisticsTemplateRepository;
 import com.sage.bif.stats.repository.GuardianAdviceTemplateRepository;
 import com.sage.bif.stats.repository.StatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +28,19 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class StatsServiceImpl implements StatsService {
+public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
     private final StatsRepository statsRepository;
-    private final EmotionAnalysisTemplateRepository templateRepository;
+    private final EmotionStatisticsTemplateRepository templateRepository;
     private final GuardianAdviceTemplateRepository guardianAdviceTemplateRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    private ApplicationContext applicationContext;
+    
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -41,8 +52,9 @@ public class StatsServiceImpl implements StatsService {
         final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
         if (stats.isEmpty()) {
-            generateMonthlyStats(bifId, year, month);
-            return getMonthlyStats(username);
+            // 트랜잭션 메서드를 직접 호출하지 않고 별도 메서드로 분리
+            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
+            return applicationContext.getBean(StatsServiceImpl.class).getMonthlyStats(username);
         }
 
         return buildStatsResponse(stats.get(), bifId, year, month);
@@ -78,7 +90,7 @@ public class StatsServiceImpl implements StatsService {
         final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
         if (stats.isEmpty()) {
-            generateMonthlyStats(bifId, year, month);
+            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
             return getMonthlyStatsByBifId(bifId);
         }
 
@@ -86,17 +98,18 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @Transactional
     public void generateMonthlyStats(final Long bifId, final Integer year, final Integer month) {
-        // 전월 데이터를 기반으로 감정 분석 텍스트와 보호자 조언 생성
+        // 전월 데이터를 기반으로 감정 통계 텍스트와 보호자 조언 생성
         final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
-        final String analysisText = generateAnalysisTextFromTemplate(emotionCounts);
+        final String statisticsText = generateStatisticsTextFromTemplate(emotionCounts);
         final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
 
         final Stats stats = Stats.builder()
                 .bifId(bifId)
                 .year(year)
                 .month(month)
-                .emotionAnalysisText(analysisText)
+                .emotionStatisticsText(statisticsText)
                 .guardianAdviceText(guardianAdvice)
                 .emotionCounts(null)  // 일기 작성 전까지는 NULL
                 .topKeywords(null)    // 일기 작성 전까지는 NULL
@@ -106,33 +119,33 @@ public class StatsServiceImpl implements StatsService {
     }
     
     @Override
-    public void generateMonthlyEmotionAnalysis(final Long bifId, final Integer year, final Integer month) {
+    public void generateMonthlyEmotionStatistics(final Long bifId, final Integer year, final Integer month) {
         // 기존 통계 데이터가 있는지 확인
         final Optional<Stats> existingStats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
         if (existingStats.isPresent()) {
-            // 기존 통계 데이터가 있으면 감정 분석 텍스트와 보호자 조언만 업데이트
+            // 기존 통계 데이터가 있으면 감정 통계 텍스트와 보호자 조언만 업데이트
             final Stats stats = existingStats.get();
             final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
-            final String analysisText = generateAnalysisTextFromTemplate(emotionCounts);
+            final String statisticsText = generateStatisticsTextFromTemplate(emotionCounts);
             final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
             
-            stats.setEmotionAnalysisText(analysisText);
+            stats.setEmotionStatisticsText(statisticsText);
             stats.setGuardianAdviceText(guardianAdvice);
             statsRepository.save(stats);
             
-            log.info("BIF ID {}의 {}년 {}월 감정 분석 텍스트와 보호자 조언 업데이트 완료", bifId, year, month);
+            log.info("BIF ID {}의 {}년 {}월 감정 통계 텍스트와 보호자 조언 업데이트 완료", bifId, year, month);
         } else {
             // 기존 통계 데이터가 없으면 전체 통계 생성
             log.warn("BIF ID {}의 {}년 {}월 통계 데이터가 없어 전체 통계를 생성합니다.", bifId, year, month);
-            generateMonthlyStats(bifId, year, month);
+            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
         }
     }
 
     private Map<EmotionType, Integer> calculateEmotionCounts(final Long bifId, final Integer year, final Integer month) {
         final Optional<com.sage.bif.stats.entity.Stats> statsOptional = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
-        final Map<EmotionType, Integer> counts = new HashMap<>();
+        final Map<EmotionType, Integer> counts = new EnumMap<>(EmotionType.class);
         for (EmotionType emotion : EmotionType.values()) {
             counts.put(emotion, 0);
         }
@@ -140,10 +153,14 @@ public class StatsServiceImpl implements StatsService {
         if (statsOptional.isPresent()) {
             final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
             try {
-                final Map<String, Integer> emotionCounts = objectMapper.readValue(stat.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-                for (Map.Entry<String, Integer> entry : emotionCounts.entrySet()) {
-                    final EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
-                    counts.put(emotionType, counts.get(emotionType) + entry.getValue());
+                if (stat.getEmotionCounts() != null) {
+                    final Map<String, Integer> emotionCounts = objectMapper.readValue(stat.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
+                    for (Map.Entry<String, Integer> entry : emotionCounts.entrySet()) {
+                        final EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
+                        counts.put(emotionType, counts.get(emotionType) + entry.getValue());
+                    }
+                } else {
+                    log.debug("No emotion counts data available for BIF ID {} in {}년 {}월", bifId, year, month);
                 }
             } catch (Exception e) {
                 log.error("Error parsing emotion counts from stats", e);
@@ -156,35 +173,30 @@ public class StatsServiceImpl implements StatsService {
     private List<Map<String, Object>> calculateTopKeywords(final Long bifId, final Integer year, final Integer month) {
         final Optional<com.sage.bif.stats.entity.Stats> statsOptional = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
-        final Map<String, Integer> keywordCounts = new HashMap<>();
-        
         if (statsOptional.isPresent()) {
             final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
             try {
-                final List<Map<String, Object>> keywords = objectMapper.readValue(stat.getTopKeywords(), new TypeReference<List<Map<String, Object>>>() {});
-                for (Map<String, Object> keyword : keywords) {
-                    final String keywordText = (String) keyword.get("keyword");
-                    final Integer count = (Integer) keyword.get("count");
-                    keywordCounts.put(keywordText, keywordCounts.getOrDefault(keywordText, 0) + count);
+                if (stat.getTopKeywords() != null) {
+                    final List<Map<String, Object>> keywords = objectMapper.readValue(stat.getTopKeywords(), new TypeReference<List<Map<String, Object>>>() {});
+                    log.debug("Retrieved {} keywords from stats for BIF ID {}: {}", keywords.size(), bifId, keywords);
+                    return keywords;
+                } else {
+                    log.debug("No top keywords data available for BIF ID {} in {}년 {}월", bifId, year, month);
+                    return new ArrayList<>();
                 }
             } catch (Exception e) {
-                log.error("Error parsing top keywords from stats", e);
+                log.error("Error parsing top keywords from stats for BIF ID {}: {}", bifId, e.getMessage());
+                return new ArrayList<>();
             }
         }
 
-        return keywordCounts.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(5)
-                .map(entry -> {
-                    final Map<String, Object> keyword = new HashMap<>();
-                    keyword.put("keyword", entry.getKey());
-                    keyword.put("count", entry.getValue());
-                    return keyword;
-                })
-                .collect(Collectors.toList());
+        log.debug("No stats found for BIF ID {} in {}년 {}월", bifId, year, month);
+        return new ArrayList<>();
     }
 
-    private String generateAnalysisTextFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
+
+
+    private String generateStatisticsTextFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
         final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
         if (total == 0) {
             return "이번 달에는 감정 데이터가 없습니다.";
@@ -205,26 +217,26 @@ public class StatsServiceImpl implements StatsService {
 
         final double dominantRatio = ratios.get(dominantEmotion);
         
-        // 템플릿 기반 분석 시도 (emotion_analysis_template 테이블 활용)
+        // 템플릿 기반 통계 시도 (emotion_statistics_template 테이블 활용)
         final String okayRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.OKAY, 0.0));
         final String goodRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GOOD, 0.0));
         final String angryRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.ANGRY, 0.0));
         final String downRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.DOWN, 0.0));
         final String greatRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GREAT, 0.0));
 
-        final Optional<EmotionAnalysisTemplate> template = templateRepository.findByEmotionRanges(okayRange, goodRange, angryRange, downRange, greatRange);
+        final Optional<EmotionStatisticsTemplate> template = templateRepository.findByEmotionRanges(okayRange, goodRange, angryRange, downRange, greatRange);
 
         if (template.isPresent()) {
-            log.debug("Found emotion analysis template for ranges: okay={}, good={}, angry={}, down={}, great={}", 
+                        log.debug("Found emotion statistics template for ranges: okay={}, good={}, angry={}, down={}, great={}",
                      okayRange, goodRange, angryRange, downRange, greatRange);
-            return template.get().getAnalysisText();
+            return template.get().getStatisticsText();
         }
 
-        log.warn("No emotion analysis template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback analysis.", 
+        log.warn("No emotion statistics template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback statistics.",
                 okayRange, goodRange, angryRange, downRange, greatRange);
 
-        // 템플릿이 없으면 통계 기반으로 분석 텍스트 생성
-        return generateStatisticsBasedAnalysisText(emotionCounts, ratios, dominantEmotion, dominantRatio);
+        // 템플릿이 없으면 통계 기반으로 통계 텍스트 생성
+        return generateStatisticsBasedStatisticsText(ratios, dominantEmotion, dominantRatio);
     }
 
     private String getRangeForPercentage(final double percentage) {
@@ -237,40 +249,39 @@ public class StatsServiceImpl implements StatsService {
         }
     }
 
-    private String generateStatisticsBasedAnalysisText(final Map<EmotionType, Integer> emotionCounts, 
-                                                      final Map<EmotionType, Double> ratios, 
-                                                      final EmotionType dominantEmotion, 
+        private String generateStatisticsBasedStatisticsText(final Map<EmotionType, Double> ratios,
+                                                      final EmotionType dominantEmotion,
                                                       final double dominantRatio) {
-        final StringBuilder analysis = new StringBuilder();
+        final StringBuilder statistics = new StringBuilder();
         
-        // 주요 감정 분석
-        analysis.append(String.format("이번 달에는 %s한 감정이 %.1f%%로 가장 많이 나타났습니다. ", 
+        // 주요 감정 통계
+        statistics.append(String.format("이번 달에는 %s한 감정이 %.1f%%로 가장 많이 나타났습니다. ",
                 getEmotionKoreanName(dominantEmotion), dominantRatio));
         
         // 긍정적 감정 비율 계산
-        final double positiveEmotionRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) + 
+        final double positiveEmotionRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) +
                                           ratios.getOrDefault(EmotionType.GREAT, 0.0);
         
         // 부정적 감정 비율 계산
-        final double negativeEmotionRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) + 
+        final double negativeEmotionRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) +
                                           ratios.getOrDefault(EmotionType.DOWN, 0.0);
         
         if (positiveEmotionRatio > 50.0) {
-            analysis.append("전반적으로 긍정적인 감정을 많이 느끼셨네요!");
+            statistics.append("전반적으로 긍정적인 감정을 많이 느끼셨네요!");
         } else if (negativeEmotionRatio > 30.0) {
-            analysis.append("부정적인 감정이 다소 높게 나타났습니다. ");
+            statistics.append("부정적인 감정이 다소 높게 나타났습니다. ");
             if (ratios.getOrDefault(EmotionType.DOWN, 0.0) > 20.0) {
-                analysis.append("우울한 감정이 많았던 것 같아요. ");
+                statistics.append("우울한 감정이 많았던 것 같아요. ");
             }
             if (ratios.getOrDefault(EmotionType.ANGRY, 0.0) > 20.0) {
-                analysis.append("화난 감정도 자주 느끼셨네요. ");
+                statistics.append("화난 감정도 자주 느끼셨네요. ");
             }
-            analysis.append("힘든 일이 있었나요?");
+            statistics.append("힘든 일이 있었나요?");
         } else {
-            analysis.append("감정이 비교적 안정적으로 유지되었습니다.");
+            statistics.append("감정이 비교적 안정적으로 유지되었습니다.");
         }
         
-        return analysis.toString();
+        return statistics.toString();
     }
 
     private String getEmotionKoreanName(final EmotionType emotionType) {
@@ -295,11 +306,11 @@ public class StatsServiceImpl implements StatsService {
 
         try {
             // 현재 달과 지난달 감정 데이터 파싱
-            final Map<String, Integer> currentCounts = currentStats.isPresent() ?
+            final Map<String, Integer> currentCounts = currentStats.isPresent() && currentStats.get().getEmotionCounts() != null ?
                     objectMapper.readValue(currentStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {}) :
                     new HashMap<>();
             
-            final Map<String, Integer> lastCounts = lastStats.isPresent() ?
+            final Map<String, Integer> lastCounts = lastStats.isPresent() && lastStats.get().getEmotionCounts() != null ?
                     objectMapper.readValue(lastStats.get().getEmotionCounts(), new TypeReference<Map<String, Integer>>() {}) :
                     new HashMap<>();
 
@@ -358,7 +369,7 @@ public class StatsServiceImpl implements StatsService {
         }
         
         // username 해시를 이용한 더미 ID 생성 (일관성 보장)
-        final Long dummyId = Math.abs((long) username.hashCode()) % 1000 + 1;
+        final Long dummyId = (long) (username.hashCode() & 0x7fffffff) % 1000 + 1;
         log.debug("Generated dummy BIF ID {} for username: {}", dummyId, username);
         return dummyId;
     }
@@ -371,7 +382,7 @@ public class StatsServiceImpl implements StatsService {
         }
         
         // Guardian은 BIF ID와 다른 범위의 ID 사용 (2000~2999)
-        final Long dummyId = Math.abs((long) username.hashCode()) % 1000 + 2000;
+        final Long dummyId = (long) (username.hashCode() & 0x7fffffff) % 1000 + 2000;
         log.debug("Generated dummy Guardian ID {} for username: {}", dummyId, username);
         return dummyId;
     }
@@ -428,8 +439,10 @@ public class StatsServiceImpl implements StatsService {
                         .count((Integer) keyword.get("count"))
                         .rank(topKeywordsData.indexOf(keyword) + 1)
                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
+    
+
 
     
 
@@ -463,9 +476,8 @@ public class StatsServiceImpl implements StatsService {
      */
     private StatsResponse buildStatsResponse(final Stats statsData, final Long bifId, final Integer year, final Integer month) {
         try {
-            // 감정 통계와 키워드가 NULL인 경우 처리
+            // 감정 통계가 NULL인 경우 처리
             List<StatsResponse.EmotionRatio> emotionRatio = new ArrayList<>();
-            List<StatsResponse.KeywordData> topKeywords = new ArrayList<>();
             
             if (statsData.getEmotionCounts() != null) {
                 final Map<String, Integer> emotionCounts = objectMapper.readValue(statsData.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
@@ -474,25 +486,25 @@ public class StatsServiceImpl implements StatsService {
                                 .emotion(EmotionType.valueOf(entry.getKey().toUpperCase()))
                                 .value(entry.getValue())
                                 .build())
-                        .collect(Collectors.toList());
+                        .toList();
             }
-            
-            // calculateTopKeywords 메소드를 사용하여 키워드 데이터 처리
-            final List<Map<String, Object>> topKeywordsData = calculateTopKeywords(bifId, year, month);
-            topKeywords = createKeywordDataList(topKeywordsData);
 
             final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, year, month);
 
+            // calculateTopKeywords 메소드를 사용하여 키워드 데이터 처리
+            final List<Map<String, Object>> topKeywordsData = calculateTopKeywords(bifId, year, month);
+            final List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(topKeywordsData);
+
             return StatsResponse.builder()
-                    .analysisText(statsData.getEmotionAnalysisText())
+                    .statisticsText(statsData.getEmotionStatisticsText())
                     .emotionRatio(emotionRatio)
                     .topKeywords(topKeywords)
                     .monthlyChange(monthlyChange)
                     .build();
 
         } catch (Exception e) {
-            log.error("Error parsing emotion analysis data for bifId: {}, year: {}, month: {}", bifId, year, month, e);
-            throw new RuntimeException("Failed to parse emotion analysis data", e);
+            log.error("Error parsing emotion statistics data for bifId: {}, year: {}, month: {}", bifId, year, month, e);
+            throw new StatsDataParseException("Failed to parse emotion statistics data", e);
         }
     }
     

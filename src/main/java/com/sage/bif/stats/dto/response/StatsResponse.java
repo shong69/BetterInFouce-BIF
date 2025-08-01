@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class StatsResponse {
 
-    private String analysisText;
+    private String statisticsText;
     
     private List<EmotionRatio> emotionRatio;
     
@@ -52,4 +52,5 @@ public class StatsResponse {
         private Integer count;
         private Integer rank;
     }
+
 } 
