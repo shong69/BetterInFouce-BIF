@@ -8,8 +8,9 @@ spring:
   # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
@@ -24,7 +25,7 @@ spring:
 
   # H2 데이터베이스 설정 (개발용)
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:file:./data/testdb
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -64,9 +65,9 @@ spring:
     azure:
       openai:
         endpoint: https://${AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com
-        api-key: ${AZURE_OPENAI_API_KEY:mock-api-key}
+        api-key: ${AZURE_OPENAI_API_KEY}
         deployment:
-          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
 
   # Security 설정
   security:

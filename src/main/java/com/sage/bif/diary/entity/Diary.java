@@ -7,16 +7,18 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import com.sage.bif.diary.model.Emotion;
+import org.hibernate.annotations.Where;
 
 @Entity
-@Table(name = "Emotion_Diary", indexes = {
-        @Index(name="idx_bifid_createdAt",columnList = "bif_id, created_at")
-})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "Emotion_Diary", indexes = {
+        @Index(name="idx_bifid_createdAt",columnList = "bif_id, created_at")
+})
+@Where(clause = "is_deleted = false")
 public class Diary {
     
     @Id
@@ -41,7 +43,7 @@ public class Diary {
     private LocalDateTime updatedAt;
 
     @Column(name="is_deleted", nullable=false)
-    private boolean isDeleted;
+    private boolean isDeleted=false;
 
     @PrePersist
     protected void onCreate() {

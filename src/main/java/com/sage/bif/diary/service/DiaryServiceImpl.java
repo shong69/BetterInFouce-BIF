@@ -11,16 +11,23 @@ import com.sage.bif.diary.dto.request.MonthlySummaryRequest;
 import com.sage.bif.diary.dto.response.DiaryResponse;
 import com.sage.bif.diary.dto.response.MonthlySummaryResponse;
 import com.sage.bif.diary.entity.Diary;
+import com.sage.bif.diary.exception.DiaryNotFoundException;
+import com.sage.bif.diary.exception.DiaryAlreadyExistsException;
 import com.sage.bif.diary.model.Emotion;
 import com.sage.bif.diary.repository.DiaryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.sage.bif.common.exception.ErrorCode.DIARY_NOT_FOUND;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DiaryServiceImpl implements DiaryService {
@@ -67,9 +74,22 @@ public class DiaryServiceImpl implements DiaryService {
                 .build();
     }
 
+//    @Override
+//    public DiaryResponse getDiary(Long diaryId) {
+//        DiaryResponse response = diaryRepository.findByIdWithUser()
+//    }
+
     @Override
     public DiaryResponse createDiary(DiaryCreateRequest request) {
-        //중복 여부 검사 로직
+        // 중복 검사 로직
+        boolean exists = diaryRepository.existsByUserIdAndDate(
+            request.getUser().getBifId(), request.getDate()
+            );
+        
+        if (exists) {
+            throw new DiaryAlreadyExistsException(request.getDate().toLocalDate());
+        }
+
         Diary diary = Diary.builder()
             .content(request.getContent())
             .user(request.getUser())
@@ -77,12 +97,11 @@ public class DiaryServiceImpl implements DiaryService {
             .createdAt(request.getDate())
             .isDeleted(false)
             .build();
-        //DIARY_ALREADY_EXISTS 에러
-
+        
         Diary savedDiary = diaryRepository.save(diary);
 
         String feedback = generateAiFeedback(request.getContent());
-        //DIARY_AI_FEEDBACK_FAILED 일기 피드백 생성 실패 에러
+        
         return DiaryResponse.builder()
             .id(savedDiary.getId())
             .content(savedDiary.getContent())
@@ -95,28 +114,30 @@ public class DiaryServiceImpl implements DiaryService {
     }
 
     @Override
+    @Transactional
     public DiaryResponse updateDiaryContent(Long diaryId, String content) {
-        Diary diary = diaryRepository.findById(diaryId)
-            .orElseThrow(() -> new BaseException(ErrorCode.DIARY_NOT_FOUND, "일기를 찾을 수 없습니다."));
+        Diary diary = diaryRepository.findByIdWithUser(diaryId)
+            .orElseThrow(() -> new DiaryNotFoundException(DIARY_NOT_FOUND, "일기를 찾을 수 없습니다."));
 
         diary.setContent(content);
-
-        Diary updatedDiary = diaryRepository.save(diary);
         
         return DiaryResponse.builder()
-            .id(updatedDiary.getId())
-            .content(updatedDiary.getContent())
-            .userId(updatedDiary.getUser().getBifId())
-            .emotion(updatedDiary.getEmotion())
+            .id(diary.getId())
+            .content(diary.getContent())
+            .userId(diary.getUser().getBifId())
+            .emotion(diary.getEmotion())
             .aiFeedback(null)
-            .createdAt(updatedDiary.getCreatedAt())
-            .updatedAt(updatedDiary.getUpdatedAt())
+            .createdAt(diary.getCreatedAt())
+            .updatedAt(diary.getUpdatedAt())
             .build();
     }
 
     @Override
+    @Transactional
     public void deleteDiary(Long diaryId) {
-
+        Diary diary = diaryRepository.findById(diaryId)
+                .orElseThrow(() -> new DiaryNotFoundException(DIARY_NOT_FOUND,"존재하지 않거나 이미 삭제된 일기입니다."));
+        diary.setDeleted(true);
     }
 
     private String generateAiFeedback(String content) {

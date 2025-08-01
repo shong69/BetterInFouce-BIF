@@ -29,7 +29,7 @@ public class AzureOpenAiClient implements AiServiceClient {
     @Value("${spring.ai.azure.openai.endpoint}")
     private String endpoint;
     
-    @Value("${spring.ai.azure.openai.deployment-name}")
+    @Value("${AZURE_OPENAI_DEPLOYMENT_NAME}")
     private String deploymentName;
     
     private final RestTemplate restTemplate;

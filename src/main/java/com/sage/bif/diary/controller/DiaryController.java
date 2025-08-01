@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 public class DiaryController {
 
     private final DiaryService diaryService;
-    private final BifRepository bifRepository;
 
     @GetMapping("/monthly-summary")
     @Operation(summary="월간 요약 조회 (GET)", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
@@ -32,6 +31,13 @@ public class DiaryController {
         MonthlySummaryResponse response = diaryService.getMonthlySummary(request);
         return ResponseEntity.ok(response);
     }
+
+//    @GetMapping("/{diaryId}")
+//    @Operation(summary = "일기 조회", description = "지정한 일기를 조회합니다.")
+//    public ResponseEntity<DiaryResponse> getDiary(@PathVariable Long diaryId) {
+//        DiaryResponse response = diaryService.getDiary(diaryId);
+//        return ResponseEntity.ok(response);
+//    }
 
     @PostMapping
     @Operation(summary = "일기 생성", description = "새로운 일기를 생성하고 AI 피드백을 제공합니다.")
@@ -47,24 +53,9 @@ public class DiaryController {
         return ResponseEntity.ok(response);
     }
 
-    // 테스트용 일기 생성 (기존 사용자 ID 사용)
-    @PostMapping("/test/create")
-    @Operation(summary = "테스트용 일기 생성", description = "기존 사용자 ID를 사용해서 일기를 작성합니다.")
-    public ResponseEntity<DiaryResponse> createTestDiary(@RequestParam String content, 
-                                                       @RequestParam Emotion emotion,
-                                                       @RequestParam Long userId) {
-        // 기존 사용자 조회
-        Bif user = bifRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
-
-        // 일기 생성 요청
-        DiaryCreateRequest request = new DiaryCreateRequest();
-        request.setContent(content);
-        request.setEmotion(emotion);
-        request.setUser(user);
-        request.setDate(LocalDateTime.now());
-
-        DiaryResponse response = diaryService.createDiary(request);
-        return ResponseEntity.ok(response);
+    @DeleteMapping("/{diaryId}")
+    @Operation(summary="일기 삭제", description = "지정한 일기를 삭제합니다.")
+    public void deleteDiary(@PathVariable Long diaryId) {
+        diaryService.deleteDiary(diaryId);
     }
 } 

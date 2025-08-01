@@ -8,10 +8,17 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Long> {
     
     @Query("SELECT d FROM Diary d WHERE d.user.bifId = :userId AND d.createdAt BETWEEN :startDate AND :endDate AND d.isDeleted = false ORDER BY d.createdAt DESC")
     List<Diary> findByUserIdAndDateBetween(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT COUNT(d) > 0 FROM Diary d WHERE d.user.bifId = :userId AND DATE(d.createdAt) = DATE(:date) AND d.isDeleted = false")
+    boolean existsByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDateTime date);
+    
+    @Query("SELECT d FROM Diary d JOIN FETCH d.user WHERE d.id = :diaryId AND d.isDeleted = false")
+    Optional<Diary> findByIdWithUser(@Param("diaryId") Long diaryId);
 } 
