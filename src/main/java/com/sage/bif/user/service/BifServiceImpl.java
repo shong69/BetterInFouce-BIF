@@ -4,6 +4,7 @@ import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.event.model.BifRegisteredEvent;
+import com.sage.bif.user.event.model.BifRegistrationRequestedEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class BifServiceImpl implements BifService {
 
     private final BifRepository bifRepository;
@@ -42,10 +42,13 @@ public class BifServiceImpl implements BifService {
                 .connectionCode(connectionCode)
                 .build();
 
+        BifRegistrationRequestedEvent requestedEvent = new BifRegistrationRequestedEvent(bif);
+        eventPublisher.publishEvent(requestedEvent);
+
         Bif savedBif = bifRepository.save(bif);
 
-        BifRegisteredEvent event = new BifRegisteredEvent(savedBif);
-        eventPublisher.publishEvent(event);
+        BifRegisteredEvent registeredEvent = new BifRegisteredEvent(savedBif);
+        eventPublisher.publishEvent(registeredEvent);
 
         return savedBif;
     }
