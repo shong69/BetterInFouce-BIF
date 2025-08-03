@@ -2,8 +2,6 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.4'
 	id 'io.spring.dependency-management' version '1.1.4'
-	id 'eclipse'
-	id 'idea'
 }
 
 group = 'com.sage.bif'
@@ -12,41 +10,6 @@ version = '0.1.0-SNAPSHOT'
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-// IDE 설정
-eclipse {
-	classpath {
-		downloadSources = true
-		downloadJavadoc = true
-	}
-}
-
-idea {
-	module {
-		downloadSources = true
-		downloadJavadoc = true
-	}
-}
-
-// 소스셋 설정
-sourceSets {
-	main {
-		java {
-			srcDirs = ['src/main/java']
-		}
-		resources {
-			srcDirs = ['src/main/resources']
-		}
-	}
-	test {
-		java {
-			srcDirs = ['src/test/java']
-		}
-		resources {
-			srcDirs = ['src/test/resources']
-		}
 	}
 }
 
