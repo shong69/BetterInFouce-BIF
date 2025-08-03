@@ -5,22 +5,13 @@ import com.sage.bif.common.exception.ErrorCode;
 
 public class UnauthorizedSubTodoAccessException extends BaseException {
 
-    public UnauthorizedSubTodoAccessException(Long bifId, Long subTodoId) {
-
-        super(ErrorCode.SUBTODO_ACCESS_DENIED, "User " + bifId + " does not have permission to access SubTodo " + subTodoId);
-
+    public UnauthorizedSubTodoAccessException(Long subTodoId) {
+        super(ErrorCode.SUBTODO_ACCESS_DENIED,
+                String.format("세부 할일 %d에 접근할 권한이 없습니다.", subTodoId));
     }
 
     public UnauthorizedSubTodoAccessException() {
-
         super(ErrorCode.SUBTODO_ACCESS_DENIED);
-
-    }
-
-    public UnauthorizedSubTodoAccessException(ErrorCode errorCode, String message) {
-
-        super(errorCode, message);
-
     }
 
 }
