@@ -2,10 +2,11 @@ package com.sage.bif.todo.service;
 
 import com.sage.bif.todo.entity.RoutineCompletion;
 import com.sage.bif.todo.entity.Todo;
-import com.sage.bif.todo.repository.RoutineCompletionRepository;
-import com.sage.bif.todo.repository.TodoRepository;
+import com.sage.bif.todo.entity.enums.TodoTypes;
 import com.sage.bif.todo.exception.TodoNotFoundException;
 import com.sage.bif.todo.exception.UnauthorizedTodoAccessException;
+import com.sage.bif.todo.repository.RoutineCompletionRepository;
+import com.sage.bif.todo.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,38 +23,52 @@ public class RoutineCompletionServiceImpl implements RoutineCompletionService {
 
     @Override
     @Transactional
-    public void completeRoutine(Long bifId, Long todoId, LocalDate completionDate) {
+    public boolean completeRoutine(Long bifId, Long todoId, LocalDate completionDate) {
+        Todo todo = validateRoutineAccess(bifId, todoId);
 
-        Todo todo = todoRepository.findById(todoId).orElseThrow(() -> new TodoNotFoundException(todoId));
+        Optional<RoutineCompletion> existing = routineCompletionRepository
+                .findByTodo_TodoIdAndCompletionDate(todoId, completionDate);
 
-        if (!todo.getBifId().getBifId().equals(bifId)) {
-            throw new UnauthorizedTodoAccessException(bifId, todoId);
+        if (existing.isPresent()) {
+            return false;
         }
 
-        Optional<RoutineCompletion> existing = routineCompletionRepository.findByTodoIdAndCompletionDate(todo, completionDate);
+        RoutineCompletion completion = RoutineCompletion.builder()
+                .todo(todo)
+                .completionDate(completionDate)
+                .build();
 
-        if (existing.isEmpty()) {
-            RoutineCompletion completion = RoutineCompletion.builder()
-                    .todoId(todo)
-                    .completionDate(completionDate)
-                    .build();
-            routineCompletionRepository.save(completion);
-        }
+        routineCompletionRepository.save(completion);
 
+        return true;
     }
 
     @Override
     @Transactional
-    public void uncompleteRoutine(Long bifId, Long todoId, LocalDate completionDate) {
+    public boolean uncompleteRoutine(Long bifId, Long todoId, LocalDate completionDate) {
+        validateRoutineAccess(bifId, todoId);
 
-        Todo todo = todoRepository.findById(todoId).orElseThrow(() -> new TodoNotFoundException(todoId));
+        int deletedCount = routineCompletionRepository.deleteByTodo_TodoIdAndCompletionDate(todoId, completionDate);
 
-        if (!todo.getBifId().getBifId().equals(bifId)) {
-            throw new UnauthorizedTodoAccessException(bifId, todoId);
-        }
-
-        routineCompletionRepository.deleteByTodoIdAndCompletionDate(todo, completionDate);
-
+        return deletedCount > 0;
     }
 
+    private Todo validateRoutineAccess(Long bifId, Long todoId) {
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(() -> new TodoNotFoundException(todoId));
+
+        if (!todo.getBifUser().getBifId().equals(bifId)) {
+            throw new UnauthorizedTodoAccessException(todoId);
+        }
+
+        if (Boolean.TRUE.equals(todo.getIsDeleted())) {
+            throw new TodoNotFoundException(todoId);
+        }
+
+        if (todo.getType() != TodoTypes.ROUTINE) {
+            throw new IllegalArgumentException("루틴 타입의 할일만 루틴 완료 처리가 가능합니다.");
+        }
+
+        return todo;
+    }
 }
