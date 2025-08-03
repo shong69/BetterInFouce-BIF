@@ -5,6 +5,8 @@ import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.event.model.GuardianRegisteredEvent;
+import com.sage.bif.user.event.model.GuardianRegistrationRequestedEvent;
+import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.GuardianRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +18,11 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class GuardianServiceImpl implements GuardianService {
 
     private final GuardianRepository guardianRepository;
     private final SocialLoginRepository socialLoginRepository;
-    private final BifService bifService;
+    private final BifRepository bifRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -30,13 +31,13 @@ public class GuardianServiceImpl implements GuardianService {
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new RuntimeException("Social login not found"));
 
-        Bif bif = bifService.findByConnectionCode(connectionCode)
-                .orElseThrow(() -> new RuntimeException("Invalid connection code"));
-
         Optional<Guardian> existingGuardian = guardianRepository.findBySocialLogin_SocialId(socialId);
         if (existingGuardian.isPresent()) {
             return existingGuardian.get();
         }
+
+        Bif bif = bifRepository.findByConnectionCode(connectionCode)
+                .orElseThrow(() -> new RuntimeException("Invalid connection code"));
 
         String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
 
@@ -46,10 +47,14 @@ public class GuardianServiceImpl implements GuardianService {
                 .nickname(nickname)
                 .build();
 
+        GuardianRegistrationRequestedEvent requestedEvent = new GuardianRegistrationRequestedEvent(guardian);
+        eventPublisher.publishEvent(requestedEvent);
+
         Guardian savedGuardian = guardianRepository.save(guardian);
 
-        GuardianRegisteredEvent event = new GuardianRegisteredEvent(savedGuardian);
-        eventPublisher.publishEvent(event);
+        GuardianRegisteredEvent registeredEvent = new GuardianRegisteredEvent(savedGuardian);
+        eventPublisher.publishEvent(registeredEvent);
+
 
         return savedGuardian;
     }

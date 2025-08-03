@@ -32,8 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String provider = jwtTokenProvider.getProviderFromToken(jwt);
             String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(jwt);
             JwtTokenProvider.UserRole role = JwtTokenProvider.UserRole.valueOf(jwtTokenProvider.getRoleFromToken(jwt));
+            Long socialId = jwtTokenProvider.getSocialIdFromToken(jwt);
 
-            CustomUserDetails userDetails = new CustomUserDetails(bifId, nickname, provider, providerUniqueId, role);
+            CustomUserDetails userDetails = new CustomUserDetails(jwt, bifId, nickname, provider, providerUniqueId, role, socialId);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());

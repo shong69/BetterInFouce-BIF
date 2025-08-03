@@ -28,7 +28,7 @@ public final class JwtTokenProvider {
     }
 
     public String generateAccessToken(UserRole role, Long bifId, String nickname,
-                                      String provider, String providerUniqueId) {
+                                      String provider, String providerUniqueId, Long socialId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
@@ -38,6 +38,7 @@ public final class JwtTokenProvider {
                 .claim("bifId", bifId)
                 .claim("nickname", nickname)
                 .claim("provider", provider)
+                .claim("socialId", socialId)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
@@ -74,6 +75,10 @@ public final class JwtTokenProvider {
 
     public String getProviderFromToken(String token) {
         return getClaimsFromToken(token).get("provider", String.class);
+    }
+
+    public Long getSocialIdFromToken(String token) {
+        return getClaimsFromToken(token).get("socialId", Long.class);
     }
 
     private Claims getClaimsFromToken(String token) {

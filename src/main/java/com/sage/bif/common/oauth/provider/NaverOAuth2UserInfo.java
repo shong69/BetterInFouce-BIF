@@ -5,6 +5,7 @@ import com.sage.bif.common.oauth.OAuth2UserInfo;
 import java.util.Map;
 
 public record NaverOAuth2UserInfo(Map<String, Object> attributes) implements OAuth2UserInfo {
+
     @Override
     public String getEmail() {
         @SuppressWarnings("unchecked")

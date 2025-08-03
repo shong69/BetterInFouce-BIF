@@ -20,7 +20,6 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // OAuth2 인증 실패 처리
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
@@ -28,7 +27,6 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
                 "소셜 로그인 인증에 실패했습니다: " + exception.getMessage());
     }
 
-    // 403 Forbidden 처리
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
@@ -36,7 +34,6 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
                 "접근 권한이 없습니다.");
     }
 
-    // 401 Unauthorized 처리
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {

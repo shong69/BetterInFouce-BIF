@@ -10,6 +10,7 @@ import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.SocialLoginService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class SecurityConfig {
+
+    @Value("${jwt.secret:your-secret-key-here-make-it-long-enough-for-hs256}")
+    private String jwtSecret;
 
     @Bean
     public OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler(JwtTokenProvider jwtTokenProvider,
@@ -62,8 +66,6 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        //로그인 프론트 생성 뒤 연결
-//                    .loginPage("/login")
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oAuth2UserServiceImpl)
                         )
