@@ -5,13 +5,15 @@ import lombok.Getter;
 @Getter
 public enum RepeatFrequency {
 
-    DAILY("daily"),
-    WEEKLY("weekly");
+    DAILY("daily", "매일"),
+    WEEKLY("weekly", "매주");
 
     private final String value;
+    private final String displayName;
 
-    RepeatFrequency(String value) {
+    RepeatFrequency(String value, String displayName) {
         this.value = value;
+        this.displayName = displayName;
     }
 
 }

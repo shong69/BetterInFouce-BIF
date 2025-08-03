@@ -14,11 +14,11 @@ public interface TodoService {
 
     List<TodoListResponse> getTodoList(Long bifId, LocalDate date);
 
-    TodoUpdatePageResponse getTodoUpdatePageList(Long bifId, Long todoId);
+    TodoUpdatePageResponse getTodoDetail(Long bifId, Long todoId);
 
     TodoListResponse updateTodo(Long bifId, Long todoId, TodoUpdateRequest request);
 
-    void deleteTodo(Long bifId, Long todoId);
+    boolean deleteTodo(Long bifId, Long todoId);
 
     TodoListResponse completeTodo(Long bifId, Long todoId);
 

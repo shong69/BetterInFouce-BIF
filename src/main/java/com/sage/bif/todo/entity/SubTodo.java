@@ -20,9 +20,9 @@ public class SubTodo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long subTodoId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
-    private Todo todoId;
+    private Todo todo;
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String title;
@@ -31,7 +31,8 @@ public class SubTodo {
     private Integer sortOrder;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
-    private Boolean isCompleted;
+    @Builder.Default
+    private Boolean isCompleted = false;
 
     @Column(columnDefinition = "DATETIME")
     private LocalDateTime completedAt;
@@ -43,6 +44,7 @@ public class SubTodo {
     private LocalDateTime updatedAt;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
-    private Boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
 }

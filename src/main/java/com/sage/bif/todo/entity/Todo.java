@@ -5,6 +5,8 @@ import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
 import com.sage.bif.user.entity.Bif;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,23 +30,27 @@ public class Todo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long todoId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "bif_id")
-    private Bif bifId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bif_id", nullable = false)
+    private Bif bifUser;
 
     @Column(columnDefinition = "TEXT", nullable = false)
+    @Size(max = 1000, message = "사용자 입력은 1000자를 초과할 수 없습니다")
     private String userInput;
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
+    @NotBlank(message = "제목은 필수입니다")
+    @Size(min = 1, max = 255, message = "제목은 1-255자 사이여야 합니다")
     private String title;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
     private TodoTypes type;
 
     @Enumerated(EnumType.STRING)
     private RepeatFrequency repeatFrequency;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "todo_repeat_days", joinColumns = @JoinColumn(name = "todo_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "repeat_day")
@@ -77,7 +83,7 @@ public class Todo {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "todoId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "todo", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SubTodo> subTodos = new ArrayList<>();
 

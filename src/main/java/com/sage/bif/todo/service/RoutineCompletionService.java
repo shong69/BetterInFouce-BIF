@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public interface RoutineCompletionService {
 
-    void completeRoutine(Long bifId, Long todoId, LocalDate completionDate);
+    boolean completeRoutine(Long bifId, Long todoId, LocalDate completionDate);
 
-    void uncompleteRoutine(Long bifId, Long todoId, LocalDate completionDate);
+    boolean uncompleteRoutine(Long bifId, Long todoId, LocalDate completionDate);
 
 }

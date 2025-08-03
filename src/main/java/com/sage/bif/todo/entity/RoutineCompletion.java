@@ -21,9 +21,9 @@ public class RoutineCompletion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long routineCompletionId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
-    private Todo todoId;
+    private Todo todo;
 
     @Column(columnDefinition = "DATE", nullable = false)
     private LocalDate completionDate;
