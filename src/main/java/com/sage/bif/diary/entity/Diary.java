@@ -7,7 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import com.sage.bif.diary.model.Emotion;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -18,7 +18,7 @@ import org.hibernate.annotations.Where;
 @Table(name = "Emotion_Diary", indexes = {
         @Index(name="idx_bifid_createdAt",columnList = "bif_id, created_at")
 })
-@Where(clause = "is_deleted = false")
+@SQLRestriction("isDeleted = false")
 public class Diary {
     
     @Id
@@ -43,7 +43,11 @@ public class Diary {
     private LocalDateTime updatedAt;
 
     @Column(name="is_deleted", nullable=false)
+    @Builder.Default
     private boolean isDeleted=false;
+
+    @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private AiFeedback aiFeedback;
 
     @PrePersist
     protected void onCreate() {

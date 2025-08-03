@@ -18,9 +18,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class MonthlySummaryRequest {
     
-    @NotNull(message = "사용자 ID는 필수입니다.")
-    private Long userId;
-    
     @NotNull(message = "연도는 필수입니다.")
     @Min(value = 2020, message = "연도는 2020년 이상이어야 합니다.")
     @Max(value = 2030, message = "연도는 2030년 이하여야 합니다.")
@@ -34,7 +31,6 @@ public class MonthlySummaryRequest {
     public static MonthlySummaryRequest ofCurrentMonth(Long userId) {
         LocalDate now = LocalDate.now();
         return MonthlySummaryRequest.builder()
-            .userId(userId)
             .year(now.getYear())
             .month(now.getMonthValue())
             .build();

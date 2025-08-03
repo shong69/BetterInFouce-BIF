@@ -66,7 +66,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             if (bif.isPresent()) {
                 // BIF 회원
                 String accessToken = jwtTokenProvider.generateAccessToken(
-                        email,
                         JwtTokenProvider.UserRole.BIF,
                         bif.get().getBifId(),
                         bif.get().getNickname(),
@@ -91,7 +90,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 if (guardian.isPresent()) {
                     // Guardian 회원
                     String accessToken = jwtTokenProvider.generateAccessToken(
-                            email,
                             JwtTokenProvider.UserRole.GUARDIAN,
                             guardian.get().getBif().getBifId(),
                             guardian.get().getNickname(),

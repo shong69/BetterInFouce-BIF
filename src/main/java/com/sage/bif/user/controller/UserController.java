@@ -58,7 +58,6 @@ public class UserController {
 
             // Access Token 생성 (BIF 역할)
             String accessToken = jwtTokenProvider.generateAccessToken(
-                    request.getEmail(),
                     JwtTokenProvider.UserRole.BIF,
                     bif.getBifId(),
                     bif.getNickname(),
@@ -110,7 +109,6 @@ public class UserController {
 
             // Access Token 생성 (GUARDIAN 역할)
             String accessToken = jwtTokenProvider.generateAccessToken(
-                    request.getEmail(),
                     JwtTokenProvider.UserRole.GUARDIAN,
                     guardian.getBif().getBifId(), // 연결된 BIF ID
                     guardian.getNickname(),
@@ -165,7 +163,6 @@ public class UserController {
             if (bif.isPresent()) {
                 // BIF 회원
                 String newAccessToken = jwtTokenProvider.generateAccessToken(
-                        socialLogin.getEmail(),
                         JwtTokenProvider.UserRole.BIF,
                         bif.get().getBifId(),
                         bif.get().getNickname(),
@@ -184,7 +181,6 @@ public class UserController {
                 var guardian = guardianService.findBySocialId(socialId);
                 if (guardian.isPresent()) {
                     String newAccessToken = jwtTokenProvider.generateAccessToken(
-                            socialLogin.getEmail(),
                             JwtTokenProvider.UserRole.GUARDIAN,
                             guardian.get().getBif().getBifId(),
                             guardian.get().getNickname(),
