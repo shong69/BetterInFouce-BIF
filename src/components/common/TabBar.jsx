@@ -30,7 +30,18 @@ export default function TabBar() {
     <div className="fixed right-0 bottom-0 left-0 border-t border-gray-100 bg-white shadow-lg">
       <div className="flex justify-around">
         {tabs.map((tab) => {
-          const isActive = currentPath === tab.path;
+          const isActive = (() => {
+            switch (tab.path) {
+              case "/":
+                return currentPath === "/" || currentPath.startsWith("/todo");
+              case "/diaries":
+                return currentPath.startsWith("/diaries");
+              case "/simulations":
+                return currentPath.startsWith("/simulations");
+              default:
+                return currentPath === tab.path;
+            }
+          })();
           const IconComponent = tab.icon;
 
           return (
