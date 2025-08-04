@@ -1,11 +1,11 @@
 export default function ProgressBar({
-  variant = "step", // "step" | "percentage"
+  variant = "step",
   label = "진행도",
   progress = 0,
   currentStep = 0,
   totalSteps = 0,
   color = "bg-secondary",
-  size = "md", // "sm" | "md" | "lg"
+  size = "md",
 }) {
   const isPercentage = variant === "percentage";
   const calculatedProgress = isPercentage
