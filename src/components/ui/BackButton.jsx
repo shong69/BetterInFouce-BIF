@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 export default function BackButton({ title = "뒤로가기", onClick }) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  function handleClick() {
     if (onClick) {
       onClick();
     } else {
       navigate(-1);
     }
-  };
+  }
 
   return (
     <button
