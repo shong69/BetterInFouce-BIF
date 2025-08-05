@@ -11,8 +11,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Todo {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-} 
+}
