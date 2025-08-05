@@ -1,5 +1,8 @@
 package com.sage.bif.common.util;
 
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
+
 import java.util.Random;
 
 public class RandomGenerator {
@@ -40,7 +43,7 @@ public class RandomGenerator {
         } while (checker.isNicknameExists(nickname) && attempts < maxAttempts);
 
         if (attempts >= maxAttempts) {
-            throw new RuntimeException("고유한 닉네임을 생성할 수 없습니다.");
+            throw new BaseException(ErrorCode.AUTH_NICKNAME_DUPLICATE);
         }
 
         return nickname;
@@ -57,7 +60,7 @@ public class RandomGenerator {
         } while (checker.isConnectionCodeExists(connectionCode) && attempts < maxAttempts);
 
         if (attempts >= maxAttempts) {
-            throw new RuntimeException("고유한 연결 코드를 생성할 수 없습니다.");
+            throw new BaseException(ErrorCode.COMMON_INTERNAL_SERVER_ERROR);
         }
 
         return connectionCode;

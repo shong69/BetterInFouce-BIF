@@ -1,5 +1,7 @@
 package com.sage.bif.user.service;
 
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
@@ -29,7 +31,7 @@ public class GuardianServiceImpl implements GuardianService {
     @Transactional
     public Guardian registerBySocialId(Long socialId, String email, String connectionCode) {
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
-                .orElseThrow(() -> new RuntimeException("Social login not found"));
+                .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
         Optional<Guardian> existingGuardian = guardianRepository.findBySocialLogin_SocialId(socialId);
         if (existingGuardian.isPresent()) {
@@ -37,7 +39,7 @@ public class GuardianServiceImpl implements GuardianService {
         }
 
         Bif bif = bifRepository.findByConnectionCode(connectionCode)
-                .orElseThrow(() -> new RuntimeException("Invalid connection code"));
+                .orElseThrow(() -> new BaseException(ErrorCode.AUTH_INVALID_INVITATION_CODE));
 
         String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
 

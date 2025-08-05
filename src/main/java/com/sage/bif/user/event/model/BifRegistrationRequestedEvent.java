@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class BifRegistrationRequestedEvent extends BaseEvent {
 
-    private final Bif bif;
+    private final transient Bif bif;
 
     public BifRegistrationRequestedEvent(Bif bif) {
         super(bif);
