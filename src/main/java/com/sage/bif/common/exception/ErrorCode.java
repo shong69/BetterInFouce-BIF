@@ -66,7 +66,6 @@ public enum ErrorCode {
     AUTH_NOT_BIF_ACCOUNT(HttpStatus.FORBIDDEN, "AUTH_NOT_BIF_ACCOUNT", "BIF 계정만 접근할 수 있습니다."),
     AUTH_NOT_GUARDIAN_ACCOUNT(HttpStatus.FORBIDDEN, "AUTH_NOT_GUARDIAN_ACCOUNT", "보호자 계정만 접근할 수 있습니다."),
 
-
     PROFILE_BIF_NOT_CONNECTED(HttpStatus.NOT_FOUND, "PROFILE_BIF_NOT_CONNECTED", "연결된 BIF 계정이 없습니다."),
     PROFILE_STAT_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "PROFILE_STAT_DATA_NOT_FOUND", "해당 기간의 통계 데이터를 찾을 수 없습니다."),
     PROFILE_DATE_RANGE_INVALID(HttpStatus.BAD_REQUEST, "PROFILE_DATE_RANGE_INVALID", "날짜 범위가 올바르지 않습니다."),
