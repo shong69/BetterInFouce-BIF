@@ -154,10 +154,10 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
             try {
                 if (stat.getEmotionCounts() != null) {
-                    final Map<String, Integer> emotionCounts = objectMapper.readValue(stat.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
-                    for (Map.Entry<String, Integer> entry : emotionCounts.entrySet()) {
-                        final EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
-                        counts.put(emotionType, counts.get(emotionType) + entry.getValue());
+                final Map<String, Integer> emotionCounts = objectMapper.readValue(stat.getEmotionCounts(), new TypeReference<Map<String, Integer>>() {});
+                for (Map.Entry<String, Integer> entry : emotionCounts.entrySet()) {
+                    final EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
+                    counts.put(emotionType, counts.get(emotionType) + entry.getValue());
                     }
                 } else {
                     log.debug("No emotion counts data available for BIF ID {} in {}년 {}월", bifId, year, month);
@@ -177,7 +177,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
             try {
                 if (stat.getTopKeywords() != null) {
-                    final List<Map<String, Object>> keywords = objectMapper.readValue(stat.getTopKeywords(), new TypeReference<List<Map<String, Object>>>() {});
+                final List<Map<String, Object>> keywords = objectMapper.readValue(stat.getTopKeywords(), new TypeReference<List<Map<String, Object>>>() {});
                     log.debug("Retrieved {} keywords from stats for BIF ID {}: {}", keywords.size(), bifId, keywords);
                     return keywords;
                 } else {
@@ -250,7 +250,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
 
         private String generateStatisticsBasedStatisticsText(final Map<EmotionType, Double> ratios,
-                                                      final EmotionType dominantEmotion,
+                                                      final EmotionType dominantEmotion, 
                                                       final double dominantRatio) {
         final StringBuilder statistics = new StringBuilder();
         
@@ -259,11 +259,11 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 getEmotionKoreanName(dominantEmotion), dominantRatio));
         
         // 긍정적 감정 비율 계산
-        final double positiveEmotionRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) +
+        final double positiveEmotionRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) + 
                                           ratios.getOrDefault(EmotionType.GREAT, 0.0);
         
         // 부정적 감정 비율 계산
-        final double negativeEmotionRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) +
+        final double negativeEmotionRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) + 
                                           ratios.getOrDefault(EmotionType.DOWN, 0.0);
         
         if (positiveEmotionRatio > 50.0) {
@@ -365,7 +365,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         // 현재는 username을 기반으로 더미 ID 생성 (개발/테스트용)
         if (username == null || username.trim().isEmpty()) {
             log.warn("Username is null or empty, using default BIF ID");
-            return 1L;
+        return 1L;
         }
         
         // username 해시를 이용한 더미 ID 생성 (일관성 보장)
@@ -378,7 +378,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         // todo: 실제 사용자 서비스 완성 후 구현 필요
         if (username == null || username.trim().isEmpty()) {
             log.warn("Username is null or empty, using default Guardian ID");
-            return 1L;
+        return 1L;
         }
         
         // Guardian은 BIF ID와 다른 범위의 ID 사용 (2000~2999)
@@ -391,7 +391,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         // todo: 실제 보호자-BIF 관계 테이블에서 조회 로직 구현 필요
         if (guardianId == null) {
             log.warn("Guardian ID is null, using default BIF ID");
-            return 1L;
+        return 1L;
         }
         
         // 더미 로직: Guardian ID에서 BIF ID 매핑 (개발/테스트용)
@@ -405,7 +405,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         // todo: 실제 사용자 서비스에서 BIF 닉네임 조회 로직 구현 필요
         if (bifId == null) {
             log.warn("BIF ID is null, using default nickname");
-            return "BIF";
+        return "BIF";
         }
         
         // 더미 닉네임 생성 (개발/테스트용)
