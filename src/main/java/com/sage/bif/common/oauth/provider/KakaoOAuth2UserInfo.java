@@ -8,7 +8,6 @@ public record KakaoOAuth2UserInfo(Map<String, Object> attributes) implements OAu
 
     @Override
     public String getEmail() {
-        @SuppressWarnings("unchecked")
         Map<String, Object> account = (Map<String, Object>) attributes.get("kakao_account");
         return account != null ? (String) account.get("email") : null;
     }

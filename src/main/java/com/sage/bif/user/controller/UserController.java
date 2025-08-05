@@ -1,6 +1,8 @@
 package com.sage.bif.user.controller;
 
 import com.sage.bif.common.dto.ApiResponse;
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.user.dto.request.SocialRegistrationRequest;
 import com.sage.bif.user.dto.response.BifResponse;
@@ -136,6 +138,7 @@ public class UserController {
             Map<String, Object> responseData = new HashMap<>();
             responseData.put(ACCESS_TOKEN, accessToken);
             responseData.put("guardian", response);
+
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(responseData, "보호자 회원가입 성공"));
 
@@ -271,7 +274,7 @@ public class UserController {
             return generateGuardianTokens(guardian.get(), socialLogin, response);
         }
 
-        throw new RuntimeException("사용자 정보를 찾을 수 없습니다.");
+        throw new BaseException(ErrorCode.USER_NOT_FOUND);
     }
 
     private Map<String, Object> generateBifTokens(com.sage.bif.user.entity.Bif bif,

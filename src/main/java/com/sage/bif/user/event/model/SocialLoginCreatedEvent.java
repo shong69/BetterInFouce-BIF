@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class SocialLoginCreatedEvent extends BaseEvent {
 
-    private final SocialLogin socialLogin;
+    private final transient SocialLogin socialLogin;
 
     public SocialLoginCreatedEvent(SocialLogin socialLogin) {
         super(socialLogin);

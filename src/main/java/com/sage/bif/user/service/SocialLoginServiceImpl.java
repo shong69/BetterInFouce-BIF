@@ -1,5 +1,7 @@
 package com.sage.bif.user.service;
 
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.event.model.SocialLoginCreatedEvent;
 import com.sage.bif.user.repository.SocialLoginRepository;
@@ -58,11 +60,15 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     @Override
     @Transactional
     public void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt) {
-        String redisKey = REDIS_TOKEN + socialId;
-        Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
+        try {
+            String redisKey = REDIS_TOKEN + socialId;
+            Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
 
-        redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
-        String savedToken = redisTemplate.opsForValue().get(redisKey);
+            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
+        } catch (Exception e) {
+            throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
+        }
+
     }
 
     @Override

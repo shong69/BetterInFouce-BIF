@@ -1,5 +1,7 @@
 package com.sage.bif.user.service;
 
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.SocialLogin;
@@ -26,7 +28,7 @@ public class BifServiceImpl implements BifService {
     @Transactional
     public Bif registerBySocialId(Long socialId, String email) {
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
-                .orElseThrow(() -> new RuntimeException("Social login not found"));
+                .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
         Optional<Bif> existingBif = bifRepository.findBySocialLogin_SocialId(socialId);
         if (existingBif.isPresent()) {
