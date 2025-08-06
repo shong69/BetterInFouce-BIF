@@ -14,10 +14,10 @@ import java.util.Optional;
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Long> {
     
-    @Query("SELECT d FROM Diary d WHERE d.user.bifId = :userId AND d.createdAt BETWEEN :startDate AND :endDate AND d.isDeleted = false ORDER BY d.createdAt DESC")
+    @Query("SELECT d FROM Diary d LEFT JOIN FETCH d.aiFeedback WHERE d.user.bifId = :userId AND d.createdAt >= :startDate AND d.createdAt < :endDate AND d.isDeleted = false ORDER BY d.createdAt DESC")
     List<Diary> findByUserIdAndDateBetween(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
-    @Query("SELECT d FROM Diary d JOIN FETCH d.user WHERE d.id = :diaryId AND d.isDeleted = false")
+    @Query("SELECT d FROM Diary d JOIN FETCH d.user LEFT JOIN FETCH d.aiFeedback WHERE d.id = :diaryId AND d.isDeleted = false")
     Optional<Diary> findByIdWithUser(@Param("diaryId") Long diaryId);
     
     @Query("SELECT COUNT(d) > 0 FROM Diary d WHERE d.user.bifId = :userId AND DATE(d.createdAt) = :date AND d.isDeleted = false")

@@ -34,6 +34,13 @@ public class AiFeedback {
     @Column(columnDefinition = "TEXT", nullable=false)
     private String content;
 
+    @Column(name="content_flagged", nullable=false)
+    @Builder.Default
+    private boolean contentFlagged=false;
+
+    @Column(name="content_flagged_categories", columnDefinition = "TEXT")
+    private String contentFlaggedCategories;
+
     @Column(name="created_at", columnDefinition = "TIMESTAMP", nullable=false)
     private LocalDateTime createdAt;
     

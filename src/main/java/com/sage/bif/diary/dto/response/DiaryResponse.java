@@ -17,6 +17,8 @@ public class DiaryResponse {
     private String content;
     private Long userId;
     private String aiFeedback;
+    private boolean contentFlagged;
+    private String contentFlaggedCategories;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 

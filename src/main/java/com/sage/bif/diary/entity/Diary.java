@@ -18,7 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Table(name = "Emotion_Diary", indexes = {
         @Index(name="idx_bifid_createdAt",columnList = "bif_id, created_at")
 })
-@SQLRestriction("isDeleted = false")
+@SQLRestriction("is_deleted = false")
 public class Diary {
     
     @Id
