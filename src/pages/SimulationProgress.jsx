@@ -8,11 +8,12 @@ import ProgressBar from "@components/ui/ProgressBar";
 import Bubble from "@components/common/Bubble";
 import { useLoadingStore } from "@stores/loadingStore";
 
-function SimulationProgress() {
+export default function SimulationProgress() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoadingStore();
   const [simulation, setSimulation] = useState(null);
+  const [_sessionId, setSessionId] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
@@ -30,6 +31,14 @@ function SimulationProgress() {
       const loadSimulation = async function () {
         try {
           showLoading("시뮬레이션을 불러오는 중...");
+
+          const sessionResponse = await simulationService.startSimulation(
+            parseInt(id),
+          );
+          if (sessionResponse && sessionResponse.sessionId) {
+            setSessionId(sessionResponse.sessionId);
+          }
+
           const data = await simulationService.getSimulationDetails(
             parseInt(id),
           );
@@ -286,7 +295,7 @@ function SimulationProgress() {
             <h3
               className={`font-bold text-[14ox] ${
                 simulation.category === "업무"
-                  ? "text-[#EF4444]"
+                  ? "text-warning"
                   : simulation.category === "일상"
                     ? "text-[#F59E0B]"
                     : "text-[#0B70F5]"
@@ -297,7 +306,7 @@ function SimulationProgress() {
             <span
               className={`rounded-xl px-3 py-1 text-xs font-medium ${
                 simulation.category === "업무"
-                  ? "bg-[#FEE2E2] text-[#EF4444]"
+                  ? "bg-[#FEE2E2] text-[warning]"
                   : simulation.category === "일상"
                     ? "bg-[#FEF3C7] text-[#F59E0B]"
                     : "bg-[#C2DCFF] text-[#0B70F5]"
@@ -488,5 +497,3 @@ function SimulationProgress() {
     </>
   );
 }
-
-export default SimulationProgress;

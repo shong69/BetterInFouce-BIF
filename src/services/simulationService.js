@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
-function mapBackendToFrontend(backendData) {
+export default function mapBackendToFrontend(backendData) {
   if (!Array.isArray(backendData)) {
     console.error("백엔드 데이터가 배열이 아닙니다:", backendData);
     return [];
@@ -155,9 +155,38 @@ export const simulationService = {
       const response = await axios.post(
         `${API_BASE_URL}/simulations/${simulationId}/start`,
       );
+      // 백엔드에서 생성한 세션 ID 반환
       return response.data;
     } catch (error) {
       console.log("백엔드 API 연결 실패:", error.message);
+      throw error;
+    }
+  },
+
+  // 점수 업데이트
+  updateScore: async function (sessionId, stepScore) {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/sessions/${sessionId}/score`,
+        { score: stepScore },
+      );
+      return response.data;
+    } catch (error) {
+      console.log("점수 업데이트 실패:", error.message);
+      throw error;
+    }
+  },
+
+  // 시뮬레이션 완료
+  completeSimulation: async function (sessionId, totalScore) {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/sessions/${sessionId}/complete`,
+        { totalScore: totalScore },
+      );
+      return response.data;
+    } catch (error) {
+      console.log("시뮬레이션 완료 처리 실패:", error.message);
       throw error;
     }
   },

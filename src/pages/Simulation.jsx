@@ -6,7 +6,7 @@ import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import Card from "@components/common/Card";
 
-function Simulation() {
+export default function Simulation() {
   const [simulations, setSimulations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,5 +130,3 @@ function Simulation() {
     </>
   );
 }
-
-export default Simulation;

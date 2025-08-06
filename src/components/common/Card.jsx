@@ -1,8 +1,8 @@
 export default function Card({
-  id = {},
-  title = {},
-  category = {},
-  duration = {},
+  id = 1,
+  title = "제목",
+  category = "일상",
+  duration = "10분",
   onClick,
 }) {
   function getCategoryColor() {
