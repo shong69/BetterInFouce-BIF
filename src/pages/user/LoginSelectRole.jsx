@@ -1,51 +1,44 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserStore, useToastStore } from "@stores";
-
 import Logo from "@components/ui/Logo";
 import PrimaryButton from "@components/ui/PrimaryButton";
 import SecondaryButton from "@components/ui/SecondaryButton";
 import Footer from "@components/common/Footer";
 
 export default function LoginSelectRole() {
-  const { registrationInfo, registerBif } = useUserStore();
-  const { showError } = useToastStore();
+  const [sessionInfo, setSessionInfo] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!registrationInfo) {
-      navigate("/login");
-    }
-  }, [registrationInfo, navigate]);
+    fetch("/api/auth/session-info", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data.registrationInfo) {
+          setSessionInfo(data.data.registrationInfo);
+        } else {
+          navigate("/login");
+        }
+      });
+  }, [navigate]);
 
   async function handleBifSelect() {
-    if (!registrationInfo) {
-      navigate("/login");
-      return;
-    }
+    const response = await fetch("/api/auth/register/bif", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        socialId: sessionInfo.socialId,
+        email: sessionInfo.email,
+      }),
+    });
 
-    try {
-      const result = await registerBif(
-        registrationInfo.socialId,
-        registrationInfo.email,
-      );
-
-      if (result.success) {
-        navigate("/");
-      } else {
-        showError("회원가입에 실패했습니다.");
-      }
-    } catch {
-      showError("네트워크 오류가 발생했습니다.");
+    if (response.ok) {
+      navigate("/");
     }
   }
 
   function handleGuardianSelect() {
     navigate("/login/invite-code");
-  }
-
-  if (!registrationInfo) {
-    return null;
   }
 
   return (

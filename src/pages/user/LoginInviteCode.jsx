@@ -83,18 +83,46 @@ export default function LoginInviteCode() {
     setError("");
 
     try {
-      const result = await registerGuardian(
-        registrationInfo.socialId,
-        registrationInfo.email,
-        code,
-      );
+      const sessionResponse = await fetch("/api/auth/session-info", {
+        credentials: "include",
+      });
 
-      if (result.success) {
-        navigate("/");
-      } else {
-        setError("초대코드가 올바르지 않습니다.");
+      if (!sessionResponse.ok) {
+        setError("세션 정보를 가져올 수 없습니다. 다시 로그인해주세요.");
+        window.location.href = "/login";
+        return;
       }
-    } catch {
+
+      const sessionData = await sessionResponse.json();
+
+      if (!sessionData.success || !sessionData.data.registrationInfo) {
+        setError("세션 정보가 올바르지 않습니다.");
+        window.location.href = "/login";
+        return;
+      }
+
+      const sessionInfo = sessionData.data.registrationInfo;
+
+      const response = await fetch("/api/auth/register/guardian", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          socialId: sessionInfo.socialId,
+          email: sessionInfo.email,
+          connectionCode: code,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        window.location.href = "/";
+      } else {
+        setError(data.message || "초대코드가 올바르지 않습니다.");
+      }
+    } catch (error) {
+      console.error("보호자 회원가입 실패:", error);
       setError("네트워크 오류가 발생했습니다.");
     } finally {
       setLoading(false);
