@@ -177,6 +177,8 @@ app:
   version: "1.0.0"
   environment: "development"
   debug: true
+  frontend:
+    url: http://localhost:3000
 
   # JWT 설정
 jwt:
