@@ -42,7 +42,7 @@ public class GuardianServiceImpl implements GuardianService {
         Bif bif = bifRepository.findByConnectionCode(connectionCode)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_INVALID_INVITATION_CODE));
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("보호자", this::isNicknameExists);
 
         Guardian guardian = Guardian.builder()
                 .socialLogin(socialLogin)

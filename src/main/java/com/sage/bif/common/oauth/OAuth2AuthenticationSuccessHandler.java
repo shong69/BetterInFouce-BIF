@@ -103,7 +103,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setRefreshTokenCookie(response, refreshToken);
@@ -123,7 +123,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setRefreshTokenCookie(response, refreshToken);

@@ -70,7 +70,7 @@ public class UserController {
             );
 
             String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
             socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
 
             Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN, refreshToken);
@@ -124,7 +124,7 @@ public class UserController {
             );
 
             String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
             socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
 
             Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN, refreshToken);
@@ -288,7 +288,7 @@ public class UserController {
 
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
         socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
-                LocalDateTime.now().plusDays(30));
+                LocalDateTime.now().plusDays(7));
 
         setRefreshTokenCookie(response, newRefreshToken);
 
@@ -310,7 +310,7 @@ public class UserController {
 
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
         socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
-                LocalDateTime.now().plusDays(30));
+                LocalDateTime.now().plusDays(7));
 
         setRefreshTokenCookie(response, newRefreshToken);
 
