@@ -80,7 +80,7 @@ public enum ErrorCode {
     TODO_NOTIFICATION_SCHEDULE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TODO_NOTIFICATION_SCHEDULE_FAILED", "할 일 알림 스케줄링에 실패했습니다."),
     TODO_STATS_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TODO_STATS_UPDATE_FAILED", "할 일 통계 업데이트에 실패했습니다."),
 
-    DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
+    DIARY_NOT_FOUND(HttpStatus.FORBIDDEN, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
     DIARY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "DIARY_INVALID_INPUT", "일기 입력이 올바르지 않습니다."),
     DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY_ALREADY_EXISTS", "해당 날짜에 이미 일기가 존재합니다."),
     DIARY_AI_FEEDBACK_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DIARY_AI_FEEDBACK_FAILED", "일기 피드백 생성에 실패했습니다."),
