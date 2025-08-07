@@ -85,7 +85,7 @@ public enum ErrorCode {
     SUBTODOS_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "SUBTODOS_NOT_COMPLETED", "모든 세부 할일을 완료해야 합니다."),
     SUBTODO_INVALID_RELATION(HttpStatus.BAD_REQUEST, "SUBTODO_INVALID_RELATION", "세부 할일이 해당 할일에 속하지 않습니다."),
 
-    DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
+    DIARY_NOT_FOUND(HttpStatus.FORBIDDEN, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
     DIARY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "DIARY_INVALID_INPUT", "일기 입력이 올바르지 않습니다."),
     DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY_ALREADY_EXISTS", "해당 날짜에 이미 일기가 존재합니다."),
     DIARY_AI_FEEDBACK_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DIARY_AI_FEEDBACK_FAILED", "일기 피드백 생성에 실패했습니다."),
