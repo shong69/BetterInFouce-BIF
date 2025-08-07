@@ -30,6 +30,7 @@ public class GuardianServiceImpl implements GuardianService {
     @Override
     @Transactional
     public Guardian registerBySocialId(Long socialId, String email, String connectionCode) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -41,7 +42,7 @@ public class GuardianServiceImpl implements GuardianService {
         Bif bif = bifRepository.findByConnectionCode(connectionCode)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_INVALID_INVITATION_CODE));
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("보호자", this::isNicknameExists);
 
         Guardian guardian = Guardian.builder()
                 .socialLogin(socialLogin)

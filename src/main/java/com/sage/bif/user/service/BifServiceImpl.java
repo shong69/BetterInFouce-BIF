@@ -27,6 +27,7 @@ public class BifServiceImpl implements BifService {
     @Override
     @Transactional
     public Bif registerBySocialId(Long socialId, String email) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -35,7 +36,7 @@ public class BifServiceImpl implements BifService {
             return existingBif.get();
         }
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("사용자", this::isNicknameExists);
         String connectionCode = RandomGenerator.generateUniqueConnectionCode(this::isConnectionCodeExists);
 
         Bif bif = Bif.builder()
@@ -72,4 +73,5 @@ public class BifServiceImpl implements BifService {
     private boolean isConnectionCodeExists(String connectionCode) {
         return bifRepository.findByConnectionCode(connectionCode).isPresent();
     }
+    
 }
