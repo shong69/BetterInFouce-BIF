@@ -107,10 +107,6 @@ export default function LoginInviteCode() {
 
   const isCodeComplete = inviteCode.every((digit) => digit !== "");
 
-  if (!registrationInfo) {
-    return null;
-  }
-
   return (
     <>
       <div className="flex min-h-screen flex-col bg-white">
