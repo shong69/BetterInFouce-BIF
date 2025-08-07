@@ -2,6 +2,7 @@ package com.sage.bif.user.service;
 
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
+import com.sage.bif.common.service.RedisService;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.event.model.SocialLoginCreatedEvent;
 import com.sage.bif.user.repository.SocialLoginRepository;
@@ -22,7 +23,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
     private final SocialLoginRepository socialLoginRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
     private static final String REDIS_TOKEN = "refresh_token:";
 
     @Override
@@ -64,7 +65,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
             String redisKey = REDIS_TOKEN + socialId;
             Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
 
-            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
+            redisService.set(redisKey, refreshToken, expiration);
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
         }
@@ -74,24 +75,29 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     @Override
     public String getRefreshTokenFromRedis(Long socialId) {
         String redisKey = REDIS_TOKEN + socialId;
-        return redisTemplate.opsForValue().get(redisKey);
+        Optional<Object> tokenOptional = redisService.get(redisKey);
+        if (tokenOptional.isPresent()) {
+            return tokenOptional.get().toString();
+        }
+        return null;
     }
 
     @Override
     @Transactional
     public void deleteRefreshTokenFromRedis(Long socialId) {
         String redisKey = REDIS_TOKEN + socialId;
-        redisTemplate.delete(redisKey);
+        redisService.delete(redisKey);
     }
 
     @Override
     public boolean validateRefreshToken(Long socialId, String refreshToken) {
         String redisKey = REDIS_TOKEN + socialId;
-        String storedToken = redisTemplate.opsForValue().get(redisKey);
+        Optional<Object> storedTokenOptional = redisService.get(redisKey);
 
-        if (storedToken == null) {
+        if (storedTokenOptional.isEmpty()) {
             return false;
         }
+        String storedToken = storedTokenOptional.get().toString();
         return storedToken.equals(refreshToken);
     }
 }

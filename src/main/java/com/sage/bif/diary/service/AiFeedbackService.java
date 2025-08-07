@@ -9,6 +9,7 @@ import com.sage.bif.common.client.ai.AiSettings;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.diary.entity.AiFeedback;
 import com.sage.bif.diary.entity.Diary;
+import com.sage.bif.diary.model.Emotion;
 import com.sage.bif.diary.repository.AiFeedbackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public class AiFeedbackService {
         if (needsRegeneration) {
             log.info("AI 피드백 재생성 시작 - 일기 ID: {}", diary.getId());
             try {
-                String aiFeedbackContent = generateAiFeedback(diary.getContent());
+                String aiFeedbackContent = generateAiFeedback(diary.getContent(), diary.getEmotion());
                 
                 feedback.setContent(aiFeedbackContent);
                 checkModeration(diary.getContent(), feedback, diary.getUser().getBifId(), diary.getId());
@@ -72,11 +73,17 @@ public class AiFeedbackService {
         }
     }
     
-    public String generateAiFeedback(String content) {
+    public String generateAiFeedback(String content, Emotion emotion) {
         try {
-            log.info("AI 피드백 생성 시작");
+            log.info("AI 피드백 생성 시작 - 감정: {}", emotion);
             
-            AiRequest request = new AiRequest(content);
+            String userPrompt = content;
+            if (emotion != null) {
+                userPrompt = String.format("감정: %s%n%n일기 내용:%n%s", 
+                    emotion.name(), content);
+            }
+            
+            AiRequest request = new AiRequest(userPrompt);
             AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
             
             log.info("AI 피드백 생성 완료");
@@ -90,4 +97,5 @@ public class AiFeedbackService {
             return null;
         }
     }
+    
 } 
