@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -23,6 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final SocialLoginService socialLoginService;
@@ -105,7 +109,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.BIF, socialId));
 
-        response.sendRedirect("/api/test-token.html");
+        response.sendRedirect(frontendUrl + "/");
     }
 
 
@@ -125,7 +129,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.GUARDIAN, socialId));
 
-        response.sendRedirect("/api/test-token.html");
+        response.sendRedirect(frontendUrl + "/");
     }
 
     private void handleIncompleteRegistration(SocialLogin socialLogin, String providerUniqueId,
@@ -138,7 +142,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        response.sendRedirect("/api/register-choice.html");
+        response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void handleNewUser(String email, String providerUniqueId,
@@ -154,7 +158,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        response.sendRedirect("/api/register-choice.html");
+        response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
