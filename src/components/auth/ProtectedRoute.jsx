@@ -1,15 +1,10 @@
-import { useAuth } from "@hooks/useAuth";
-import LoadingSpinner from "@components/ui/LoadingSpinner";
 import { Navigate } from "react-router-dom";
+import { useUserStore } from "@stores";
 
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useUserStore();
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (!isAuthenticated) {
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 

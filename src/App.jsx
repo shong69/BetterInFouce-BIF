@@ -1,32 +1,31 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Todo from "@pages/Todo";
-import TodoDetail from "@pages/TodoDetail";
-import Login from "@pages/Login";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useUserStore } from "@stores";
+
+import Todo from "@pages/todo/Todo";
+import TodoDetail from "@pages/todo/TodoDetail";
+import CreateTodo from "@pages/todo/CreateTodo";
+import EditTodo from "@pages/todo/EditTodo";
+import Login from "@pages/user/Login";
+import LoginSelectRole from "@pages/user/LoginSelectRole";
+import LoginInviteCode from "@pages/user/LoginInviteCode";
 import Diary from "@pages/Diary";
 import Profile from "@pages/Profile";
 import Simulation from "@pages/Simulation";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
-import CreateTodo from "@pages/CreateTodo";
-import EditTodo from "@pages/EditTodo";
 import ProtectedRoute from "@components/auth/ProtectedRoute";
-import { useEffect } from "react";
-import { useAuth } from "./hooks/useAuth";
 
 function App() {
-  const { registrationInfo, isLoading, checkAuthStatus } = useAuth();
-  const location = useLocation();
+  const { isAuthenticated, registrationInfo, isLoading, initializeAuth } =
+    useUserStore();
 
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    initializeAuth();
+  }, [initializeAuth]);
 
   if (isLoading) {
     return <LoadingSpinner />;
-  }
-
-  if (registrationInfo && !location.pathname.startsWith("/login")) {
-    return <Navigate to="/login/select-role" replace />;
   }
 
   return (
@@ -34,17 +33,31 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/login/select-role" element={<LoginSelectRole />} />
+          <Route
+            path="/login/select-role"
+            element={
+              registrationInfo ? (
+                <LoginSelectRole />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
           <Route path="/login/invite-code" element={<LoginInviteCode />} />
 
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              registrationInfo ? (
+                <Navigate to="/login/select-role" replace />
+              ) : isAuthenticated() ? (
                 <Todo />
-              </ProtectedRoute>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
+
           <Route
             path="/todo/:id"
             element={
@@ -69,9 +82,30 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/diaries" element={<Diary />} />
-          <Route path="/simulations" element={<Simulation />} />
-          <Route path="/bif-profile" element={<Profile />} />
+          <Route
+            path="/diaries"
+            element={
+              <ProtectedRoute>
+                <Diary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulations"
+            element={
+              <ProtectedRoute>
+                <Simulation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bif-profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
 

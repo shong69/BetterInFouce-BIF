@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useUserStore } from "@stores/userStore";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
@@ -6,6 +7,14 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+api.interceptors.request.use((config) => {
+  const { accessToken } = useUserStore.getState();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
 });
 
 api.interceptors.response.use(
@@ -18,24 +27,25 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "api/auth/refresh",
+          "/api/auth/refresh",
           {},
           {
             withCredentials: true,
+            baseURL:
+              import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
           },
         );
 
         const { accessToken } = response.data.data;
 
-        sessionStorage.setItem("accessToken", accessToken);
+        useUserStore.getState().setAccessToken(accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
-        return api(originalRequest);
+        return axios(originalRequest);
       } catch (refreshError) {
-        sessionStorage.removeItem("accessToken");
+        useUserStore.getState().logout();
         window.location.href = "/login";
-
         return Promise.reject(refreshError);
       }
     }
@@ -43,13 +53,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export default api;
