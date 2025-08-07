@@ -9,25 +9,25 @@ export default function Modal({
 }) {
   if (!isOpen) return null;
 
-  const handleBackgroundClick = (e) => {
+  function handleBackgroundClick(e) {
     if (e.target === e.currentTarget) {
       onClose();
     }
-  };
+  }
 
-  const handlePrimaryClick = () => {
+  function handlePrimaryClick() {
     if (onPrimaryClick) {
       onPrimaryClick();
     }
     onClose();
-  };
+  }
 
-  const handleSecondaryClick = () => {
+  function handleSecondaryClick() {
     if (onSecondaryClick) {
       onSecondaryClick();
     }
     onClose();
-  };
+  }
 
   const hasButtons = primaryButtonText || secondaryButtonText;
 
