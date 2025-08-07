@@ -33,12 +33,6 @@ public class SocialLogin {
     @Column(name = "provider_unique_id", nullable = false, unique = true, length = 255)
     private String providerUniqueId;
 
-    @Column(name = "refresh_token", length = 500)
-    private String refreshToken;
-
-    @Column(name = "refresh_token_expires_at")
-    private LocalDateTime refreshTokenExpiresAt;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -49,5 +43,16 @@ public class SocialLogin {
 
     public enum SocialProvider {
         GOOGLE, KAKAO, NAVER
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = this.createdAt == null ? LocalDateTime.now() : this.createdAt;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

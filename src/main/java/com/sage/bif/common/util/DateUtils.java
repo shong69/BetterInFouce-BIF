@@ -23,4 +23,4 @@ public class DateUtils {
     public static boolean isToday(LocalDateTime dateTime) {
         return dateTime != null && dateTime.toLocalDate().equals(LocalDateTime.now().toLocalDate());
     }
-} 
+}

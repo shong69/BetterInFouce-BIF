@@ -14,11 +14,13 @@ import java.util.Collections;
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
+    private String accessToken;
     private final Long bifId;
     private final String nickname;
     private final String provider;
     private final String providerUniqueId;
     private final JwtTokenProvider.UserRole role;
+    private final Long socialId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

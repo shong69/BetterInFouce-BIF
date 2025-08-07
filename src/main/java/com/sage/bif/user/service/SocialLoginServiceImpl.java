@@ -1,13 +1,17 @@
 package com.sage.bif.user.service;
 
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.event.model.SocialLoginCreatedEvent;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -18,6 +22,8 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
     private final SocialLoginRepository socialLoginRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RedisTemplate<String, String> redisTemplate;
+    private static final String REDIS_TOKEN = "refresh_token:";
 
     @Override
     @Transactional
@@ -54,47 +60,38 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     @Override
     @Transactional
     public void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt) {
-        SocialLogin socialLogin = socialLoginRepository.findById(socialId)
-                .orElseThrow(() -> new RuntimeException("Social login not found"));
+        try {
+            String redisKey = REDIS_TOKEN + socialId;
+            Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
 
-        socialLogin.setRefreshToken(refreshToken);
-        socialLogin.setRefreshTokenExpiresAt(expiresAt);
+            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
+        } catch (Exception e) {
+            throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
+        }
 
-        socialLoginRepository.save(socialLogin);
     }
 
     @Override
-    public Optional<String> getRefreshToken(Long socialId) {
-        return socialLoginRepository.findById(socialId)
-                .map(SocialLogin::getRefreshToken);
+    public String getRefreshTokenFromRedis(Long socialId) {
+        String redisKey = REDIS_TOKEN + socialId;
+        return redisTemplate.opsForValue().get(redisKey);
     }
 
     @Override
     @Transactional
-    public void deleteRefreshToken(Long socialId) {
-        SocialLogin socialLogin = socialLoginRepository.findById(socialId)
-                .orElseThrow(() -> new RuntimeException("Social login not found"));
-
-        socialLogin.setRefreshToken(null);
-        socialLogin.setRefreshTokenExpiresAt(null);
-
-        socialLoginRepository.save(socialLogin);
+    public void deleteRefreshTokenFromRedis(Long socialId) {
+        String redisKey = REDIS_TOKEN + socialId;
+        redisTemplate.delete(redisKey);
     }
 
     @Override
     public boolean validateRefreshToken(Long socialId, String refreshToken) {
-        Optional<SocialLogin> socialLoginOpt = socialLoginRepository.findById(socialId);
-        if (socialLoginOpt.isEmpty()) {
+        String redisKey = REDIS_TOKEN + socialId;
+        String storedToken = redisTemplate.opsForValue().get(redisKey);
+
+        if (storedToken == null) {
             return false;
         }
-
-        SocialLogin socialLogin = socialLoginOpt.get();
-        String storedRefreshToken = socialLogin.getRefreshToken();
-        LocalDateTime expiresAt = socialLogin.getRefreshTokenExpiresAt();
-
-        return storedRefreshToken != null &&
-                storedRefreshToken.equals(refreshToken) &&
-                expiresAt != null &&
-                expiresAt.isAfter(LocalDateTime.now());
+        return storedToken.equals(refreshToken);
     }
 }

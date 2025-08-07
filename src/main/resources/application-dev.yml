@@ -1,7 +1,7 @@
 spring:
   application:
     name: bif-dev
-
+  
   # JPA 설정
   jpa:
     hibernate:
@@ -13,25 +13,6 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         use_sql_comments: true
 
-#  # H2 데이터베이스 설정 (개발용)
-#  datasource:
-#    url: jdbc:h2:file:./data/testdb
-#    username: sa
-#    password:
-#    driver-class-name: org.h2.Driver
-#    hikari:
-#      maximum-pool-size: 10
-#      minimum-idle: 5
-#      connection-timeout: 30000
-#
-#  h2:
-#    console:
-#      enabled: true
-#      path: /h2-console
-#      settings:
-#        web-allow-others: true
-
-#     데이터베이스 설정:로컬 서버 사용시 (주석 처리)
 
 
   # 서버 설정
@@ -49,6 +30,8 @@ spring:
       org.hibernate.SQL: DEBUG
       org.hibernate.type.descriptor.sql.BasicBinder: TRACE
       org.springframework.security: DEBUG
+      org.springframework.data.redis: DEBUG
+      io.lettuce.core: DEBUG
     pattern:
       console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
       file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -62,7 +45,7 @@ spring:
         max-history: 30
         total-size-cap: 1GB
         file-name-pattern: logs/bif-dev-%d{yyyy-MM-dd}.%i.log
-
+  
   # 개발 도구
   devtools:
     restart:

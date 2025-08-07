@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class GuardianRegistrationRequestedEvent extends BaseEvent {
 
-    private final Guardian guardian;
+    private final transient Guardian guardian;
 
     public GuardianRegistrationRequestedEvent(Guardian guardian) {
         super(guardian);

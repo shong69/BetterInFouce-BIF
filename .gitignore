@@ -86,18 +86,4 @@ set-env.sh
 
 # Logs
 *.log
-logs/
-
-# Security and sensitive files
-.env
-*.env
-application-secret.yml
-application-secret-*.yml
-secrets/
-*.key
-*.pem
-*.p12
-*.jks
-.bat
-*.bat
 /logs
