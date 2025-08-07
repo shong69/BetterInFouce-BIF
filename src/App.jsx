@@ -84,6 +84,30 @@ function App() {
             }
           />
           <Route
+            path="/todo/:id"
+            element={
+              <ProtectedRoute>
+                <TodoDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/new"
+            element={
+              <ProtectedRoute>
+                <CreateTodo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditTodo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/diaries"
             element={
               <ProtectedRoute>
