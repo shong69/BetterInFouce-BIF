@@ -1,0 +1,104 @@
+package com.sage.bif.diary.event.listener;
+
+import com.sage.bif.diary.event.model.DiaryCreatedEvent;
+import com.sage.bif.diary.event.model.DiaryUpdatedEvent;
+import com.sage.bif.diary.event.model.DiaryDeletedEvent;
+import com.sage.bif.stats.event.model.StatsUpdatedEvent;
+import com.sage.bif.common.service.RedisService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class DiaryEventListener {
+    
+    private final ApplicationEventPublisher eventPublisher;
+    private final RedisService redisService;
+    
+    @EventListener
+    public void handleDiaryCreated(DiaryCreatedEvent event) {
+        log.info("Diary created: {} - User: {} - Emotion: {} - EventId: {}", 
+                event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getEmotion(), event.getEventId());
+        
+        try {
+            // 1. 캐시 무효화 (모든 관련 캐시)
+            invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
+            
+            // 2. 통계 업데이트 이벤트 발행
+            publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
+            
+        } catch (Exception e) {
+            log.error("Error in handleDiaryCreated: {}", e.getMessage(), e);
+        }
+    }
+    
+    @EventListener
+    public void handleDiaryUpdated(DiaryUpdatedEvent event) {
+        log.info("Diary updated: {} - User: {} - EventId: {}", 
+                event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getEventId());
+        
+        try {
+            // 1. 캐시 무효화 (모든 관련 캐시)
+            invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
+            
+            // 2. 내용 변경 감지 및 처리
+            if (!event.getPreviousContent().equals(event.getDiary().getContent())) {
+                log.info("Diary content changed significantly for diary: {}", event.getDiary().getId());
+                
+                // 3. 통계 업데이트 이벤트 발행
+                publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_UPDATED", "일기 수정으로 인한 통계 업데이트");
+            }
+
+        } catch (Exception e) {
+            log.error("Error in handleDiaryUpdated: {}", e.getMessage(), e);
+        }
+    }
+    
+    @EventListener
+    public void handleDiaryDeleted(DiaryDeletedEvent event) {
+        log.info("Diary deleted: {} - User: {} - Emotion: {} - EventId: {}", 
+                event.getDiaryId(), event.getUserId(), event.getEmotion(), event.getEventId());
+        
+        try {
+            // 1. 관련 캐시 정리
+            invalidateAllDiaryCache(event.getUserId());
+            
+            // 2. 통계 업데이트 이벤트 발행
+            publishStatsEvent(event.getUserId(), "DIARY_DELETED", "일기 삭제로 인한 통계 업데이트");
+            
+        } catch (Exception e) {
+            log.error("Error in handleDiaryDeleted: {}", e.getMessage(), e);
+        }
+    }
+    
+
+    private void invalidateAllDiaryCache(Long userId) {
+        try {
+            String currentYear = String.valueOf(LocalDate.now().getYear());
+            String currentMonth = String.valueOf(LocalDate.now().getMonthValue());
+            String monthlyCacheKey = String.format("monthly_summary:%d:%s:%s", userId, currentYear, currentMonth);
+            redisService.delete(monthlyCacheKey);
+            
+            log.info("Monthly summary cache cleared for user: {} - key: {}", userId, monthlyCacheKey);
+            
+        } catch (Exception e) {
+            log.error("Failed to invalidate diary cache for user {}: {}", userId, e.getMessage());
+        }
+    }
+    
+
+    private void publishStatsEvent(Long userId, String updateType, String updateReason) {
+        StatsUpdatedEvent statsEvent = new StatsUpdatedEvent(
+                this, null, userId, updateType, updateReason
+        );
+        eventPublisher.publishEvent(statsEvent);
+        log.info("Stats update event published: User={}, Type={}", userId, updateType);
+    }
+
+} 
