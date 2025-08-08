@@ -12,6 +12,7 @@ import LoginInviteCode from "@pages/user/LoginInviteCode";
 import Diary from "@pages/Diary";
 import Profile from "@pages/Profile";
 import Simulation from "@pages/Simulation";
+import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
 import ProtectedRoute from "@components/auth/ProtectedRoute";
