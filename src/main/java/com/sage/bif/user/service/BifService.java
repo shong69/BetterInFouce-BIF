@@ -9,4 +9,5 @@ public interface BifService {
     Bif registerBySocialId(Long socialId, String email);
     Optional<Bif> findByConnectionCode(String connectionCode);
     Optional<Bif> findBySocialId(Long socialId);
+
 }

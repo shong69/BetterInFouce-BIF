@@ -7,6 +7,7 @@ import com.sage.bif.common.oauth.OAuth2AuthenticationSuccessHandler;
 import com.sage.bif.common.oauth.OAuth2UserServiceImpl;
 import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
+import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +19,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,7 +29,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class SecurityConfig {
 
     @Value("${app.frontend.url}")
@@ -42,8 +41,9 @@ public class SecurityConfig {
     public OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler(JwtTokenProvider jwtTokenProvider,
                                                                                  SocialLoginService socialLoginService,
                                                                                  BifService bifService,
-                                                                                 GuardianService guardianService) {
-        return new OAuth2AuthenticationSuccessHandler(jwtTokenProvider, socialLoginService, bifService, guardianService);
+                                                                                 GuardianService guardianService,
+                                                                                 LoginLogService loginLogService) {
+        return new OAuth2AuthenticationSuccessHandler(jwtTokenProvider, socialLoginService, bifService, guardianService, loginLogService);
     }
 
     @Bean
@@ -63,6 +63,7 @@ public class SecurityConfig {
                                                    JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorization -> authorization

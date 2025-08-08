@@ -9,9 +9,9 @@ import com.sage.bif.user.dto.response.BifResponse;
 import com.sage.bif.user.dto.response.GuardianResponse;
 import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
+import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,7 +30,6 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "User Management", description = "사용자 관리 API")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -43,9 +42,9 @@ public class UserController {
     private final GuardianService guardianService;
     private final SocialLoginService socialLoginService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final LoginLogService loginLogService;
 
     @PostMapping("/register/bif")
-    @Operation(summary = "소셜 로그인으로 BIF 회원가입", description = "소셜 로그인 정보를 사용하여 BIF 회원을 등록합니다. 닉네임과 연결 코드는 자동 생성됩니다.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerBifBySocial(
             @Valid @RequestBody SocialRegistrationRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
 
@@ -59,6 +58,8 @@ public class UserController {
                         .body(ApiResponse.error("소셜 로그인 정보를 찾을 수 없습니다."));
             }
             var socialLogin = socialLoginOpt.get();
+
+            loginLogService.recordLogin(request.getSocialId());
 
             String accessToken = jwtTokenProvider.generateAccessToken(
                     JwtTokenProvider.UserRole.BIF,
@@ -95,7 +96,6 @@ public class UserController {
     }
 
     @PostMapping("/register/guardian")
-    @Operation(summary = "소셜 로그인으로 보호자 회원가입", description = "소셜 로그인 정보와 연결 코드를 사용하여 보호자를 등록합니다. 닉네임은 자동 생성됩니다.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerGuardianBySocial(
             @Valid @RequestBody SocialRegistrationRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
 
@@ -113,6 +113,8 @@ public class UserController {
                         .body(ApiResponse.error("소셜 로그인 정보를 찾을 수 없습니다."));
             }
             var socialLogin = socialLoginOpt.get();
+
+            loginLogService.recordLogin(request.getSocialId());
 
             String accessToken = jwtTokenProvider.generateAccessToken(
                     JwtTokenProvider.UserRole.GUARDIAN,
@@ -160,6 +162,8 @@ public class UserController {
                 var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
 
                 if (socialLoginOpt.isPresent()) {
+                    Long socialId = socialLoginOpt.get().getSocialId();
+                    loginLogService.recordLogout(socialId);
                     socialLoginService.deleteRefreshTokenFromRedis(socialLoginOpt.get().getSocialId());
                 }
             }
@@ -177,7 +181,6 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Access Token 갱신", description = "Refresh Token만으로 새로운 Access Token을 발급받습니다.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> refreshToken(
             @CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
 
@@ -214,7 +217,6 @@ public class UserController {
     }
 
     @GetMapping("/session-info")
-    @Operation(summary = "세션 정보 조회", description = "현재 세션의 사용자 정보를 조회합니다.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSessionInfo(HttpServletRequest request) {
         try {
             HttpSession session = request.getSession(false);

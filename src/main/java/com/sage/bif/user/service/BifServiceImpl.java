@@ -5,12 +5,9 @@ import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.SocialLogin;
-import com.sage.bif.user.event.model.BifRegisteredEvent;
-import com.sage.bif.user.event.model.BifRegistrationRequestedEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +19,6 @@ public class BifServiceImpl implements BifService {
 
     private final BifRepository bifRepository;
     private final SocialLoginRepository socialLoginRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -45,15 +41,7 @@ public class BifServiceImpl implements BifService {
                 .connectionCode(connectionCode)
                 .build();
 
-        BifRegistrationRequestedEvent requestedEvent = new BifRegistrationRequestedEvent(bif);
-        eventPublisher.publishEvent(requestedEvent);
-
-        Bif savedBif = bifRepository.save(bif);
-
-        BifRegisteredEvent registeredEvent = new BifRegisteredEvent(savedBif);
-        eventPublisher.publishEvent(registeredEvent);
-
-        return savedBif;
+        return bifRepository.save(bif);
     }
 
     @Override

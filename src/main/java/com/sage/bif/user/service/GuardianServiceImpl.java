@@ -6,13 +6,10 @@ import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
 import com.sage.bif.user.entity.SocialLogin;
-import com.sage.bif.user.event.model.GuardianRegisteredEvent;
-import com.sage.bif.user.event.model.GuardianRegistrationRequestedEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.GuardianRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +22,6 @@ public class GuardianServiceImpl implements GuardianService {
     private final GuardianRepository guardianRepository;
     private final SocialLoginRepository socialLoginRepository;
     private final BifRepository bifRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -50,16 +46,7 @@ public class GuardianServiceImpl implements GuardianService {
                 .nickname(nickname)
                 .build();
 
-        GuardianRegistrationRequestedEvent requestedEvent = new GuardianRegistrationRequestedEvent(guardian);
-        eventPublisher.publishEvent(requestedEvent);
-
-        Guardian savedGuardian = guardianRepository.save(guardian);
-
-        GuardianRegisteredEvent registeredEvent = new GuardianRegisteredEvent(savedGuardian);
-        eventPublisher.publishEvent(registeredEvent);
-
-
-        return savedGuardian;
+        return guardianRepository.save(guardian);
     }
 
     @Override
@@ -70,4 +57,5 @@ public class GuardianServiceImpl implements GuardianService {
     private boolean isNicknameExists(String nickname) {
         return guardianRepository.findByNickname(nickname).isPresent();
     }
+
 }

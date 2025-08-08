@@ -12,6 +12,6 @@ public interface SocialLoginService {
     Optional<SocialLogin> findByProviderUniqueId(String providerUniqueId);
     void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt);
     boolean validateRefreshToken(Long socialId, String refreshToken);
-    String getRefreshTokenFromRedis(Long socialId);
     void deleteRefreshTokenFromRedis(Long socialId);
+
 }
