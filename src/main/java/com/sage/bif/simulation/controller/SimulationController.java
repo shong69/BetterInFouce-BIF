@@ -59,4 +59,10 @@ public class SimulationController {
         SimulationDetailsResponse details = simulationService.getSimulationDetails(simulationId);
         return ResponseEntity.ok(ApiResponse.success(details, "시뮬레이션 정보 조회 성공"));
     }
+    
+    @PostMapping("/{simulationId}/recommend")
+    public ResponseEntity<ApiResponse<String>> recommendSimulation(@PathVariable Long simulationId) {
+        simulationService.recommendSimulation(simulationId);
+        return ResponseEntity.ok(ApiResponse.success("추천되었습니다.", "시뮬레이션 추천 성공"));
+    }
 } 

@@ -19,4 +19,6 @@ public interface SimulationService {
     SimulationResultResponse getSimulationResult(String sessionId);
     
     SimulationDetailsResponse getSimulationDetails(Long simulationId);
+    
+    void recommendSimulation(Long simulationId);
 } 

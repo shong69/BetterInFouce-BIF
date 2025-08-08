@@ -12,13 +12,13 @@ import java.util.Optional;
 @Repository
 public interface SimulationFeedbackRepository extends JpaRepository<SimulationFeedback, Long> {
     
-    // 시뮬레이션 ID로 모든 피드백 조회
-    List<SimulationFeedback> findBySimulationSimulationIdOrderByMinPercentageDesc(Long simulationId);
+    // 시뮬레이션별 피드백 목록 조회
+    List<SimulationFeedback> findBySimulationId(Long simulationId);
     
-    // 퍼센테이지 범위에 따른 피드백 조회
-    @Query("SELECT sf FROM SimulationFeedback sf WHERE sf.simulation.simulationId = :simulationId AND :percentage BETWEEN sf.minPercentage AND sf.maxPercentage")
-    Optional<SimulationFeedback> findBySimulationIdAndPercentageRange(@Param("simulationId") Long simulationId, @Param("percentage") Integer percentage);
+    // 시뮬레이션별 첫 번째 피드백 조회
+    Optional<SimulationFeedback> findFirstBySimulationId(Long simulationId);
     
-    // 시뮬레이션 ID로 피드백 존재 여부 확인
-    boolean existsBySimulationSimulationId(Long simulationId);
-}
+    // 점수 범위에 해당하는 피드백 조회
+    @Query("SELECT sf FROM SimulationFeedback sf WHERE sf.simulationId = :simulationId AND :score BETWEEN sf.minScore AND sf.maxScore")
+    Optional<SimulationFeedback> findBySimulationIdAndScore(@Param("simulationId") Long simulationId, @Param("score") Integer score);
+} 
