@@ -184,6 +184,7 @@ springdoc:
 app:
   frontend:
     url: http://localhost:3000
+
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET:your-secret-key-here-make-it-long-enough-for-hs256}
