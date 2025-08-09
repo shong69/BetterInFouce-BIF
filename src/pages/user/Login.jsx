@@ -57,7 +57,6 @@ export default function Login() {
               </span>
             </button>
 
-            {/* Kakao 로그인 */}
             <button
               onClick={handleKakaoLogin}
               className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#FEE500] px-4 py-3 transition-colors duration-200 hover:bg-yellow-400"
@@ -73,7 +72,6 @@ export default function Login() {
               </span>
             </button>
 
-            {/* Naver 로그인 */}
             <button
               onClick={handleNaverLogin}
               className="flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 px-4 py-3 transition-colors duration-200 hover:bg-green-600"
@@ -88,14 +86,12 @@ export default function Login() {
             </button>
           </div>
 
-          {/* 하단 안내 텍스트 */}
           <p className="text-tiny mt-8 text-center leading-relaxed text-gray-500">
             로그인 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.
           </p>
         </div>
       </div>
 
-      {/* 하단 Footer */}
       <div className="pb-6">
         <Footer />
       </div>
