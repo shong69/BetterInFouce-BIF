@@ -36,15 +36,47 @@ export const useUserStore = create((set, get) => ({
   initializeAuth: async () => {
     set({ isLoading: true });
 
+    const isTokenExpired = (token) => {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        return payload.exp < currentTime + 30;
+      } catch {
+        return true;
+      }
+    };
+
+    const getTokenPayload = (token) => {
+      try {
+        return JSON.parse(atob(token.split(".")[1]));
+      } catch {
+        return null;
+      }
+    };
+
     const savedToken = sessionStorage.getItem("accessToken");
-    if (savedToken) {
+    if (savedToken && !isTokenExpired(savedToken)) {
+      const payload = getTokenPayload(savedToken);
       set({
         accessToken: savedToken,
-        isLoading: false,
+        user: payload
+          ? {
+              userRole: payload.role,
+              bifId: payload.bifId,
+              nickname: payload.nickname,
+              provider: payload.provider,
+              providerUniqueId: payload.sub,
+            }
+          : null,
         registrationInfo: null,
+        isLoading: false,
       });
       return;
+    } else if (savedToken) {
+      sessionStorage.removeItem("accessToken");
     }
+
+    let sessionInfoSuccess = false;
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/session-info`, {
@@ -69,6 +101,8 @@ export const useUserStore = create((set, get) => ({
             isLoading: false,
           });
           sessionStorage.setItem("accessToken", data.accessToken);
+          sessionInfoSuccess = true;
+          return;
         } else if (data.registrationInfo) {
           set({
             registrationInfo: data.registrationInfo,
@@ -76,6 +110,7 @@ export const useUserStore = create((set, get) => ({
             user: null,
             isLoading: false,
           });
+          return;
         } else {
           set({
             accessToken: null,
@@ -99,6 +134,40 @@ export const useUserStore = create((set, get) => ({
         registrationInfo: null,
         isLoading: false,
       });
+    }
+
+    if (!sessionInfoSuccess) {
+      try {
+        const refreshResponse = await fetch(
+          `${API_BASE_URL}/api/auth/refresh`,
+          {
+            method: "POST",
+            credentials: "include",
+          },
+        );
+
+        if (refreshResponse.ok) {
+          const result = await refreshResponse.json();
+          if (result.data?.accessToken) {
+            set({
+              accessToken: result.data.accessToken,
+              user: {
+                providerUniqueId: result.data.providerUniqueId,
+                userRole: result.data.userRole,
+                bifId: result.data.bifId,
+                nickname: result.data.nickname,
+                provider: result.data.provider,
+              },
+              isLoading: false,
+              registrationInfo: null,
+            });
+            sessionStorage.setItem("accessToken", result.data.accessToken);
+            return;
+          }
+        }
+      } catch (refreshError) {
+        console.log("Refresh failed:", refreshError);
+      }
     }
   },
 
