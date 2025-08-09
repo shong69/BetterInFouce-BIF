@@ -1,6 +1,7 @@
 package com.sage.bif.user.controller;
 
 import com.sage.bif.common.dto.ApiResponse;
+import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.jwt.JwtTokenProvider;
@@ -40,6 +41,9 @@ public class UserController {
     private static final String PROVIDER = "provider";
     private static final String REFRESH_TOKEN = "refreshToken";
     private static final String ACCESS_TOKEN = "accessToken";
+    private static final String ROLE = "userRole";
+    private static final String BIF_ID = "bifId";
+    private static final String NICKNAME = "nickname";
 
     private final BifService bifService;
     private final GuardianService guardianService;
@@ -204,13 +208,13 @@ public class UserController {
                         .body(ApiResponse.error("Refresh Token이 유효하지 않습니다.", validationResult));
             }
 
-            String providerUniqueId;
-            try {
-                providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(refreshToken);
-            } catch (Exception e) {
+            String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(refreshToken);
+
+            if (providerUniqueId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("토큰에서 사용자 정보를 추출할 수 없습니다.", "INVALID_TOKEN_FORMAT"));
             }
+
 
             var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
             if (socialLoginOpt.isEmpty()) {
@@ -248,55 +252,55 @@ public class UserController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSessionInfo(HttpServletRequest request, HttpServletResponse response) {
         try {
             HttpSession session = request.getSession(false);
-            if (session == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("세션이 없습니다."));
-            }
-
             Map<String, Object> sessionData = new HashMap<>();
 
-            String accessToken = (String) session.getAttribute(ACCESS_TOKEN);
-            if (accessToken != null) {
-                sessionData.put(ACCESS_TOKEN, accessToken);
-                sessionData.put(PROVIDER_UNIQUE_ID, session.getAttribute(PROVIDER_UNIQUE_ID));
-                sessionData.put("userRole", session.getAttribute("userRole"));
-                sessionData.put("bifId", session.getAttribute("bifId"));
-                sessionData.put("nickname", session.getAttribute("nickname"));
-                sessionData.put(PROVIDER, session.getAttribute(PROVIDER));
-            } else {
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                if (auth instanceof OAuth2AuthenticationToken oauth2Token) {
-                    oauth2Token = (OAuth2AuthenticationToken) auth;
-                    String providerUniqueId = oauth2Token.getPrincipal().getName();
+            if (session != null) {
+                String accessToken = (String) session.getAttribute(ACCESS_TOKEN);
+                if (accessToken != null) {
+                    // 로그인된 사용자
+                    sessionData.put(ACCESS_TOKEN, accessToken);
+                    sessionData.put(PROVIDER_UNIQUE_ID, session.getAttribute(PROVIDER_UNIQUE_ID));
+                    sessionData.put(ROLE, session.getAttribute(ROLE));
+                    sessionData.put(BIF_ID, session.getAttribute(BIF_ID));
+                    sessionData.put(NICKNAME, session.getAttribute(NICKNAME));
+                    sessionData.put(PROVIDER, session.getAttribute(PROVIDER));
 
-                    var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
-                    if (socialLoginOpt.isPresent()) {
-                        Long socialId = socialLoginOpt.get().getSocialId();
+                    return ResponseEntity.ok(ApiResponse.success(sessionData, "세션 정보 조회 성공"));
+                }
+            }
 
-                        var bif = bifService.findBySocialId(socialId);
-                        var guardian = guardianService.findBySocialId(socialId);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth instanceof OAuth2AuthenticationToken oauth2Token) {
+                oauth2Token = (OAuth2AuthenticationToken) auth;
+                String providerUniqueId = oauth2Token.getPrincipal().getName();
 
-                        if (bif.isPresent() || guardian.isPresent()) {
-                            Map<String, Object> tokenData = generateNewTokens(socialLoginOpt.get(), response);
-                            sessionData.putAll(tokenData);
+                var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
+                if (socialLoginOpt.isPresent()) {
+                    Long socialId = socialLoginOpt.get().getSocialId();
 
-                            session.removeAttribute("registration_socialId");
-                            session.removeAttribute("registration_email");
-                            session.removeAttribute("registration_provider");
-                            session.removeAttribute("registration_providerUniqueId");
+                    var bif = bifService.findBySocialId(socialId);
+                    var guardian = guardianService.findBySocialId(socialId);
 
-                        } else {
-                            String email = oauth2Token.getPrincipal().getAttribute("email");
-                            String provider = oauth2Token.getAuthorizedClientRegistrationId();
+                    if (bif.isPresent() || guardian.isPresent()) {
+                        Map<String, Object> tokenData = generateNewTokens(socialLoginOpt.get(), response);
+                        sessionData.putAll(tokenData);
 
-                            Map<String, Object> registrationInfo = new HashMap<>();
-                            registrationInfo.put("socialId", socialId);
-                            registrationInfo.put("email", email);
-                            registrationInfo.put(PROVIDER, provider);
-                            registrationInfo.put(PROVIDER_UNIQUE_ID, providerUniqueId);
+                        session.removeAttribute("registration_socialId");
+                        session.removeAttribute("registration_email");
+                        session.removeAttribute("registration_provider");
+                        session.removeAttribute("registration_providerUniqueId");
 
-                            sessionData.put("registrationInfo", registrationInfo);
-                        }
+                    } else {
+                        String email = oauth2Token.getPrincipal().getAttribute("email");
+                        String provider = oauth2Token.getAuthorizedClientRegistrationId();
+
+                        Map<String, Object> registrationInfo = new HashMap<>();
+                        registrationInfo.put("socialId", socialId);
+                        registrationInfo.put("email", email);
+                        registrationInfo.put(PROVIDER, provider);
+                        registrationInfo.put(PROVIDER_UNIQUE_ID, providerUniqueId);
+
+                        sessionData.put("registrationInfo", registrationInfo);
                     }
                 }
             }
@@ -312,6 +316,44 @@ public class UserController {
             log.error("세션 정보 조회 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("세션 정보 조회 실패: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<ApiResponse<String>> withdrawUser(
+            Authentication authentication, HttpServletResponse response) {
+
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("인증되지 않은 사용자입니다.", "UNAUTHORIZED"));
+            }
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long socialId = userDetails.getSocialId();
+            JwtTokenProvider.UserRole userRole = userDetails.getRole();
+
+            if (userRole == JwtTokenProvider.UserRole.BIF) {
+                bifService.deleteBySocialId(socialId);
+            } else if (userRole == JwtTokenProvider.UserRole.GUARDIAN) {
+                guardianService.deleteBySocialId(socialId);
+            }
+
+            socialLoginService.deleteBySocialId(socialId);
+
+            socialLoginService.deleteRefreshTokenFromRedis(socialId);
+
+            clearRefreshTokenCookie(response);
+
+            LocalDateTime withdrawalDate = LocalDateTime.now();
+            loginLogService.scheduleLogsForDeletion(socialId, withdrawalDate);
+
+            return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다."));
+
+        } catch (Exception e) {
+            log.error("회원탈퇴 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("회원탈퇴 중 오류가 발생했습니다.", "SERVER_ERROR"));
         }
     }
 
@@ -348,12 +390,12 @@ public class UserController {
         setRefreshTokenCookie(response, newRefreshToken);
 
         Map<String, Object> responseData = new HashMap<>();
-        responseData.put("accessToken", newJwtToken);
-        responseData.put("providerUniqueId", socialLogin.getProviderUniqueId());
-        responseData.put("userRole", "BIF");
-        responseData.put("bifId", bif.getBifId());
-        responseData.put("nickname", bif.getNickname());
-        responseData.put("provider", socialLogin.getProvider().name());
+        responseData.put(ACCESS_TOKEN, newJwtToken);
+        responseData.put(PROVIDER_UNIQUE_ID, socialLogin.getProviderUniqueId());
+        responseData.put(ROLE, "BIF");
+        responseData.put(BIF_ID, bif.getBifId());
+        responseData.put(NICKNAME, bif.getNickname());
+        responseData.put(PROVIDER, socialLogin.getProvider().name());
 
         return responseData;
     }
@@ -375,12 +417,12 @@ public class UserController {
         setRefreshTokenCookie(response, newRefreshToken);
 
         Map<String, Object> responseData = new HashMap<>();
-        responseData.put("accessToken", newJwtToken);
-        responseData.put("providerUniqueId", socialLogin.getProviderUniqueId());
-        responseData.put("userRole", "GUARDIAN");
-        responseData.put("bifId", guardian.getBif().getBifId());
-        responseData.put("nickname", guardian.getNickname());
-        responseData.put("provider", socialLogin.getProvider().name());
+        responseData.put(ACCESS_TOKEN, newJwtToken);
+        responseData.put(PROVIDER_UNIQUE_ID, socialLogin.getProviderUniqueId());
+        responseData.put(ROLE, "GUARDIAN");
+        responseData.put(BIF_ID, guardian.getBif().getBifId());
+        responseData.put(NICKNAME, guardian.getNickname());
+        responseData.put(PROVIDER, socialLogin.getProvider().name());
 
         return responseData;
     }

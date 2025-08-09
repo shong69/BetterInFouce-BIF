@@ -183,5 +183,5 @@ app:
   # JWT 설정
 jwt:
   secret: ${JWT_SECRET:your-secret-key-here-make-it-long-enough-for-hs256}
-  access-expiration: 3600000  # 1시간 (밀리초)
+  access-expiration: 900000  # 1시간 (밀리초)
   refresh-expiration: 2592000000  # 30일 (밀리초)
