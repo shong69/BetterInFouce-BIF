@@ -101,4 +101,9 @@ public class SocialLoginServiceImpl implements SocialLoginService {
         return storedToken.equals(refreshToken);
     }
 
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        socialLoginRepository.deleteById(socialId);
+    }
+
 }
