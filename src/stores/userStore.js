@@ -235,4 +235,28 @@ export const useUserStore = create((set, get) => ({
       return { success: false, error };
     }
   },
+  withdraw: async () => {
+    try {
+      await api.delete("/api/auth/withdraw");
+
+      sessionStorage.removeItem("accessToken");
+
+      set({
+        accessToken: null,
+        user: null,
+        registrationInfo: null,
+        isLoading: false,
+      });
+
+      return { success: true, message: "회원탈퇴가 완료되었습니다." };
+    } catch (error) {
+      console.error("회원탈퇴 실패", error);
+    }
+    return {
+      success: false,
+      message:
+        // eslint-disable-next-line no-undef
+        error.response?.data?.message || "회원탈퇴 중 오류가 발생했습니다.",
+    };
+  },
 }));
