@@ -77,6 +77,10 @@ public class Todo {
     @Column(columnDefinition = "DATETIME")
     private LocalDateTime completedAt;
 
+    @Column(columnDefinition = "INT DEFAULT 0", nullable = false)
+    @Builder.Default
+    private Integer currentStep = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

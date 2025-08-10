@@ -1,5 +1,6 @@
 package com.sage.bif.todo.controller;
 
+import com.sage.bif.common.dto.ApiResponse;
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.todo.dto.request.AiTodoCreateRequest;
 import com.sage.bif.todo.dto.request.SubTodoCompletionUpdateRequest;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,6 +74,18 @@ public class TodoController {
         TodoUpdatePageResponse response = todoService.getTodoDetail(bifId, todoId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{todoId}/step")
+    @Operation(summary = "할 일 단계 업데이트")
+    public ResponseEntity<ApiResponse<Void>> updateTodoStep(
+            @PathVariable Long todoId,
+            @RequestBody UpdateStepRequest request,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long bifId = customUserDetails.getBifId();
+        todoService.updateCurrentStep(bifId, todoId, request.getStep());
+
+        return ResponseEntity.ok(ApiResponse.success(null, "단계가 업데이트되었습니다."));
     }
 
     @PutMapping("/{todoId}")
@@ -142,6 +157,12 @@ public class TodoController {
         subTodoService.updateSubTodo(bifId, todoId, subTodoId, request);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Getter
+    @Setter
+    public static class UpdateStepRequest {
+        private int step;
     }
 
 }
