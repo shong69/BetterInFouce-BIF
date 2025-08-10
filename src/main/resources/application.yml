@@ -35,7 +35,7 @@ spring:
 
   # Azure Database for MySQL 설정
   # datasource:
-  #   url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+  #   url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
   #   username: ${AZURE_MYSQL_USERNAME}@${AZURE_MYSQL_SERVER_NAME}
   #   password: ${AZURE_MYSQL_PASSWORD}
   #   driver-class-name: com.mysql.cj.jdbc.Driver
@@ -134,6 +134,10 @@ spring:
       enabled: true
     livereload:
       enabled: true
+
+  websocket:
+    servlet:
+      allowed_origins: "*"
 
 # 서버 설정
 server:

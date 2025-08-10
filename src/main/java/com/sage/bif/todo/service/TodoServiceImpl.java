@@ -17,12 +17,14 @@ import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
+import com.sage.bif.todo.event.model.*;
 import com.sage.bif.todo.exception.*;
 import com.sage.bif.todo.repository.SubTodoRepository;
 import com.sage.bif.todo.repository.TodoRepository;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.repository.BifRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,8 @@ public class TodoServiceImpl implements TodoService {
     private final AiServiceClient aiServiceClient;
     private final ObjectMapper objectMapper;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     @Override
     @Transactional
     public TodoListResponse createTodoByAi(Long bifId, AiTodoCreateRequest request) {
@@ -63,6 +67,16 @@ public class TodoServiceImpl implements TodoService {
             List<SubTodo> subTodos = createSubTodosFromParsedData(newTodo, parsedData);
 
             todoRepository.save(newTodo);
+
+            TodoCreatedEvent event = new TodoCreatedEvent(
+                    this,
+                    newTodo,
+                    bifId,
+                    "AI",
+                    request.getUserInput()
+            );
+            eventPublisher.publishEvent(event);
+
             if (!subTodos.isEmpty()) {
                 subTodoRepository.saveAll(subTodos);
                 newTodo.setSubTodos(subTodos);
@@ -104,11 +118,51 @@ public class TodoServiceImpl implements TodoService {
 
         validateUserPermission(todo, bifId);
 
-        updateTodoBasicInfo(todo, request);
+        Map<String, Object> previousValues = new HashMap<>();
+        Map<String, Object> newValues = new HashMap<>();
+
+        trackAndUpdateTodo(todo, request, previousValues, newValues);
 
         updateSubTodos(todo, request.getSubTodos());
 
+        if (!newValues.isEmpty()) {
+            TodoUpdatedEvent event = new TodoUpdatedEvent(
+                    this,
+                    todo,
+                    bifId,
+                    previousValues,
+                    newValues
+            );
+            eventPublisher.publishEvent(event);
+        }
+
         return TodoListResponse.from(todo);
+    }
+
+    private void trackAndUpdateTodo(Todo todo, TodoUpdateRequest request,
+                                    Map<String, Object> previousValues,
+                                    Map<String, Object> newValues) {
+        if (!Objects.equals(todo.getTitle(), request.getTitle())) {
+            previousValues.put("title", todo.getTitle());
+            newValues.put("title", request.getTitle());
+        }
+
+        if (!Objects.equals(todo.getDueDate(), request.getDueDate())) {
+            previousValues.put("dueDate", todo.getDueDate());
+            newValues.put("dueDate", request.getDueDate());
+        }
+
+        if (!Objects.equals(todo.getDueTime(), request.getDueTime())) {
+            previousValues.put("dueTime", todo.getDueTime());
+            newValues.put("dueTime", request.getDueTime());
+        }
+
+        if (!Objects.equals(todo.getNotificationTime(), request.getNotificationTime())) {
+            previousValues.put("notificationTime", todo.getNotificationTime());
+            newValues.put("notificationTime", request.getNotificationTime());
+        }
+
+        updateTodoBasicInfo(todo, request);
     }
 
     @Override
@@ -124,6 +178,14 @@ public class TodoServiceImpl implements TodoService {
         if (todo.getSubTodos() != null) {
             todo.getSubTodos().forEach(subTodo -> subTodo.setIsDeleted(true));
         }
+
+        TodoDeletedEvent event = new TodoDeletedEvent(
+                this,
+                todo,
+                bifId,
+                false
+        );
+        eventPublisher.publishEvent(event);
 
         return true;
     }
@@ -142,6 +204,13 @@ public class TodoServiceImpl implements TodoService {
             todo.setIsCompleted(true);
             todo.setCompletedAt(LocalDateTime.now());
 
+            TodoCompletedEvent event = new TodoCompletedEvent(
+                    this,
+                    todo,
+                    bifId,
+                    "manual"
+            );
+            eventPublisher.publishEvent(event);
         } else if (todo.getType() == TodoTypes.ROUTINE) {
             routineCompletionService.completeRoutine(bifId, todoId, LocalDate.now());
         }
@@ -160,6 +229,14 @@ public class TodoServiceImpl implements TodoService {
         if (todo.getType() == TodoTypes.TASK) {
             todo.setIsCompleted(false);
             todo.setCompletedAt(null);
+
+            TodoUncompletedEvent event = new TodoUncompletedEvent(
+                    this,
+                    todo,
+                    bifId,
+                    "manual"
+            );
+            eventPublisher.publishEvent(event);
         } else if (todo.getType() == TodoTypes.ROUTINE) {
             routineCompletionService.uncompleteRoutine(bifId, todoId, LocalDate.now());
         }
