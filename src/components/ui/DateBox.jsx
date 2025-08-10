@@ -1,4 +1,4 @@
-import { getCurrentDate } from "../../utils/dateUtils";
+import { getCurrentDate } from "@utils/dateUtils";
 
 export default function DateBox() {
   return (
