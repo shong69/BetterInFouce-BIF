@@ -32,7 +32,7 @@ public class TodoUpdateRequest {
     @Size(max = 7, message = "반복 요일은 최대 7개까지 가능합니다")
     private List<RepeatDays> repeatDays;
 
-    @Future(message = "마감일은 현재보다 미래여야 합니다")
+    @FutureOrPresent(message = "마감일은 현재보다 미래여야 합니다")
     private LocalDate dueDate;
 
     private LocalTime dueTime;
