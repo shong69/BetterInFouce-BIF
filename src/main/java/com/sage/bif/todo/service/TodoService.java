@@ -24,4 +24,6 @@ public interface TodoService {
 
     TodoListResponse uncompleteTodo(Long bifId, Long todoId);
 
+    void updateCurrentStep(Long bifId, Long todoId, int newStep);
+
 }

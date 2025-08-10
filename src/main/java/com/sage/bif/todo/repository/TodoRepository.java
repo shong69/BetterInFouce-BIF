@@ -7,7 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,14 +16,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT DISTINCT t FROM Todo t LEFT JOIN FETCH t.subTodos s WHERE t.bifUser.bifId = :bifId AND t.isDeleted = false AND (t.dueDate = :date OR t.dueDate IS NULL OR t.type = 'ROUTINE') ORDER BY t.createdAt DESC")
     List<Todo> findTodoWithSubTodosByBifIdAndDate(@Param("bifId") Long bifId, @Param("date") LocalDate date);
 
-    @Query("SELECT DISTINCT t FROM Todo t LEFT JOIN FETCH t.repeatDays LEFT JOIN FETCH t.subTodos s WHERE t.todoId = :todoId AND t.bifUser.bifId = :bifId AND t.isDeleted = false")
+    @Query("SELECT DISTINCT t FROM Todo t WHERE t.todoId = :todoId AND t.bifUser.bifId = :bifId AND t.isDeleted = false")
     Optional<Todo> findTodoDetailsById(@Param("bifId") Long bifId, @Param("todoId") Long todoId);
-
-    @Query("SELECT t FROM Todo t WHERE t.notificationEnabled = true " +
-            "AND t.isCompleted = false AND t.isDeleted = false " +
-            "AND t.dueDate = CURRENT_DATE " +
-            "AND FUNCTION('ADDTIME', FUNCTION('ADDTIME', CURRENT_TIME, CONCAT('0:', t.notificationTime, ':0')), '0:1:0') >= t.dueTime " +
-            "AND FUNCTION('ADDTIME', CURRENT_TIME, CONCAT('0:', t.notificationTime, ':0')) <= t.dueTime")
-    List<Todo> findTodosForNotification(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
 }
