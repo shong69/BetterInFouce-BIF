@@ -1,31 +1,25 @@
 package com.sage.bif.todo.event.listener;
 
-import com.sage.bif.todo.event.model.TodoCompletedEvent;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import com.sage.bif.common.event.model.BaseEvent;
+import com.sage.bif.todo.entity.Todo;
+import lombok.Getter;
 
-@Slf4j
-@Component
-public class TodoCompletedListener {
+@Getter
+public class TodoCompletedListener extends BaseEvent {
 
-    @EventListener
-    public void handleTodoCompleted(TodoCompletedEvent event) {
-        log.info("Todo completed: {} - User: {} - Method: {} - EventId: {}",
-                event.getTodo().getId(), event.getUserId(), event.getCompletionMethod(), event.getEventId());
+    private final transient Todo todo;
+    private final Long bifId;
+    private final String completionMethod;
 
-        // 여기에 Todo 완료 후 처리 로직 추가
-        // 예: 통계 업데이트, 알림 발송 등
+    public TodoCompletedListener(Todo todo, Long bifId, String completionMethod) {
+        super();
+        this.todo = todo;
+        this.bifId = bifId;
+        this.completionMethod = completionMethod;
     }
 
-    @Async
-    @EventListener
-    public void handleTodoCompletedAsync(TodoCompletedEvent event) {
-        log.info("Async processing todo completion: {} - User: {} - EventId: {}",
-                event.getTodo().getId(), event.getUserId(), event.getEventId());
-
-        // 비동기 처리 로직
-        // 예: 외부 서비스 호출, 이메일 발송 등
+    @Override
+    public String getEventType() {
+        return "";
     }
 }
