@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AiRequest {
-    private String userPrompt; // 사용자 입력만 담당
+    private String userPrompt;
 }

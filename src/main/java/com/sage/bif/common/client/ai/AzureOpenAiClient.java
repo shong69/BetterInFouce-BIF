@@ -117,7 +117,6 @@ public class AzureOpenAiClient implements AiServiceClient {
             throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE, 
                 "AI 서비스 내부 오류: " + e.getMessage());
         } catch (Exception e) {
-            // 기타 예상치 못한 오류
             throw new BaseException(ErrorCode.COMMON_AI_MODEL_ERROR, 
                 "예상치 못한 오류: " + e.getMessage());
         }

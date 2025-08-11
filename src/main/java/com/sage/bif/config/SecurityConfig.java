@@ -68,7 +68,6 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorization -> authorization
-                        // Swagger / OpenAPI 문서 허용 (context-path: /api)
                         .requestMatchers(
                                 "/api/swagger-ui.html",
                                 "/api/swagger-ui/**",
@@ -77,11 +76,8 @@ public class SecurityConfig {
                                 "/api/v3/api-docs",
                                 "/api/v3/api-docs/**"
                         ).permitAll()
-                        // H2 콘솔 허용 (context-path: /api)
                         .requestMatchers("/api/h2-console/**").permitAll()
-                        // 통계 테스트 공개 엔드포인트
                         .requestMatchers("/api/stats/test/stat").permitAll()
-                        // 테스트용 공개 API 허용
                         .requestMatchers("/api/diaries/test/**").permitAll()
                         .requestMatchers("/api/auth/admin-login", "/api/oauth2/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()

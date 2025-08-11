@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+
+//todo: 일부 기능 사용자화 필요
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -59,7 +61,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
         
         if (stats.isEmpty()) {
-            // 트랜잭션 메서드를 직접 호출하지 않고 별도 메서드로 분리
             applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
             return applicationContext.getBean(StatsServiceImpl.class).getMonthlyStats(bifId);
         }
@@ -84,9 +85,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 .build();
     }
     
-    /**
-     * BIF ID로 직접 월별 통계 조회 (보호자용)
-     */
     private StatsResponse getMonthlyStatsByBifId(final Long bifId) {
         final Integer year = getCurrentYear();
         final Integer month = getCurrentMonth();
@@ -266,14 +264,12 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             return "이번 달에는 감정 데이터가 없습니다.";
         }
 
-        // 요구사항: 감정 분석은 감정 통계를 토대로 이루어진다
         final Map<EmotionType, Double> ratios = emotionCounts.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> (double) entry.getValue() / total * 100
                 ));
 
-        // 감정 비율을 기반으로 분석 텍스트 생성
         final EmotionType dominantEmotion = emotionCounts.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
@@ -281,7 +277,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
         final double dominantRatio = ratios.get(dominantEmotion);
         
-        // 템플릿 기반 통계 시도 (emotion_statistics_template 테이블 활용)
         final String okayRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.OKAY, 0.0));
         final String goodRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GOOD, 0.0));
         final String angryRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.ANGRY, 0.0));
@@ -299,7 +294,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         log.warn("No emotion statistics template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback statistics.",
                 okayRange, goodRange, angryRange, downRange, greatRange);
 
-        // 템플릿이 없으면 통계 기반으로 통계 텍스트 생성
         return generateStatisticsBasedStatisticsText(ratios, dominantEmotion, dominantRatio);
     }
 
@@ -317,16 +311,13 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                                                       final EmotionType dominantEmotion, 
                                                       final double dominantRatio) {
         final StringBuilder statistics = new StringBuilder();
-        
-        // 주요 감정 통계
+
         statistics.append(String.format("이번 달에는 %s한 감정이 %.1f%%로 가장 많이 나타났습니다. ",
                 getEmotionKoreanName(dominantEmotion), dominantRatio));
         
-        // 긍정적 감정 비율 계산
         final double positiveEmotionRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) + 
                                           ratios.getOrDefault(EmotionType.GREAT, 0.0);
         
-        // 부정적 감정 비율 계산
         final double negativeEmotionRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) + 
                                           ratios.getOrDefault(EmotionType.DOWN, 0.0);
         
@@ -431,12 +422,9 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    /**
-     * 변화율 계산 메소드
-     */
     private Double calculateChangePercentage(final Integer previousValue, final Integer currentValue) {
         if (previousValue == 0) {
-            return currentValue > 0 ? 100.0 : 0.0; // 지난달이 0이고 이번달이 있으면 100% 증가
+            return currentValue > 0 ? 100.0 : 0.0;
         }
         return ((double) (currentValue - previousValue) / previousValue) * 100.0;
     }
@@ -489,12 +477,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return LocalDateTime.now().getYear();
     }
     
-    /**
-     * Stats 엔티티를 StatsResponse로 변환하는 공통 메서드
-     */
     private StatsResponse buildStatsResponse(final Stats statsData, final Long bifId, final Integer year, final Integer month) {
         try {
-            // 감정 통계가 NULL인 경우 처리
             List<StatsResponse.EmotionRatio> emotionRatio = new ArrayList<>();
             
             if (statsData.getEmotionCounts() != null && !statsData.getEmotionCounts().trim().isEmpty()) {
@@ -530,8 +514,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             }
 
             final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, year, month);
-
-            // calculateTopKeywords 메소드를 사용하여 키워드 데이터 처리
             final List<Map<String, Object>> topKeywordsData = calculateTopKeywords(bifId, year, month);
             final List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(topKeywordsData);
 
@@ -558,9 +540,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return trimmed;
     }
     
-    /**
-     * 보호자 조언을 Stats 테이블에서 가져오기
-     */
     private String getGuardianAdviceFromStats(final Long bifId) {
         final Integer year = getCurrentYear();
         final Integer month = getCurrentMonth();
@@ -569,28 +548,22 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         if (stats.isPresent()) {
             return stats.get().getGuardianAdviceText();
         }
-        
-        // 저장된 조언이 없으면 실시간으로 생성
+    
         return generateGuardianAdviceFromTemplate(calculateEmotionCounts(bifId, year, month));
     }
     
-    /**
-     * 보호자 조언 템플릿에서 조언 생성 (generateGuardianAdvice와 동일한 로직)
-     */
     private String generateGuardianAdviceFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
         final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
         if (total == 0) {
             return "BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
         }
         
-        // 감정 비율 계산
         final Map<String, Double> ratios = emotionCounts.entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> entry.getKey().name(),
                         entry -> (double) entry.getValue() / total * 100
                 ));
         
-        // 템플릿 기반 조언 생성 (guardian_advice_template 테이블 활용)
         final String okayRange = getRangeForPercentage(ratios.getOrDefault("OKAY", 0.0));
         final String goodRange = getRangeForPercentage(ratios.getOrDefault("GOOD", 0.0));
         final String angryRange = getRangeForPercentage(ratios.getOrDefault("ANGRY", 0.0));
@@ -609,7 +582,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         log.warn("No guardian advice template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback advice.", 
                 okayRange, goodRange, angryRange, downRange, greatRange);
         
-        // 템플릿이 없으면 기본 조언 생성
         return generateFallbackGuardianAdvice(ratios);
     }
 }

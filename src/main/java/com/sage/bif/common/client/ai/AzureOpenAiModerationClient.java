@@ -17,13 +17,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Azure OpenAI Moderation API 클라이언트
- */
 @Component
 public class AzureOpenAiModerationClient {
     
-    // API 응답 필드 상수
     private static final String RESULTS_FIELD = "results";
     private static final String FLAGGED_FIELD = "flagged";
     private static final String CATEGORIES_FIELD = "categories";
@@ -89,9 +85,6 @@ public class AzureOpenAiModerationClient {
         }
     }
 
-    /**
-     * Moderation API 응답을 파싱하여 ModerationResponse 객체로 변환합니다.
-     */
     private ModerationResponse parseModerationResponse(JsonNode body) {
         try {
             validateResponseFormat(body);
@@ -115,9 +108,6 @@ public class AzureOpenAiModerationClient {
         }
     }
 
-    /**
-     * 응답 형식이 올바른지 검증합니다.
-     */
     private void validateResponseFormat(JsonNode body) {
         if (!body.has(RESULTS_FIELD) || !body.get(RESULTS_FIELD).isArray() || body.get(RESULTS_FIELD).isEmpty()) {
             throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID, 
@@ -125,13 +115,9 @@ public class AzureOpenAiModerationClient {
         }
     }
 
-    /**
-     * flagged된 카테고리들을 추출합니다.
-     */
     private String extractFlaggedCategories(JsonNode categories) {
         StringBuilder flaggedCategories = new StringBuilder();
         
-        // 각 카테고리를 확인하여 flagged된 것들을 수집
         if (categories.get("hate").asBoolean()) flaggedCategories.append("hate ");
         if (categories.get("hate/threatening").asBoolean()) flaggedCategories.append("hate/threatening ");
         if (categories.get("self-harm").asBoolean()) flaggedCategories.append("self-harm ");
