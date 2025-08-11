@@ -16,9 +16,9 @@ public interface SimulationService {
     
     SimulationChoiceResponse submitChoice(String sessionId, SimulationChoiceRequest request);
     
-    SimulationResultResponse getSimulationResult(String sessionId);
-    
     SimulationDetailsResponse getSimulationDetails(Long simulationId);
     
     void recommendSimulation(Long simulationId);
+    
+    String getFeedbackText(Long simulationId, int score);
 } 

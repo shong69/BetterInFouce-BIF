@@ -1,4 +1,4 @@
-2025-08-08 10:08:26 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:44 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -9,7 +9,7 @@
         s1_0.`updated_at` 
     from
         `simulation` s1_0
-2025-08-08 10:08:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:45 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -20,7 +20,7 @@
         s1_0.`updated_at` 
     from
         `simulation` s1_0
-2025-08-08 10:08:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -33,7 +33,7 @@
         `simulation` s1_0 
     where
         s1_0.`simulation_id`=?
-2025-08-08 10:08:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         ss1_0.`step_id`,
         ss1_0.`character_line`,
@@ -43,9 +43,8 @@
         `simulation_step` ss1_0 
     where
         ss1_0.`simulation_id`=? 
-    order by
-        ss1_0.`step_order`
-2025-08-08 10:08:29 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+        and ss1_0.`step_order`=?
+2025-08-11 00:01:47 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -59,35 +58,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:08:29 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
-    /* <criteria> */ select
-        bc1_0.`choice_id`,
-        bc1_0.`choice_score`,
-        bc1_0.`choice_text`,
-        bc1_0.`feedback_text`,
-        bc1_0.`simulation_id`,
-        bc1_0.`step_id` 
-    from
-        `bif_choice` bc1_0 
-    where
-        bc1_0.`step_id`=? 
-    order by
-        bc1_0.`choice_id`
-2025-08-08 10:08:29 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
-    /* <criteria> */ select
-        bc1_0.`choice_id`,
-        bc1_0.`choice_score`,
-        bc1_0.`choice_text`,
-        bc1_0.`feedback_text`,
-        bc1_0.`simulation_id`,
-        bc1_0.`step_id` 
-    from
-        `bif_choice` bc1_0 
-    where
-        bc1_0.`step_id`=? 
-    order by
-        bc1_0.`choice_id`
-2025-08-08 10:08:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
     select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -100,7 +71,7 @@
         `simulation` s1_0 
     where
         s1_0.`simulation_id`=?
-2025-08-08 10:08:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         ss1_0.`step_id`,
         ss1_0.`character_line`,
@@ -112,7 +83,7 @@
         ss1_0.`simulation_id`=? 
     order by
         ss1_0.`step_order`
-2025-08-08 10:08:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -126,7 +97,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:08:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -140,7 +111,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:08:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -154,7 +125,166 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:01:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:01:51 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:01:51 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:01:51 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:01:51 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:01:51 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:01:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:01:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:03:08 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:03:08 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:03:09 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:03:09 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:03:17 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
     select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -167,7 +297,7 @@
         `simulation` s1_0 
     where
         s1_0.`simulation_id`=?
-2025-08-08 10:11:05 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         ss1_0.`step_id`,
         ss1_0.`character_line`,
@@ -177,9 +307,8 @@
         `simulation_step` ss1_0 
     where
         ss1_0.`simulation_id`=? 
-    order by
-        ss1_0.`step_order`
-2025-08-08 10:11:05 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+        and ss1_0.`step_order`=?
+2025-08-11 00:03:17 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -193,35 +322,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    /* <criteria> */ select
-        bc1_0.`choice_id`,
-        bc1_0.`choice_score`,
-        bc1_0.`choice_text`,
-        bc1_0.`feedback_text`,
-        bc1_0.`simulation_id`,
-        bc1_0.`step_id` 
-    from
-        `bif_choice` bc1_0 
-    where
-        bc1_0.`step_id`=? 
-    order by
-        bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    /* <criteria> */ select
-        bc1_0.`choice_id`,
-        bc1_0.`choice_score`,
-        bc1_0.`choice_text`,
-        bc1_0.`feedback_text`,
-        bc1_0.`simulation_id`,
-        bc1_0.`step_id` 
-    from
-        `bif_choice` bc1_0 
-    where
-        bc1_0.`step_id`=? 
-    order by
-        bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     select
         s1_0.`simulation_id`,
         s1_0.`category`,
@@ -234,7 +335,7 @@
         `simulation` s1_0 
     where
         s1_0.`simulation_id`=?
-2025-08-08 10:11:05 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         ss1_0.`step_id`,
         ss1_0.`character_line`,
@@ -246,7 +347,7 @@
         ss1_0.`simulation_id`=? 
     order by
         ss1_0.`step_order`
-2025-08-08 10:11:05 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -260,7 +361,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -274,7 +375,7 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
-2025-08-08 10:11:05 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+2025-08-11 00:03:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
     /* <criteria> */ select
         bc1_0.`choice_id`,
         bc1_0.`choice_score`,
@@ -288,3 +389,5064 @@
         bc1_0.`step_id`=? 
     order by
         bc1_0.`choice_id`
+2025-08-11 00:03:18 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:03:18 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:03:18 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:03:18 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:03:18 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:03:22 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:03:22 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:28 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:05:28 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:05:31 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:05:31 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:05:31 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:31 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:31 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:45 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:05:45 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:05:46 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:05:46 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:05:46 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:46 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:05:47 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:05:47 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:47 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:47 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:48 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:05:48 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:48 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:05:48 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:05:48 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:05:52 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:05:52 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:01 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:08:01 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:08:03 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:08:03 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:08:17 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:08:17 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:08:17 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:08:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:08:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:18 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:08:18 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:18 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:08:18 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:08:18 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:08:21 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:08:21 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:09 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:12:09 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:12:12 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:12:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:12:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:12:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:12:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:19 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:12:19 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:12:19 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:19 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:19 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:12:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:12:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:12:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:12:25 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:12:25 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:05 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:19:05 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:19:07 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:19:07 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:19:13 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:19:13 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:13 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:13 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:15 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:15 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:15 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:19:15 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:15 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:19 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:19 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:19 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:19:19 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:19 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:23 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:23 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:23 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:19:23 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:23 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:19:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:31 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:19:31 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:19:31 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:21:17 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:21:17 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:21:20 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:21:20 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:21:21 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:21:21 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:21:21 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:21 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:21:21 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:21:21 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:21 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:21 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:22 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:21:22 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:22 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:21:22 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:21:22 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:21:26 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:21:26 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:31 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:26:33 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:26:33 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:26:36 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:26:36 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:26:36 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:36 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:36 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:43 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:26:43 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:26:44 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:26:44 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:26:44 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:44 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:26:44 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:26:44 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:44 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:44 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:46 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:26:46 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:46 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:26:46 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:26:46 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:26:49 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:26:49 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:50 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:28:50 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:28:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:28:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:28:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:28:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:28:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:56 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:28:56 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:28:56 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:28:56 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:28:56 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:00 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:29:00 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:50 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:29:50 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:29:51 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:29:51 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:29:57 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:29:57 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:29:57 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:57 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:29:57 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:29:57 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:57 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:57 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:58 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:29:58 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:29:58 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:29:58 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:29:58 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:30:02 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:30:02 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:51 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:33:52 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:33:52 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:52 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:52 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:55 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:33:55 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:55 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:33:55 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:33:55 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:59 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:33:59 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:33:59 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:33:59 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:33:59 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:09 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:09 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:09 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:34:11 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:34:13 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:34:13 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:34:14 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:34:14 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:14 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:14 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:16 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:16 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:16 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:34:16 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:16 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:21 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:21 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:21 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:34:21 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:21 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:25 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:25 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:34:25 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:34:25 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:34:25 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:27 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:40:27 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:40:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:40:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:40:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:29 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:29 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:40:29 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:40:29 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:29 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:29 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:37 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:37 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:37 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:40:37 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:37 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:43 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:43 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:43 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:40:43 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:43 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:47 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:40:47 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:40:47 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:40:50 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:40:59 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:40:59 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:42:43 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:42:43 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:42:46 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:42:46 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:42:52 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:42:52 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:42:52 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:52 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:42:52 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:42:52 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:52 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:52 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:55 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:42:55 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:55 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:42:55 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:42:55 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:59 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:42:59 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:42:59 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:42:59 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:42:59 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:43:03 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:43:03 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:43:03 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:43:07 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:48:06 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:48:06 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:48:07 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:48:07 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:48:09 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:48:09 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:09 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:09 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:17 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:17 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:17 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:48:17 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:17 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:48:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:24 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:24 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:24 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:48:24 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:24 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:48:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:48:28 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:48:30 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:48:32 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:48:32 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:49:17 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:49:17 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:49:17 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:49:31 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:49:31 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:31 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:31 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:49:31 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:49:31 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:31 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:31 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:33 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:33 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:33 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:49:33 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:33 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:37 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:37 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:37 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:49:37 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:37 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:41 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:49:41 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:49:41 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:49:43 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:49:46 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:49:46 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:51:28 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:51:28 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:51:30 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:51:30 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:52:40 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:52:40 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:40 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:40 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:52:40 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:52:40 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:40 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:40 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:41 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:41 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:41 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:52:41 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:41 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:44 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:44 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:44 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:52:44 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:44 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:49 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:52:49 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:52:49 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:52:51 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:52:51 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:52:55 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:52:55 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:53:10 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:53:10 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:10 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:10 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0 
+    where
+        s1_0.`simulation_id`=?
+2025-08-11 00:53:11 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:53:11 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:11 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:11 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:53:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:12 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:15 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:15 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:15 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:53:15 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:15 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:19 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+        and ss1_0.`step_order`=?
+2025-08-11 00:53:19 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        bc1_0.`choice_id`,
+        bc1_0.`choice_score`,
+        bc1_0.`choice_text`,
+        bc1_0.`feedback_text`,
+        bc1_0.`simulation_id`,
+        bc1_0.`step_id` 
+    from
+        `bif_choice` bc1_0 
+    where
+        bc1_0.`step_id`=? 
+    order by
+        bc1_0.`choice_id`
+2025-08-11 00:53:19 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        ss1_0.`step_id`,
+        ss1_0.`character_line`,
+        ss1_0.`simulation_id`,
+        ss1_0.`step_order` 
+    from
+        `simulation_step` ss1_0 
+    where
+        ss1_0.`simulation_id`=? 
+    order by
+        ss1_0.`step_order`
+2025-08-11 00:53:21 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:53:22 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        sf 
+    FROM
+        SimulationFeedback sf 
+    WHERE
+        sf.simulationId = :simulationId 
+        AND :score BETWEEN sf.minScore AND sf.maxScore */ select
+            sf1_0.`feedback_id`,
+            sf1_0.`created_at`,
+            sf1_0.`feedback_text`,
+            sf1_0.`max_score`,
+            sf1_0.`min_score`,
+            sf1_0.`simulation_id`,
+            sf1_0.`updated_at` 
+        from
+            `simulation_feedback` sf1_0 
+        where
+            sf1_0.`simulation_id`=? 
+            and ? between sf1_0.`min_score` and sf1_0.`max_score`
+2025-08-11 00:53:27 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 00:53:27 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 01:04:55 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0
+2025-08-11 01:04:55 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.`simulation_id`,
+        s1_0.`category`,
+        s1_0.`created_at`,
+        s1_0.`description`,
+        s1_0.`is_recommended`,
+        s1_0.`title`,
+        s1_0.`updated_at` 
+    from
+        `simulation` s1_0

@@ -4,18 +4,13 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 import com.sage.bif.simulation.entity.Simulation;
-import com.sage.bif.simulation.entity.SimulationSession;
 import com.sage.bif.simulation.entity.SimulationStep;
 import com.sage.bif.simulation.entity.BifChoice;
 import com.sage.bif.simulation.entity.SimulationFeedback;
 import com.sage.bif.simulation.repository.SimulationRepository;
-import com.sage.bif.simulation.repository.SimulationSessionRepository;
 import com.sage.bif.simulation.repository.SimulationStepRepository;
 import com.sage.bif.simulation.repository.BifChoiceRepository;
 import com.sage.bif.simulation.repository.SimulationFeedbackRepository;
@@ -37,51 +32,24 @@ import lombok.extern.slf4j.Slf4j;
 public class SimulationServiceImpl implements SimulationService {
     
     private final SimulationRepository simulationRepository;
-    private final SimulationSessionRepository sessionRepository;
     private final SimulationStepRepository stepRepository;
     private final BifChoiceRepository choiceRepository;
     private final SimulationFeedbackRepository feedbackRepository;
 
-    
-    // 세션 ID 생성은 이벤트 리스너에서 처리
-    
     @Override
     public List<SimulationResponse> getAllSimulations() {
-        // ===== 메인 비즈니스 로직 (서비스에서 직접 처리) =====
         List<Simulation> simulations = simulationRepository.findAll();
         List<SimulationResponse> responses = simulations.stream()
                 .map(SimulationResponse::from)
                 .collect(Collectors.toList());
-        
-
-        
         return responses;
     }
     
     @Override
     public SimulationSessionResponse startSimulation(Long simulationId) {
-        // 시뮬레이션 존재 여부 확인
         Simulation simulation = simulationRepository.findById(simulationId)
                 .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
         
-
-        
-        // ===== 메인 비즈니스 로직 (서비스에서 직접 처리) =====
-        // 세션 ID 생성
-        String sessionId = generateUniqueSessionId();
-        
-        // 세션을 DB에 저장
-        SimulationSession session = SimulationSession.builder()
-                .sessionId(sessionId)
-                .simulationId(simulationId)
-                .currentStep(1)
-                .totalScore(0)
-                .isCompleted(false)
-                .build();
-        
-        sessionRepository.save(session);
-        
-        // ===== 응답 데이터 조회 (읽기 전용) =====
         // 첫 번째 단계의 시나리오와 선택지 조회
         SimulationStep firstStep = stepRepository.findBySimulationIdAndStepOrder(simulationId, 1)
                 .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
@@ -92,7 +60,8 @@ public class SimulationServiceImpl implements SimulationService {
                 .map(BifChoice::getChoiceText)
                 .toArray(String[]::new);
         
-
+        // 세션 ID 생성 (형식: session_{timestamp}_{simulationId}_{currentStep})
+        String sessionId = "session_" + System.currentTimeMillis() + "_" + simulationId + "_1";
         
         return SimulationSessionResponse.builder()
                 .sessionId(sessionId)
@@ -106,48 +75,42 @@ public class SimulationServiceImpl implements SimulationService {
                 .build();
     }
     
-    @Override
+        @Override
     public SimulationChoiceResponse submitChoice(String sessionId, SimulationChoiceRequest request) {
-        // 세션 조회
-        SimulationSession session = sessionRepository.findBySessionId(sessionId)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SESSION_NOT_FOUND));
+        try {
+            System.out.println("=== 서비스 submitChoice 호출 ===");
+            System.out.println("sessionId: " + sessionId);
+            System.out.println("choice: " + request.getChoice());
+            
+            // 프론트에서 전달받은 정보로 처리 (로컬스토리지 기반)
+            // sessionId에서 simulationId 추출 (예: "session_123_1" -> 1)
+            Long simulationId = extractSimulationIdFromSessionId(sessionId);
+            int currentStep = extractCurrentStepFromSessionId(sessionId);
+            
+            System.out.println("추출된 simulationId: " + simulationId);
+            System.out.println("추출된 currentStep: " + currentStep);
         
         // 현재 단계의 선택지 조회
-        SimulationStep currentStep = stepRepository.findBySimulationIdAndStepOrder(
-                session.getSimulationId(), session.getCurrentStep())
+        SimulationStep currentStepData = stepRepository.findBySimulationIdAndStepOrder(simulationId, currentStep)
                 .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
         
         // 선택한 선택지의 점수 계산
-        List<BifChoice> choices = choiceRepository.findByStepIdOrderByChoiceId(currentStep.getStepId());
+        List<BifChoice> choices = choiceRepository.findByStepIdOrderByChoiceId(currentStepData.getStepId());
         BifChoice selectedChoice = choices.stream()
                 .filter(choice -> choice.getChoiceText().equals(request.getChoice()))
                 .findFirst()
                 .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_INVALID_CHOICE));
         
-        // 세션 상태 업데이트
-        session.setTotalScore(session.getTotalScore() + selectedChoice.getChoiceScore());
-        session.setCurrentStep(session.getCurrentStep() + 1);
+        // 다음 단계 정보 조회
+        int nextStep = currentStep + 1;
+        List<SimulationStep> allSteps = stepRepository.findBySimulationIdOrderByStepOrder(simulationId);
+        boolean isCompleted = nextStep > allSteps.size();
         
-        // 시뮬레이션 완료 여부 확인
-        List<SimulationStep> allSteps = stepRepository.findBySimulationIdOrderByStepOrder(session.getSimulationId());
-        boolean isCompleted = session.getCurrentStep() > allSteps.size();
-        
-        // 시뮬레이션 완료 시 세션 상태 업데이트
-        if (isCompleted) {
-            session.setIsCompleted(true);
-        }
-        
-        sessionRepository.save(session);
-        
-
-        
-        // 다음 단계 정보 조회 (완료되지 않은 경우)
         String nextScenario = "";
         String[] nextChoices = new String[0];
         
         if (!isCompleted) {
-            SimulationStep nextStepData = stepRepository.findBySimulationIdAndStepOrder(
-                    session.getSimulationId(), session.getCurrentStep())
+            SimulationStep nextStepData = stepRepository.findBySimulationIdAndStepOrder(simulationId, nextStep)
                     .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
             
             List<BifChoice> nextStepChoices = choiceRepository.findByStepIdOrderByChoiceId(nextStepData.getStepId());
@@ -157,42 +120,36 @@ public class SimulationServiceImpl implements SimulationService {
                     .toArray(String[]::new);
         }
         
+        // 다음 단계의 세션 ID 생성
+        String nextSessionId = "session_" + System.currentTimeMillis() + "_" + simulationId + "_" + nextStep;
+        
         return SimulationChoiceResponse.builder()
-                .sessionId(sessionId)
+                .sessionId(nextSessionId)
                 .selectedChoice(request.getChoice())
                 .feedback(selectedChoice.getFeedbackText() != null ? selectedChoice.getFeedbackText() : "")
                 .nextScenario(nextScenario)
                 .nextChoices(nextChoices)
-                .currentScore(session.getTotalScore())
+                .currentScore(selectedChoice.getChoiceScore())
                 .isCompleted(isCompleted)
                 .build();
+        } catch (Exception e) {
+            System.err.println("서비스에서 예외 발생: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     @Override
-    public SimulationResultResponse getSimulationResult(String sessionId) {
-        // DB에서 세션 조회
-        SimulationSession session = sessionRepository.findBySessionId(sessionId)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SESSION_NOT_FOUND));
+    public String getFeedbackText(Long simulationId, int score) {
+        // DB에서 점수 범위에 맞는 피드백을 찾기
+        Optional<SimulationFeedback> feedback = feedbackRepository.findBySimulationIdAndScore(simulationId, score);
         
-        if (!session.getIsCompleted()) {
-            throw new SimulationException(SimulationErrorCode.SIMULATION_NOT_COMPLETED);
+        if (feedback.isPresent()) {
+            return feedback.get().getFeedbackText();
         }
         
-        // ===== 실제 계산 로직 =====
-        int percentage = calculatePercentage(session.getSimulationId(), session.getTotalScore());
-        String feedbackMessage = generateDefaultFeedbackByPercentage(percentage);
-        String finalGrade = percentage >= 80 ? "최고!" : percentage >= 60 ? "아주 좋아요!" : "노력해봐요!";
-        
-
-        
-        return new SimulationResultResponse(
-                sessionId, 
-                finalGrade, 
-                List.of("선택지1", "선택지2", "선택지3"), // 임시 선택지
-                session.getTotalScore(), 
-                percentage, 
-                feedbackMessage
-        );
+        // 매칭되는 피드백이 없으면 기본 문구 반환
+        return "피드백 에러입니다.";
     }
     
     @Override
@@ -236,54 +193,30 @@ public class SimulationServiceImpl implements SimulationService {
                 .build();
     }
     
-    // 세션 ID 생성 로직
-    
-    // ===== 계산 로직 =====
-    
-    // 퍼센테이지 계산 로직
-    private int calculatePercentage(Long simulationId, int totalScore) {
-        // 시뮬레이션의 총 점수 계산
-        List<SimulationStep> steps = stepRepository.findBySimulationIdOrderByStepOrder(simulationId);
-        int maxPossibleScore = 0;
-        
-        for (SimulationStep step : steps) {
-            List<BifChoice> choices = choiceRepository.findByStepIdOrderByChoiceId(step.getStepId());
-            int maxStepScore = choices.stream()
-                    .mapToInt(BifChoice::getChoiceScore)
-                    .max()
-                    .orElse(0);
-            maxPossibleScore += maxStepScore;
-        }
-        
-        if (maxPossibleScore == 0) return 0;
-        return (int) Math.round((double) totalScore / maxPossibleScore * 100);
+    public void saveScore(String sessionId, int score) {
+        // 로컬스토리지에서 처리하므로 서버에서는 불필요
+        log.info("점수 저장 요청: sessionId={}, score={} (로컬스토리지에서 처리)", sessionId, score);
     }
-    
-    // 퍼센테이지 기반 피드백 생성 로직
-    private String generateDefaultFeedbackByPercentage(int percentage) {
-        if (percentage >= 90) {
-            return "완벽한 선택이었습니다! 당신의 판단력이 뛰어납니다.";
-        } else if (percentage >= 80) {
-            return "매우 좋은 선택입니다. 대부분의 상황에서 올바른 판단을 하셨네요.";
-        } else if (percentage >= 70) {
-            return "좋은 선택입니다. 몇 가지 개선할 점이 있지만 전반적으로 잘하셨습니다.";
-        } else if (percentage >= 60) {
-            return "보통 수준입니다. 더 나은 결과를 위해 노력해보세요.";
-        } else if (percentage >= 50) {
-            return "개선이 필요합니다. 상황을 더 신중하게 판단해보세요.";
-        } else {
-            return "많이 부족합니다. 기본적인 상황 판단 능력을 기르는 것이 좋겠습니다.";
-        }
-    }
-    
+
     // 추천 기능 구현
     @Override
     public void recommendSimulation(Long simulationId) {
         // 추천 로직 구현
     }
 
-    // 고유 세션 ID 생성 메서드
-    private String generateUniqueSessionId() {
-        return "session_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId();
+    // 세션 ID에서 시뮬레이션 ID 추출
+    private Long extractSimulationIdFromSessionId(String sessionId) {
+        // 예: "session_1754836913942_7_1" -> 7
+        String[] parts = sessionId.split("_");
+        return Long.parseLong(parts[parts.length - 2]);
     }
+    
+    // 세션 ID에서 현재 단계 추출
+    private int extractCurrentStepFromSessionId(String sessionId) {
+        // 예: "session_1754836913942_7_1" -> 1
+        String[] parts = sessionId.split("_");
+        return Integer.parseInt(parts[parts.length - 1]);
+    }
+    
+
 } 
