@@ -9,6 +9,7 @@ BIF 프로젝트의 백엔드 애플리케이션입니다.
 - **Database**: H2 (개발용), MySQL (운영용)
 - **Build Tool**: Gradle
 - **AI Service**: Azure OpenAI
+- **Content Moderation**: Azure OpenAI Moderation API
 
 ## 프로젝트 구조
 
@@ -72,6 +73,60 @@ export AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1-mini
 
 - **Swagger UI**: http://localhost:8080/api/swagger-ui.html
 - **API Docs**: http://localhost:8080/api/api-docs
+
+## 콘텐츠 위험도 검사 (Content Moderation)
+
+Azure OpenAI Moderation API를 사용하여 사용자 입력과 AI 응답에 대한 위험도를 검사합니다.
+
+### 설정
+
+`application-dev.yml`에서 Moderation API 설정을 조정할 수 있습니다:
+
+```yaml
+azure:
+  openai:
+    moderation:
+      enabled: true                    # Moderation API 사용 여부
+      threshold: 0.7                  # 전체 위험도 임계값
+      block-on-failure: true          # API 실패 시 차단 여부
+      category-thresholds:            # 카테고리별 개별 임계값
+        hate: 0.7                     # 혐오 표현
+        hate-threatening: 0.6         # 혐오/위협
+        self-harm: 0.5                # 자해
+        sexual: 0.7                   # 성적 콘텐츠
+        sexual-minors: 0.3            # 성적/미성년자 (더 엄격)
+        violence: 0.7                 # 폭력
+        violence-graphic: 0.6         # 폭력/그래픽
+```
+
+### 동작 방식
+
+1. **사용자 입력 검사**: AI 응답 생성 전 사용자 입력의 위험도 검사
+2. **AI 응답 검사**: AI가 생성한 응답의 위험도 검사
+3. **자동 차단**: 위험도가 임계값을 초과하면 `ContentModerationException` 발생
+4. **설정 기반 처리**: API 실패 시 설정에 따라 처리 방식 결정
+
+### 사용 예제
+
+```java
+@Service
+public class ExampleService {
+    
+    @Autowired
+    private AzureOpenAiClient aiClient;
+    
+    public void generateResponse(String userInput) {
+        try {
+            // 내부적으로 moderation 체크 수행
+            AiResponse response = aiClient.generate(new AiRequest(userInput));
+            // 안전한 응답 처리
+        } catch (ContentModerationException e) {
+            // 위험한 콘텐츠 처리
+            log.warn("위험한 콘텐츠 감지: {}", e.getModerationResult());
+        }
+    }
+}
+```
 
 ## 데이터베이스
 

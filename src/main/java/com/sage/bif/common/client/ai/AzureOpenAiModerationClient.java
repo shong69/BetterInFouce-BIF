@@ -2,10 +2,11 @@ package com.sage.bif.common.client.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sage.bif.common.client.ai.dto.ModerationRequest;
-import com.sage.bif.common.client.ai.dto.ModerationResponse;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,48 +18,49 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Azure OpenAI Moderation API 클라이언트
- */
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class AzureOpenAiModerationClient {
-    
-    // API 응답 필드 상수
-    private static final String RESULTS_FIELD = "results";
-    private static final String FLAGGED_FIELD = "flagged";
-    private static final String CATEGORIES_FIELD = "categories";
     
     @Value("${spring.ai.azure.openai.api-key}")
     private String apiKey;
     
-    @Value("${spring.ai.azure.openai.resource-name}")
-    private String resoureName;
+    @Value("${spring.ai.azure.openai.endpoint}")
+    private String endpoint;
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-
-    public AzureOpenAiModerationClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-    }
-
-    public ModerationResponse moderate(String input) {
+    private final ModerationConfig moderationConfig;
+    
+    /**
+     * 입력 텍스트의 위험도를 검사합니다.
+     * @param inputText 검사할 텍스트
+     * @return ModerationResult 위험도 검사 결과
+     */
+    public ModerationResult moderateText(String inputText) {
+        // Moderation API가 비활성화된 경우 기본적으로 통과
+        if (!moderationConfig.isEnabled()) {
+            log.debug("Content moderation is disabled, skipping check for: {}", inputText);
+            return createPassedModerationResult();
+        }
         try {
-            String moderationEndpoint = String.format("%s/openai/moderations?api-version=2025-01-01-preview", resoureName);
+            String moderationEndpoint = String.format("%s/openai/deployments/text-moderation-001/input?api-version=2025-01-01-preview", 
+                endpoint);
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("api-key", apiKey);
             
-            ModerationRequest moderationRequest = new ModerationRequest(input);
-            String requestBody = objectMapper.writeValueAsString(moderationRequest);
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("input", inputText);
             
-            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
             ResponseEntity<JsonNode> response = restTemplate.postForEntity(moderationEndpoint, entity, JsonNode.class);
             
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE, 
-                    "Moderation API 호출 실패. HTTP 상태 코드: " + response.getStatusCode());
+                    "Moderation API HTTP 상태 코드: " + response.getStatusCode());
             }
             
             JsonNode body = response.getBody();
@@ -88,58 +90,189 @@ public class AzureOpenAiModerationClient {
                 "Moderation API 예상치 못한 오류: " + e.getMessage());
         }
     }
-
-    /**
-     * Moderation API 응답을 파싱하여 ModerationResponse 객체로 변환합니다.
-     */
-    private ModerationResponse parseModerationResponse(JsonNode body) {
+    
+    private ModerationResult parseModerationResponse(JsonNode body) {
         try {
-            validateResponseFormat(body);
-            
-            JsonNode result = body.get(RESULTS_FIELD).get(0);
-            boolean flagged = result.get(FLAGGED_FIELD).asBoolean();
-            
-            ModerationResponse response = new ModerationResponse();
-            response.setFlagged(flagged);
-            
-            if (flagged && result.has(CATEGORIES_FIELD)) {
-                String flaggedCategories = extractFlaggedCategories(result.get(CATEGORIES_FIELD));
-                response.setFlaggedCategories(flaggedCategories);
+            if (!body.has("results") || !body.get("results").isArray() || body.get("results").isEmpty()) {
+                throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID, 
+                    "Moderation API 응답에 results가 없습니다.");
             }
             
-            return response;
+            JsonNode result = body.get("results").get(0);
+            
+            if (!result.has("flagged")) {
+                throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID, 
+                    "Moderation API 응답에 flagged 필드가 없습니다.");
+            }
+            
+            boolean isFlagged = result.get("flagged").asBoolean();
+            
+            ModerationResult moderationResult = new ModerationResult();
+            moderationResult.setFlagged(isFlagged);
+            
+            if (isFlagged && result.has("categories")) {
+                JsonNode categories = result.get("categories");
+                moderationResult.setHate(categories.has("hate") ? categories.get("hate").asBoolean() : false);
+                moderationResult.setHateThreatening(categories.has("hate/threatening") ? categories.get("hate/threatening").asBoolean() : false);
+                moderationResult.setSelfHarm(categories.has("self-harm") ? categories.get("self-harm").asBoolean() : false);
+                moderationResult.setSexual(categories.has("sexual") ? categories.get("sexual").asBoolean() : false);
+                moderationResult.setSexualMinors(categories.has("sexual/minors") ? categories.get("sexual/minors").asBoolean() : false);
+                moderationResult.setViolence(categories.has("violence") ? categories.get("violence").asBoolean() : false);
+                moderationResult.setViolenceGraphic(categories.has("violence/graphic") ? categories.get("violence/graphic").asBoolean() : false);
+            }
+            
+            // 설정 기반 위험도 재판단
+            if (result.has("category_scores")) {
+                JsonNode categoryScores = result.get("category_scores");
+                moderationResult.setHateScore(categoryScores.has("hate") ? categoryScores.get("hate").asDouble() : 0.0);
+                moderationResult.setHateThreateningScore(categoryScores.has("hate/threatening") ? categoryScores.get("hate/threatening").asDouble() : 0.0);
+                moderationResult.setSelfHarmScore(categoryScores.has("self-harm") ? categoryScores.get("self-harm").asDouble() : 0.0);
+                moderationResult.setSexualScore(categoryScores.has("sexual") ? categoryScores.get("sexual").asDouble() : 0.0);
+                moderationResult.setSexualMinorsScore(categoryScores.has("sexual/minors") ? categoryScores.get("sexual/minors").asDouble() : 0.0);
+                moderationResult.setViolenceScore(categoryScores.has("violence") ? categoryScores.get("violence").asDouble() : 0.0);
+                moderationResult.setViolenceGraphicScore(categoryScores.has("violence/graphic") ? categoryScores.get("violence/graphic").asDouble() : 0.0);
+                
+                // 설정 기반 위험도 판단
+                moderationResult.setFlagged(isContentFlagged(moderationResult));
+            }
+            
+            return moderationResult;
             
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID, 
-                "Moderation API 응답 파싱 오류: " + e.getMessage());
+                "Moderation API 응답 파싱 실패: " + e.getMessage());
         }
     }
-
+    
     /**
-     * 응답 형식이 올바른지 검증합니다.
+     * 위험도 검사를 통과한 결과를 생성합니다.
+     * @return ModerationResult
      */
-    private void validateResponseFormat(JsonNode body) {
-        if (!body.has(RESULTS_FIELD) || !body.get(RESULTS_FIELD).isArray() || body.get(RESULTS_FIELD).isEmpty()) {
-            throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID, 
-                "Moderation API 응답 형식이 올바르지 않습니다.");
-        }
+    private ModerationResult createPassedModerationResult() {
+        ModerationResult result = new ModerationResult();
+        result.setFlagged(false);
+        result.setHate(false);
+        result.setHateThreatening(false);
+        result.setSelfHarm(false);
+        result.setSexual(false);
+        result.setSexualMinors(false);
+        result.setViolence(false);
+        result.setViolenceGraphic(false);
+        
+        result.setHateScore(0.0);
+        result.setHateThreateningScore(0.0);
+        result.setSelfHarmScore(0.0);
+        result.setSexualScore(0.0);
+        result.setSexualMinorsScore(0.0);
+        result.setViolenceScore(0.0);
+        result.setViolenceGraphicScore(0.0);
+        
+        return result;
     }
-
+    
     /**
-     * flagged된 카테고리들을 추출합니다.
+     * 설정 기반으로 콘텐츠가 위험한지 판단합니다.
+     * @param result ModerationResult
+     * @return boolean 위험 여부
      */
-    private String extractFlaggedCategories(JsonNode categories) {
-        StringBuilder flaggedCategories = new StringBuilder();
+    private boolean isContentFlagged(ModerationResult result) {
+        ModerationConfig.CategoryThresholds thresholds = moderationConfig.getCategoryThresholds();
         
-        // 각 카테고리를 확인하여 flagged된 것들을 수집
-        if (categories.get("hate").asBoolean()) flaggedCategories.append("hate ");
-        if (categories.get("hate/threatening").asBoolean()) flaggedCategories.append("hate/threatening ");
-        if (categories.get("self-harm").asBoolean()) flaggedCategories.append("self-harm ");
-        if (categories.get("sexual").asBoolean()) flaggedCategories.append("sexual ");
-        if (categories.get("sexual/minors").asBoolean()) flaggedCategories.append("sexual/minors ");
-        if (categories.get("violence").asBoolean()) flaggedCategories.append("violence ");
-        if (categories.get("violence/graphic").asBoolean()) flaggedCategories.append("violence/graphic ");
+        return result.getHateScore() >= thresholds.getHate() ||
+               result.getHateThreateningScore() >= thresholds.getHateThreatening() ||
+               result.getSelfHarmScore() >= thresholds.getSelfHarm() ||
+               result.getSexualScore() >= thresholds.getSexual() ||
+               result.getSexualMinorsScore() >= thresholds.getSexualMinors() ||
+               result.getViolenceScore() >= thresholds.getViolence() ||
+               result.getViolenceGraphicScore() >= thresholds.getViolenceGraphic();
+    }
+    
+    /**
+     * Moderation API 검사 결과를 담는 내부 클래스
+     */
+    public static class ModerationResult {
+        private boolean flagged;
+        private boolean hate;
+        private boolean hateThreatening;
+        private boolean selfHarm;
+        private boolean sexual;
+        private boolean sexualMinors;
+        private boolean violence;
+        private boolean violenceGraphic;
         
-        return flaggedCategories.toString().trim();
+        private double hateScore;
+        private double hateThreateningScore;
+        private double selfHarmScore;
+        private double sexualScore;
+        private double sexualMinorsScore;
+        private double violenceScore;
+        private double violenceGraphicScore;
+        
+        // Getters and Setters
+        public boolean isFlagged() { return flagged; }
+        public void setFlagged(boolean flagged) { this.flagged = flagged; }
+        
+        public boolean isHate() { return hate; }
+        public void setHate(boolean hate) { this.hate = hate; }
+        
+        public boolean isHateThreatening() { return hateThreatening; }
+        public void setHateThreatening(boolean hateThreatening) { this.hateThreatening = hateThreatening; }
+        
+        public boolean isSelfHarm() { return selfHarm; }
+        public void setSelfHarm(boolean selfHarm) { this.selfHarm = selfHarm; }
+        
+        public boolean isSexual() { return sexual; }
+        public void setSexual(boolean sexual) { this.sexual = sexual; }
+        
+        public boolean isSexualMinors() { return sexualMinors; }
+        public void setSexualMinors(boolean sexualMinors) { this.sexualMinors = sexualMinors; }
+        
+        public boolean isViolence() { return violence; }
+        public void setViolence(boolean violence) { this.violence = violence; }
+        
+        public boolean isViolenceGraphic() { return violenceGraphic; }
+        public void setViolenceGraphic(boolean violenceGraphic) { this.violenceGraphic = violenceGraphic; }
+        
+        public double getHateScore() { return hateScore; }
+        public void setHateScore(double hateScore) { this.hateScore = hateScore; }
+        
+        public double getHateThreateningScore() { return hateThreateningScore; }
+        public void setHateThreateningScore(double hateThreateningScore) { this.hateThreateningScore = hateThreateningScore; }
+        
+        public double getSelfHarmScore() { return selfHarmScore; }
+        public void setSelfHarmScore(double selfHarmScore) { this.selfHarmScore = selfHarmScore; }
+        
+        public double getSexualScore() { return sexualScore; }
+        public void setSexualScore(double sexualScore) { this.sexualScore = sexualScore; }
+        
+        public double getSexualMinorsScore() { return sexualMinorsScore; }
+        public void setSexualMinorsScore(double sexualMinorsScore) { this.sexualMinorsScore = sexualMinorsScore; }
+        
+        public double getViolenceScore() { return violenceScore; }
+        public void setViolenceScore(double violenceScore) { this.violenceScore = violenceScore; }
+        
+        public double getViolenceGraphicScore() { return violenceGraphicScore; }
+        public void setViolenceGraphicScore(double violenceGraphicScore) { this.violenceGraphicScore = violenceGraphicScore; }
+        
+        @Override
+        public String toString() {
+            return "ModerationResult{" +
+                    "flagged=" + flagged +
+                    ", hate=" + hate +
+                    ", hateThreatening=" + hateThreatening +
+                    ", selfHarm=" + selfHarm +
+                    ", sexual=" + sexual +
+                    ", sexualMinors=" + sexualMinors +
+                    ", violence=" + violence +
+                    ", violenceGraphic=" + violenceGraphic +
+                    ", hateScore=" + hateScore +
+                    ", hateThreateningScore=" + hateThreateningScore +
+                    ", selfHarmScore=" + selfHarmScore +
+                    ", sexualScore=" + sexualScore +
+                    ", sexualMinorsScore=" + sexualMinorsScore +
+                    ", violenceScore=" + violenceScore +
+                    ", violenceGraphicScore=" + violenceGraphicScore +
+                    '}';
+        }
     }
 } 

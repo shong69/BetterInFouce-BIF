@@ -31,7 +31,7 @@ public class AiFeedback {
     @JoinColumn(name="diary_id", nullable = false, unique = true)
     private Diary diary;
     
-    @Column(columnDefinition = "TEXT", nullable=false)
+    @Column(columnDefinition = "TEXT", nullable=true)
     private String content;
 
     @Column(name="content_flagged", nullable=false)

@@ -87,3 +87,11 @@ app:
   environment: "development"
   debug: true
 
+# Azure OpenAI Moderation API 설정
+azure:
+  openai:
+    moderation:
+      enabled: true
+      threshold: 0.7  # 위험도 임계값 (0.0 ~ 1.0)
+      block-on-failure: true  # 위험도 검사 실패 시 차단 여부
+

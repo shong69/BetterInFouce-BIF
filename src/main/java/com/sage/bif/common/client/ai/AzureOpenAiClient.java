@@ -8,6 +8,7 @@ import com.sage.bif.common.client.ai.dto.AiChatSettings;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ContentModerationException;
 import com.sage.bif.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -34,10 +35,12 @@ public class AzureOpenAiClient implements AiServiceClient {
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AzureOpenAiModerationClient moderationClient;
 
-    public AzureOpenAiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public AzureOpenAiClient(RestTemplate restTemplate, ObjectMapper objectMapper, AzureOpenAiModerationClient moderationClient) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.moderationClient = moderationClient;
     }
 
     @Override
@@ -52,6 +55,9 @@ public class AzureOpenAiClient implements AiServiceClient {
 
     private AiResponse chat(AiRequest request, String systemPrompt, double temperature, int maxTokens) {
         try {
+            // 사용자 입력에 대한 위험도 검사
+            performContentModeration(request.getUserPrompt());
+            
             String chatEndpoint = String.format("%s/openai/deployments/%s/chat/completions?api-version=2025-01-01-preview", 
                 endpoint, deploymentName);
             
@@ -96,6 +102,10 @@ public class AzureOpenAiClient implements AiServiceClient {
                 
                 if (firstChoice.has("message") && firstChoice.get("message").has("content")) {
                     String content = firstChoice.get("message").get("content").asText();
+                    
+                    // AI 응답에 대한 위험도 검사
+                    performContentModeration(content);
+                    
                     return new AiResponse(content);
                 }
             }
@@ -120,6 +130,38 @@ public class AzureOpenAiClient implements AiServiceClient {
             // 기타 예상치 못한 오류
             throw new BaseException(ErrorCode.COMMON_AI_MODEL_ERROR, 
                 "예상치 못한 오류: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 콘텐츠의 위험도를 검사합니다.
+     * @param content 검사할 콘텐츠
+     * @throws ContentModerationException 위험도가 높은 경우
+     */
+    private void performContentModeration(String content) {
+        try {
+            var moderationResult = moderationClient.moderateText(content);
+            
+            if (moderationResult.isFlagged()) {
+                log.warn("Content moderation failed for input: {}", content);
+                log.warn("Moderation result: {}", moderationResult);
+                throw new ContentModerationException(moderationResult);
+            }
+            
+            log.debug("Content moderation passed for input: {}", content);
+            
+        } catch (ContentModerationException e) {
+            // ContentModerationException은 그대로 재발생
+            throw e;
+        } catch (Exception e) {
+            // moderation API 호출 실패 시 설정에 따라 처리
+            if (moderationClient.getModerationConfig().isBlockOnFailure()) {
+                log.error("Content moderation API call failed and blockOnFailure is enabled: {}", e.getMessage(), e);
+                throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE, 
+                    "콘텐츠 위험도 검사에 실패했습니다: " + e.getMessage());
+            } else {
+                log.warn("Content moderation API call failed but blockOnFailure is disabled, continuing: {}", e.getMessage());
+            }
         }
     }
 }

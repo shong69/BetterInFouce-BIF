@@ -1,5 +1,6 @@
 package com.sage.bif.diary.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,7 @@ public class DiaryResponse {
     private String aiFeedback;
     private boolean contentFlagged;
     private String contentFlaggedCategories;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 
