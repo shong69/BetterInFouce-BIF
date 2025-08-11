@@ -39,4 +39,5 @@ public class BifChoice {
     
     @Column(name = "feedback_text", columnDefinition = "TEXT")
     private String feedbackText;
-} 
+
+}

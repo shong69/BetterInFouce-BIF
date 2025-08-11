@@ -33,4 +33,5 @@ public class SimulationResponse {
                 .updatedAt(simulation.getUpdatedAt())
                 .build();
     }
-} 
+
+}

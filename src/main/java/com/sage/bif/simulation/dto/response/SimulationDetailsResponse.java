@@ -38,4 +38,5 @@ public class SimulationDetailsResponse {
         private int choiceScore;
         private String feedbackText;
     }
-} 
+
+}

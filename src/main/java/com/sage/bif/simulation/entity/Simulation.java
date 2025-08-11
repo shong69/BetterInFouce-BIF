@@ -34,4 +34,5 @@ public class Simulation {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-} 
+
+}
