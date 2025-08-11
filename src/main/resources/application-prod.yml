@@ -12,12 +12,12 @@ spring:
         format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
         use_sql_comments: false
-  
+
   # MySQL 데이터베이스 설정 (운영용)
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: root
-    password: password
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bif}?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -26,7 +26,8 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
-  
+
+
   # 서버 설정
   server:
     port: 8080
@@ -36,7 +37,7 @@ spring:
       enabled: true
       mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
       min-response-size: 1024
-  
+
   # 로깅 설정 (운영용 최적화)
   logging:
     level:
@@ -58,7 +59,7 @@ spring:
         max-history: 90
         total-size-cap: 5GB
         file-name-pattern: logs/bif-prod-%d{yyyy-MM-dd}.%i.log
-  
+
   # 개발 도구 비활성화
   devtools:
     restart:

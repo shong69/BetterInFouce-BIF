@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
-        log.error("BaseException occurred: {} - {}. Details: {}", ex.getErrorCode().getCode(), ex.getMessage(), ex.getDetails(), ex); // 상세 로그
+        log.error("BaseException occurred: {} - {}. Details: {}", ex.getErrorCode().getCode(), ex.getMessage(), ex.getDetails(), ex);
         ErrorCode errorCode = ex.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getHttpStatus())

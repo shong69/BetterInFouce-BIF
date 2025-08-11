@@ -2,9 +2,6 @@
 spring:
   profiles:
     active: dev
-    include: secret
-  # OAuth2 클라이언트 기본 설정 (빈 설정으로 초기화)
-
   application:
     name: bif
 
@@ -22,15 +19,51 @@ spring:
           characterEncoding: utf8
           useUnicode: true
 
-  # MySQL 데이터베이스 설정 (Docker)
+
+
+  # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
+  # datasource:
+  #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+  #   username: root
+  #   password: password
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # H2 데이터베이스 설정 (개발용)
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
+  # Azure Database for MySQL 설정
+  # datasource:
+  #   url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+  #   username: ${AZURE_MYSQL_USERNAME}@${AZURE_MYSQL_SERVER_NAME}
+  #   password: ${AZURE_MYSQL_PASSWORD}
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  #   hikari:
+  #     maximum-pool-size: 10
+  #     minimum-idle: 5
+  #     connection-timeout: 30000
+  #     idle-timeout: 600000
+  #     max-lifetime: 1800000
 
-
+  # Azure SQL Database 설정
+  # datasource:
+  #   url: jdbc:sqlserver://${AZURE_SQL_SERVER_NAME}.database.windows.net:1433;database=${AZURE_SQL_DATABASE_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+  #   username: ${AZURE_SQL_USERNAME}
+  #   password: ${AZURE_SQL_PASSWORD}
+  #   driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  #   hikari:
+  #     maximum-pool-size: 10
+  #     minimum-idle: 5
+  #     connection-timeout: 30000
+  #     idle-timeout: 600000
+  #     max-lifetime: 1800000
 
   # Spring AI 설정 (Azure OpenAI)
   ai:
@@ -113,6 +146,11 @@ server:
   servlet:
     context-path: /api
 
+# 애플리케이션 설정
+app:
+  frontend:
+    url: http://localhost:3000
+
 # 로깅 설정
 logging:
   level:
@@ -149,12 +187,8 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-app:
-  frontend:
-    url: http://localhost:3000
-
 # JWT 설정
 jwt:
-  secret: ${JWT_SECRET:your-secure-jwt-secret-key-here}
-  access-expiration: 900000
-  refresh-expiration: 604800000
+  secret: ${JWT_SECRET:your-secret-key-here-make-it-long-enough-for-hs256}
+  access-expiration: 900000  # 1시간 (밀리초)
+  refresh-expiration: 604800000 # 30일 (밀리초)
