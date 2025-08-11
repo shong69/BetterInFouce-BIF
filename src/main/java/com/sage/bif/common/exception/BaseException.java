@@ -3,7 +3,7 @@ package com.sage.bif.common.exception;
 import lombok.Getter;
 
 @Getter
-public class BaseException extends RuntimeException {
+public class BaseException extends RuntimeException { // RuntimeException 상속
     private final ErrorCode errorCode;
     private final transient Object details;
 

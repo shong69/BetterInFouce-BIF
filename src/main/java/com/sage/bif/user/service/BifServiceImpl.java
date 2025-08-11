@@ -27,6 +27,7 @@ public class BifServiceImpl implements BifService {
     @Override
     @Transactional
     public Bif registerBySocialId(Long socialId, String email) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -72,4 +73,5 @@ public class BifServiceImpl implements BifService {
     private boolean isConnectionCodeExists(String connectionCode) {
         return bifRepository.findByConnectionCode(connectionCode).isPresent();
     }
+
 }

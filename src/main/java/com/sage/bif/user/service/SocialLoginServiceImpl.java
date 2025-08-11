@@ -28,6 +28,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     @Override
     @Transactional
     public SocialLogin createSocialLogin(String email, SocialLogin.SocialProvider provider, String providerUniqueId) {
+
         Optional<SocialLogin> existingSocialLogin = socialLoginRepository.findByProviderUniqueId(providerUniqueId);
         if (existingSocialLogin.isPresent()) {
             return existingSocialLogin.get();
@@ -94,4 +95,5 @@ public class SocialLoginServiceImpl implements SocialLoginService {
         }
         return storedToken.equals(refreshToken);
     }
+
 }

@@ -17,6 +17,4 @@ public interface GuardianAdviceTemplateRepository extends JpaRepository<Guardian
                                                           @Param("downRange") final String downRange,
                                                           @Param("greatRange") final String greatRange);
 
-    @Query("SELECT t FROM GuardianAdviceTemplate t ORDER BY RAND() LIMIT 1")
-    Optional<GuardianAdviceTemplate> findRandomTemplate();
 } 

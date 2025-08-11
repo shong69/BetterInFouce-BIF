@@ -12,12 +12,12 @@ spring:
         format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
         use_sql_comments: false
-  
+
   # MySQL 데이터베이스 설정 (운영용)
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bif}?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
+    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: root
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -26,32 +26,17 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
-  
-  # Spring AI 설정 (Azure OpenAI)
-  ai:
-    azure:
-      openai:
-        endpoint: ${AZURE_OPENAI_ENDPOINT}
-        api-key: ${AZURE_OPENAI_API_KEY}
-        deployment:
-          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
-  
-  # Spring Security 설정
-  security:
-    user:
-      name: ${ADMIN_USERNAME:admin}
-      password: ${ADMIN_PASSWORD:admin123}
-  
+
   # 서버 설정
   server:
-    port: ${SERVER_PORT:8080}
+    port: 8080
     servlet:
       context-path: /api
     compression:
       enabled: true
       mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
       min-response-size: 1024
-  
+
   # 로깅 설정 (운영용 최적화)
   logging:
     level:
@@ -73,7 +58,7 @@ spring:
         max-history: 90
         total-size-cap: 5GB
         file-name-pattern: logs/bif-prod-%d{yyyy-MM-dd}.%i.log
-  
+
   # 개발 도구 비활성화
   devtools:
     restart:
@@ -84,7 +69,7 @@ spring:
 # Swagger/OpenAPI 설정
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api-docs
     info:
       title: "BIF API Documentation (PROD)"
       description: "BIF (Business Intelligence Framework) REST API Documentation - Production Environment"

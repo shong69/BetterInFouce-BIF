@@ -30,6 +30,7 @@ public class GuardianServiceImpl implements GuardianService {
     @Override
     @Transactional
     public Guardian registerBySocialId(Long socialId, String email, String connectionCode) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -69,4 +70,5 @@ public class GuardianServiceImpl implements GuardianService {
     private boolean isNicknameExists(String nickname) {
         return guardianRepository.findByNickname(nickname).isPresent();
     }
+
 }

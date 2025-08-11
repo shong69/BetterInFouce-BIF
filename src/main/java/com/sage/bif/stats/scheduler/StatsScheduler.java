@@ -67,13 +67,5 @@ public class StatsScheduler {
             }
         }
     }
-    
-    /**
-     * 테스트용: 수동으로 특정 월의 감정 통계 텍스트 생성
-     * 개발/테스트 환경에서만 사용
-     */
-    public void generateEmotionStatisticsManually(final int year, final int month) {
-        log.info("수동 감정 통계 텍스트 생성 요청: {}년 {}월", year, month);
-        generateEmotionStatisticsForDummyUsers(year, month);
-    }
+
 }

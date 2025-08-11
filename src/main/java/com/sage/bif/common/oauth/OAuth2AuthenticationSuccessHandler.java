@@ -3,6 +3,7 @@ package com.sage.bif.common.oauth;
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.user.entity.SocialLogin;
+import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
 import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
@@ -28,13 +29,15 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final SocialLoginService socialLoginService;
     private final BifService bifService;
     private final GuardianService guardianService;
+    private final LoginLogService loginLogService;
 
     public OAuth2AuthenticationSuccessHandler(JwtTokenProvider jwtTokenProvider, SocialLoginService socialLoginService,
-                                              BifService bifService, GuardianService guardianService) {
+                                              BifService bifService, GuardianService guardianService, LoginLogService loginLogService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.socialLoginService = socialLoginService;
         this.bifService = bifService;
         this.guardianService = guardianService;
+        this.loginLogService = loginLogService;
     }
 
     @Override
@@ -73,6 +76,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         Optional<com.sage.bif.user.entity.Bif> bif = bifService.findBySocialId(socialLogin.getSocialId());
 
         if (bif.isPresent()) {
+            loginLogService.recordLogin(socialLogin.getSocialId());
             processBifLogin(bif.get().getBifId(), bif.get().getNickname(),
                     providerUniqueId, registrationId,
                     socialLogin.getSocialId(), request, response);
@@ -80,6 +84,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             Optional<com.sage.bif.user.entity.Guardian> guardian = guardianService.findBySocialId(socialLogin.getSocialId());
 
             if (guardian.isPresent()) {
+                loginLogService.recordLogin(socialLogin.getSocialId());
                 processGuardianLogin(guardian.get().getBif().getBifId(), guardian.get().getNickname(),
                         providerUniqueId, registrationId,
                         socialLogin.getSocialId(), request, response);
@@ -153,7 +158,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_email", email);
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
-
         response.sendRedirect("/api/register-choice.html");
     }
 

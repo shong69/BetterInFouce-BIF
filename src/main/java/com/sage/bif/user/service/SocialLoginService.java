@@ -14,4 +14,5 @@ public interface SocialLoginService {
     boolean validateRefreshToken(Long socialId, String refreshToken);
     String getRefreshTokenFromRedis(Long socialId);
     void deleteRefreshTokenFromRedis(Long socialId);
+
 }
