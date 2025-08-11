@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 
+
+// todo: 사용자화 필요
 /**
  * 통계 관련 스케줄 작업을 처리하는 클래스
  * 요구사항: 감정 분석은 매월 1일 자정에 진행한다
