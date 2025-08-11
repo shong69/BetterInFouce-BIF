@@ -34,4 +34,5 @@ public class GuardianAdviceTemplate {
 
     @Column(name = "advice_text", columnDefinition = "TEXT", nullable = false)
     private String adviceText;
+
 } 

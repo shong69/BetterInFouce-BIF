@@ -31,4 +31,5 @@ public class StatsCreateRequest {
 
     private EmotionType emotion;
     private List<String> keywords;
+
 }

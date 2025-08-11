@@ -22,4 +22,5 @@ public class EmotionStatsRequest {
     private EmotionType emotion;
 
     private List<String> keywords;
+
 }

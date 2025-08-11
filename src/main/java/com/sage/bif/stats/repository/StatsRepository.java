@@ -26,4 +26,5 @@ public interface StatsRepository extends JpaRepository<Stats, Long> {
     boolean existsByBifIdAndYearMonth(final Long bifId, final LocalDateTime yearMonth);
 
     void deleteByBifId(final Long bifId);
+
 }

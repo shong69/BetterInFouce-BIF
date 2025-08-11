@@ -37,4 +37,5 @@ public class EmotionMapper {
         log.warn("Unknown stats emotion: {}, mapping to NEUTRAL", statsEmotion);
         return Emotion.NEUTRAL; 
     }
+
 }

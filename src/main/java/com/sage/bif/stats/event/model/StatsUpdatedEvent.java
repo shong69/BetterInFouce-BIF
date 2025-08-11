@@ -32,4 +32,5 @@ public class StatsUpdatedEvent extends BaseEvent {
     public String getEventType() {
         return "STATS_UPDATED";
     }
+
 } 

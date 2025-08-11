@@ -23,4 +23,5 @@ public class StatsUpdatedListener {
         log.info("Async processing stats update: {} - User: {} - Type: {} - EventId: {}", 
                 event.getStats().getId(), event.getUserId(), event.getUpdateType(), event.getEventId());
     }
+
 } 

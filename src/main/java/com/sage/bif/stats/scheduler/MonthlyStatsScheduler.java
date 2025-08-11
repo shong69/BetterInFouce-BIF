@@ -47,4 +47,5 @@ public class MonthlyStatsScheduler {
             log.error("월별 통계 생성 스케줄러 실행 중 오류 발생: {}", e.getMessage(), e);
         }
     }
+
 }

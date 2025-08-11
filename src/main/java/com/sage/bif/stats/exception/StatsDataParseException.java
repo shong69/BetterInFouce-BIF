@@ -9,4 +9,5 @@ public class StatsDataParseException extends RuntimeException {
     public StatsDataParseException(String message, Throwable cause) {
         super(message, cause);
     }
+
 } 

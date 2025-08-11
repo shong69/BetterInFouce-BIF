@@ -16,4 +16,5 @@ public interface StatsService {
     void generateMonthlyEmotionStatistics(final Long bifId, final LocalDateTime yearMonth);
 
     void updateRealTimeStats(final Long bifId);
+
 }
