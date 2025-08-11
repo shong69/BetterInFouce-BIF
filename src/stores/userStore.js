@@ -119,13 +119,17 @@ export const useUserStore = create((set, get) => ({
             isLoading: false,
           });
         }
-      } else {
-        set({
-          accessToken: null,
-          user: null,
-          registrationInfo: null,
-          isLoading: false,
-        });
+      } else if (response.status === 401) {
+        const result = await response.json();
+        if (result.code === "EXISTING_USER_LOGOUT_REQUIRED") {
+          set({
+            accessToken: null,
+            user: null,
+            registrationInfo: null,
+            isLoading: false,
+          });
+          return;
+        }
       }
     } catch {
       set({
@@ -169,6 +173,12 @@ export const useUserStore = create((set, get) => ({
         console.log("Refresh failed:", refreshError);
       }
     }
+    set({
+      accessToken: null,
+      user: null,
+      registrationInfo: null,
+      isLoading: false,
+    });
   },
 
   logout: async () => {
