@@ -2,9 +2,6 @@ package com.sage.bif.common.client.ai.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Azure OpenAI Moderation API 요청을 위한 DTO
- */
 public class ModerationRequest {
     
     @JsonProperty("input")
