@@ -91,10 +91,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-
-      <div className="pb-6">
-        <Footer />
-      </div>
       <Footer />
     </>
   );

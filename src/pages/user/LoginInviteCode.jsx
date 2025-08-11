@@ -31,7 +31,9 @@ export default function LoginInviteCode() {
 
     if (value && index < 5) {
       const nextInput = document.getElementById(`code-${index + 1}`);
-      if (nextInput) nextInput.focus();
+      if (nextInput) {
+        nextInput.focus();
+      }
     }
   }
 
@@ -61,7 +63,9 @@ export default function LoginInviteCode() {
 
       const lastIndex = Math.min(validChars.length - 1, 5);
       const lastInput = document.getElementById(`code-${lastIndex}`);
-      if (lastInput) lastInput.focus();
+      if (lastInput) {
+        lastInput.focus();
+      }
     }
   }
 
