@@ -7,13 +7,12 @@ import java.util.Random;
 
 public class RandomGenerator {
 
-    private static final String NICKNAME_PREFIX = "사용자";
-    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final String CONNECTION_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final Random random = new Random();
 
-    public static String generateNickname() {
-        StringBuilder sb = new StringBuilder(NICKNAME_PREFIX);
+    public static String generateNickname(String prefix) {
+        StringBuilder sb = new StringBuilder(prefix);
 
         for (int i = 0; i < 6; i++) {
             sb.append(LETTERS.charAt(random.nextInt(LETTERS.length())));
@@ -32,13 +31,13 @@ public class RandomGenerator {
         return sb.toString();
     }
 
-    public static String generateUniqueNickname(NicknameChecker checker) {
+    public static String generateUniqueNickname(String prefix, NicknameChecker checker) {
         String nickname;
         int attempts = 0;
-        final int maxAttempts = 10;
+        final int maxAttempts = 100;
 
         do {
-            nickname = generateNickname();
+            nickname = generateNickname(prefix);
             attempts++;
         } while (checker.isNicknameExists(nickname) && attempts < maxAttempts);
 
@@ -52,7 +51,7 @@ public class RandomGenerator {
     public static String generateUniqueConnectionCode(ConnectionCodeChecker checker) {
         String connectionCode;
         int attempts = 0;
-        final int maxAttempts = 10;
+        final int maxAttempts = 100;
 
         do {
             connectionCode = generateConnectionCode();

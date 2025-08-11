@@ -6,13 +6,10 @@ import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
 import com.sage.bif.user.entity.SocialLogin;
-import com.sage.bif.user.event.model.GuardianRegisteredEvent;
-import com.sage.bif.user.event.model.GuardianRegistrationRequestedEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.GuardianRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +22,11 @@ public class GuardianServiceImpl implements GuardianService {
     private final GuardianRepository guardianRepository;
     private final SocialLoginRepository socialLoginRepository;
     private final BifRepository bifRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public Guardian registerBySocialId(Long socialId, String email, String connectionCode) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -41,7 +38,7 @@ public class GuardianServiceImpl implements GuardianService {
         Bif bif = bifRepository.findByConnectionCode(connectionCode)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_INVALID_INVITATION_CODE));
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("보호자", this::isNicknameExists);
 
         Guardian guardian = Guardian.builder()
                 .socialLogin(socialLogin)
@@ -49,16 +46,7 @@ public class GuardianServiceImpl implements GuardianService {
                 .nickname(nickname)
                 .build();
 
-        GuardianRegistrationRequestedEvent requestedEvent = new GuardianRegistrationRequestedEvent(guardian);
-        eventPublisher.publishEvent(requestedEvent);
-
-        Guardian savedGuardian = guardianRepository.save(guardian);
-
-        GuardianRegisteredEvent registeredEvent = new GuardianRegisteredEvent(savedGuardian);
-        eventPublisher.publishEvent(registeredEvent);
-
-
-        return savedGuardian;
+        return guardianRepository.save(guardian);
     }
 
     @Override
@@ -69,4 +57,13 @@ public class GuardianServiceImpl implements GuardianService {
     private boolean isNicknameExists(String nickname) {
         return guardianRepository.findByNickname(nickname).isPresent();
     }
+
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
+        if (bifOpt.isPresent()) {
+            bifRepository.delete(bifOpt.get());
+        }
+    }
+
 }

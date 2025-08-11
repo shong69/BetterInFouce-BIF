@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface SocialLoginRepository extends JpaRepository<SocialLogin, Long> {
 
     Optional<SocialLogin> findByProviderUniqueId(String providerUniqueId);
+
 }

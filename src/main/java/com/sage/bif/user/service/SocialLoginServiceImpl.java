@@ -2,12 +2,9 @@ package com.sage.bif.user.service;
 
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
-import com.sage.bif.common.service.RedisService;
 import com.sage.bif.user.entity.SocialLogin;
-import com.sage.bif.user.event.model.SocialLoginCreatedEvent;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +15,17 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class SocialLoginServiceImpl implements SocialLoginService {
 
     private final SocialLoginRepository socialLoginRepository;
-    private final ApplicationEventPublisher eventPublisher;
-    private final RedisService redisService;
+    private final RedisTemplate<String, String> redisTemplate;
+
     private static final String REDIS_TOKEN = "refresh_token:";
 
     @Override
     @Transactional
     public SocialLogin createSocialLogin(String email, SocialLogin.SocialProvider provider, String providerUniqueId) {
+
         Optional<SocialLogin> existingSocialLogin = socialLoginRepository.findByProviderUniqueId(providerUniqueId);
         if (existingSocialLogin.isPresent()) {
             return existingSocialLogin.get();
@@ -40,12 +37,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
                 .providerUniqueId(providerUniqueId)
                 .build();
 
-        SocialLogin savedSocialLogin = socialLoginRepository.save(socialLogin);
-
-        SocialLoginCreatedEvent event = new SocialLoginCreatedEvent(savedSocialLogin);
-        eventPublisher.publishEvent(event);
-
-        return savedSocialLogin;
+        return socialLoginRepository.save(socialLogin);
     }
 
     @Override
@@ -65,7 +57,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
             String redisKey = REDIS_TOKEN + socialId;
             Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
 
-            redisService.set(redisKey, refreshToken, expiration);
+            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
         }
@@ -73,31 +65,26 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     }
 
     @Override
-    public String getRefreshTokenFromRedis(Long socialId) {
-        String redisKey = REDIS_TOKEN + socialId;
-        Optional<Object> tokenOptional = redisService.get(redisKey);
-        if (tokenOptional.isPresent()) {
-            return tokenOptional.get().toString();
-        }
-        return null;
-    }
-
-    @Override
     @Transactional
     public void deleteRefreshTokenFromRedis(Long socialId) {
         String redisKey = REDIS_TOKEN + socialId;
-        redisService.delete(redisKey);
+        redisTemplate.delete(redisKey);
     }
 
     @Override
     public boolean validateRefreshToken(Long socialId, String refreshToken) {
         String redisKey = REDIS_TOKEN + socialId;
-        Optional<Object> storedTokenOptional = redisService.get(redisKey);
+        String storedToken = redisTemplate.opsForValue().get(redisKey);
 
-        if (storedTokenOptional.isEmpty()) {
+        if (storedToken == null) {
             return false;
         }
-        String storedToken = storedTokenOptional.get().toString();
         return storedToken.equals(refreshToken);
     }
+
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        socialLoginRepository.deleteById(socialId);
+    }
+
 }
