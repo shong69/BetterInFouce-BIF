@@ -17,6 +17,7 @@ public class MonthlySummaryResponse {
     private int year;
     private int month;
     private Map<LocalDate, DailyInfo> dailyEmotions;
+    private boolean canWriteToday;
 
     @Getter
     @Setter

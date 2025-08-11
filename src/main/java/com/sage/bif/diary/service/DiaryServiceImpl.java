@@ -85,10 +85,15 @@ public class DiaryServiceImpl implements DiaryService {
         LocalDateTime end = start.plusMonths(1);
 
         List<Diary> diaries = diaryRepository.findByUserIdAndDateBetween(bifId,start,end);
+
+        LocalDate today = LocalDate.now();
+        boolean canWriteToday = diaryRepository.existsByUserIdAndDate(bifId, today)==0;
+
         if(diaries.isEmpty()){
             return MonthlySummaryResponse.builder()
                     .year(request.getYear())
                     .month(request.getMonth())
+                    .canWriteToday(canWriteToday)
                     .build();
         }
         Map<LocalDate, MonthlySummaryResponse.DailyInfo> dailyInfos = diaries.stream()
@@ -104,6 +109,7 @@ public class DiaryServiceImpl implements DiaryService {
                 .year(request.getYear())
                 .month(request.getMonth())
                 .dailyEmotions(dailyInfos)
+                .canWriteToday(canWriteToday)
                 .build();
     }
 
