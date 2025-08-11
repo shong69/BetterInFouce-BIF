@@ -20,9 +20,9 @@ spring:
 
   # MySQL 데이터베이스 설정 (Docker)
   datasource:
-    url: jdbc:mysql://localhost:3306/simulation_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-    username: nojong
-    password: tiger
+    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+    username: root
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:

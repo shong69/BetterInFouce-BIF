@@ -35,4 +35,4 @@ public class AiServiceException extends BaseException {
         super(errorCode, message);
         this.violationInfo = violationInfo;
     }
-} 
+}

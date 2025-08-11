@@ -26,5 +26,4 @@ public class MonthlySummaryResponse {
         private Emotion emotion;
         private Long diaryId;
     }
-
-} 
+}

@@ -120,5 +120,4 @@ public class AzureOpenAiClient implements AiServiceClient {
                     "예상치 못한 오류: " + e.getMessage());
         }
     }
-
 }

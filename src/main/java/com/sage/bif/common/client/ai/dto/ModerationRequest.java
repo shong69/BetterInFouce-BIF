@@ -32,4 +32,4 @@ public class ModerationRequest {
     public void setInput(String input) {
         this.input = input;
     }
-} 
+}

@@ -154,5 +154,4 @@ public class DiaryController {
         
         return ResponseEntity.ok(result);
     }
-
-} 
+}

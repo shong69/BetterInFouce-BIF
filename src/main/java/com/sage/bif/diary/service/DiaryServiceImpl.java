@@ -288,4 +288,4 @@ public class DiaryServiceImpl implements DiaryService {
         DiaryDeletedEvent event = new DiaryDeletedEvent(this, deletedDiaryId, bifId, deletedContent, emotion);
         eventPublisher.publishEvent(event);
     }
-} 
+}

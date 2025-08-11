@@ -1,8 +1,5 @@
 package com.sage.bif.common.client.ai.dto;
 
-/**
- * Azure OpenAI Moderation API 응답을 위한 DTO
- */
 public class ModerationResponse {
     
     private boolean flagged;
@@ -30,4 +27,4 @@ public class ModerationResponse {
     public void setFlaggedCategories(String flaggedCategories) {
         this.flaggedCategories = flaggedCategories;
     }
-} 
+}

@@ -31,4 +31,4 @@ public class DiaryDeletedEvent extends BaseEvent {
     public String getEventType() {
         return "DIARY_DELETED";
     }
-} 
+}

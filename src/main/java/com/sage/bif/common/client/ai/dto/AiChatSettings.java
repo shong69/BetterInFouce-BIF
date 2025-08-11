@@ -21,4 +21,4 @@ public class AiChatSettings {
             .maxTokens(1000)
             .build();
     }
-} 
+}
