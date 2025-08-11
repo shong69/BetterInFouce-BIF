@@ -59,4 +59,5 @@ public class Diary {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

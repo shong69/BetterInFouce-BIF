@@ -12,4 +12,5 @@ public class BifAccessForbiddenException extends BaseException {
     public BifAccessForbiddenException(ErrorCode errorCode, String message) {
         super(errorCode, message);
     }
+
 } 

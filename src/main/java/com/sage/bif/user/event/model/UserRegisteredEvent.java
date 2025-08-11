@@ -26,4 +26,5 @@ public class UserRegisteredEvent extends BaseEvent {
     public String getEventType() {
         return "USER_REGISTERED";
     }
-} 
+
+}

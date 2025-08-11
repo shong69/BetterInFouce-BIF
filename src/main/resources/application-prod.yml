@@ -114,4 +114,4 @@ app:
 #     url: jdbc:sqlserver://${AZURE_SQL_HOST}.database.windows.net:1433;database=${AZURE_SQL_DATABASE};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
 #     username: ${AZURE_SQL_USERNAME}
 #     password: ${AZURE_SQL_PASSWORD}
-#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver 
+#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

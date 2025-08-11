@@ -23,4 +23,5 @@ public class DiaryCreatedEvent extends BaseEvent {
     public String getEventType() {
         return "DIARY_CREATED";
     }
+
 }

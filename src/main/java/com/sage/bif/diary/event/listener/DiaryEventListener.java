@@ -93,4 +93,5 @@ public class DiaryEventListener {
         eventPublisher.publishEvent(statsEvent);
         log.info("Stats update event published: User={}, Type={}", userId, updateType);
     }
+
 }

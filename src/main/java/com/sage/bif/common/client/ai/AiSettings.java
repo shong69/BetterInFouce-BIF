@@ -24,4 +24,5 @@ public class AiSettings {
         .temperature(0.5)
         .maxTokens(300)
         .build();
+
 }

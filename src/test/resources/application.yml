@@ -66,4 +66,4 @@ logging:
 jwt:
   secret: test-secret-key-for-testing-only
   access-expiration: 3600000
-  refresh-expiration: 2592000000 
+  refresh-expiration: 2592000000
