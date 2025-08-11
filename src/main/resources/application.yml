@@ -13,38 +13,31 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+        connection:
+          characterEncoding: utf8
+          useUnicode: true
+    defer-datasource-initialization: false
 
-  # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
-  # datasource:
-  #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
-  #   username: root
-  #   password: password
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
-
-  # H2 데이터베이스 설정 (개발용)
+  # MySQL 데이터베이스 설정 (Docker)
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:mysql://localhost:3306/simulation_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+    username: nojong
+    password: tiger
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
-  # Azure Database for MySQL 설정
-  # datasource:
-  #   url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-  #   username: ${AZURE_MYSQL_USERNAME}@${AZURE_MYSQL_SERVER_NAME}
-  #   password: ${AZURE_MYSQL_PASSWORD}
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
-  #   hikari:
-  #     maximum-pool-size: 10
-  #     minimum-idle: 5
-  #     connection-timeout: 30000
-  #     idle-timeout: 600000
-  #     max-lifetime: 1800000
+  # H2 콘솔 비활성화 (MySQL 사용시)
+  # h2:
+  #   console:
+  #     enabled: true
+  #     path: /h2-console
+
 
   # Azure SQL Database 설정
   # datasource:
@@ -183,6 +176,6 @@ app:
 
 # JWT 설정
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:your-secure-jwt-secret-key-here}
   access-expiration: 900000
   refresh-expiration: 604800000

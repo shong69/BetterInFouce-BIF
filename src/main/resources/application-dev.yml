@@ -10,19 +10,26 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
         use_sql_comments: true
+        connection:
+          characterEncoding: utf8
+          useUnicode: true
+        globally_quoted_identifiers: true
+        globally_quoted_identifiers_skip_column_definitions: true
   
-  # H2 데이터베이스 설정 (개발용)
+  # MySQL 데이터베이스 설정 (Docker)
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/simulation_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+    username: nojong
+    password: tiger
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 30000
+
 
   h2:
     console:
@@ -30,13 +37,6 @@ spring:
       path: /h2-console
       settings:
         web-allow-others: true
-
-    # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
-  # datasource:
-  #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
-  #   username: root
-  #   password: password
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
 
 
   ai:
@@ -171,7 +171,6 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-# 애플리케이션 커스텀 설정
 app:
   name: "BIF Development"
   version: "1.0.0"
@@ -182,6 +181,6 @@ app:
 
   # JWT 설정
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:yourStrongAndLongSecretKeyForJWTAuthenticationWhichIsAtLeast32BytesLong}
   access-expiration: 10000  # 10초 (밀리초) / 900000 (15분)
   refresh-expiration: 30000  # 30초 (밀리초) / 604800000 (7일)
