@@ -19,4 +19,5 @@ public class SimulationChoiceResponse {
     private String[] nextChoices;
     private Integer currentScore;
     private Boolean isCompleted;
-} 
+
+}

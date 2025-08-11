@@ -17,4 +17,5 @@ public interface BifChoiceRepository extends JpaRepository<BifChoice, Long> {
     Optional<BifChoice> findByStepIdAndChoiceText(Long stepId, String choiceText);
     
     List<BifChoice> findBySimulationId(Long simulationId);
-} 
+
+}

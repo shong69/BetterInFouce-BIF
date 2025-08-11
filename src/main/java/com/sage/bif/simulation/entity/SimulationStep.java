@@ -24,4 +24,5 @@ public class SimulationStep {
     
     @Column(name = "character_line", nullable = false, columnDefinition = "TEXT")
     private String characterLine;
-} 
+
+}

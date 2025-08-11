@@ -18,7 +18,7 @@ public class SimulationFeedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "feedback_id")
-    private Long id;
+    private Long feedbackId;
     
     @Column(name = "simulation_id", nullable = false)
     private Long simulationId;
@@ -39,4 +39,5 @@ public class SimulationFeedback {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-} 
+
+}

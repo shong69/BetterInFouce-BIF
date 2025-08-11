@@ -9,11 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.sage.bif.simulation.dto.response.SimulationResponse;
-import com.sage.bif.simulation.dto.response.SimulationSessionResponse;
 import com.sage.bif.simulation.dto.response.SimulationDetailsResponse;
 
 import com.sage.bif.simulation.dto.response.SimulationChoiceResponse;
-import com.sage.bif.simulation.dto.request.SimulationChoiceRequest;
+
 import com.sage.bif.simulation.service.SimulationService;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -38,9 +37,11 @@ public class SimulationController {
     }
     
     @PostMapping("/{simulationId}/start")
-    public ResponseEntity<ApiResponse<SimulationSessionResponse>> startSimulation(@PathVariable Long simulationId) {
-        SimulationSessionResponse session = simulationService.startSimulation(simulationId);
-        return ResponseEntity.ok(ApiResponse.success(session, "시뮬레이션 시작 성공"));
+    public ResponseEntity<ApiResponse<String>> startSimulation(@PathVariable Long simulationId) {
+
+        String sessionId = simulationService.startSimulation(simulationId);
+        return ResponseEntity.ok(ApiResponse.success(sessionId, "시뮬레이션 시작 성공"));
+        
     }
     
     @PostMapping("/choice")
@@ -51,10 +52,9 @@ public class SimulationController {
             log.info("요청 데이터: {}", request);
             
             String sessionId = (String) request.get("sessionId");
-            SimulationChoiceRequest choiceRequest = new SimulationChoiceRequest();
-            choiceRequest.setChoice((String) request.get("choice"));
+            String choice = (String) request.get("choice");
 
-            SimulationChoiceResponse response = simulationService.submitChoice(sessionId, choiceRequest);
+            SimulationChoiceResponse response = simulationService.submitChoice(sessionId, choice);
             return ResponseEntity.ok(ApiResponse.success(response, "선택지 제출 성공"));
         } catch (Exception e) {
             log.error("선택지 제출 중 오류 발생: {}", e.getMessage(), e);
@@ -122,7 +122,7 @@ public class SimulationController {
             return Long.valueOf(parts[2]);
         }
         throw new IllegalArgumentException("잘못된 sessionId 형식: " + sessionId);
-    }
-    
 
-} 
+    }
+
+}

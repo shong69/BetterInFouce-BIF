@@ -1,5 +1,6 @@
 package com.sage.bif.simulation.service;
 
+import com.sage.bif.common.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -15,15 +16,10 @@ import com.sage.bif.simulation.repository.SimulationStepRepository;
 import com.sage.bif.simulation.repository.BifChoiceRepository;
 import com.sage.bif.simulation.repository.SimulationFeedbackRepository;
 import com.sage.bif.simulation.dto.response.SimulationResponse;
-import com.sage.bif.simulation.dto.response.SimulationSessionResponse;
 import com.sage.bif.simulation.dto.response.SimulationChoiceResponse;
-import com.sage.bif.simulation.dto.response.SimulationResultResponse;
 import com.sage.bif.simulation.dto.response.SimulationDetailsResponse;
-import com.sage.bif.simulation.dto.request.SimulationChoiceRequest;
 
 import com.sage.bif.simulation.exception.SimulationException;
-import com.sage.bif.simulation.exception.SimulationErrorCode;
-import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -48,41 +44,24 @@ public class SimulationServiceImpl implements SimulationService {
     }
     
     @Override
-    public SimulationSessionResponse startSimulation(Long simulationId) {
+    public String startSimulation(Long simulationId) {
         log.info("시뮬레이션 시작 요청: simulationId={}", simulationId);
         
-        Simulation simulation = simulationRepository.findById(simulationId)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
-        
-        SimulationStep firstStep = stepRepository.findBySimulationIdAndStepOrder(simulationId, 1)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
-        
-        List<BifChoice> firstChoices = choiceRepository.findByStepIdOrderByChoiceId(firstStep.getStepId());
-        String[] choiceTexts = firstChoices.stream()
-                .map(BifChoice::getChoiceText)
-                .toArray(String[]::new);
+        simulationRepository.findById(simulationId)
+                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
         
         String sessionId = "session_" + System.currentTimeMillis() + "_" + simulationId + "_1";
         log.info("시뮬레이션 세션 생성: sessionId={}", sessionId);
         
-        return SimulationSessionResponse.builder()
-                .sessionId(sessionId)
-                .simulationId(simulationId)
-                .simulationTitle(simulation.getTitle())
-                .category(simulation.getCategory())
-                .currentStep("1")
-                .scenario(firstStep.getCharacterLine())
-                .choices(choiceTexts)
-                .isCompleted(false)
-                .build();
+        return sessionId;
     }
     
     @Override
-    public SimulationChoiceResponse submitChoice(String sessionId, SimulationChoiceRequest request) {
+    public SimulationChoiceResponse submitChoice(String sessionId, String userChoice) {
         try {
             log.info("=== 서비스 submitChoice 호출 ===");
             log.info("sessionId: {}", sessionId);
-            log.info("choice: {}", request.getChoice());
+            log.info("choice: {}", userChoice);
             
             Long simulationId = extractSimulationIdFromSessionId(sessionId);
             int currentStep = extractCurrentStepFromSessionId(sessionId);
@@ -91,13 +70,13 @@ public class SimulationServiceImpl implements SimulationService {
             log.info("추출된 currentStep: {}", currentStep);
         
         SimulationStep currentStepData = stepRepository.findBySimulationIdAndStepOrder(simulationId, currentStep)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
+                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
         
         List<BifChoice> choices = choiceRepository.findByStepIdOrderByChoiceId(currentStepData.getStepId());
         BifChoice selectedChoice = choices.stream()
-                .filter(choice -> choice.getChoiceText().equals(request.getChoice()))
+                .filter(choice -> choice.getChoiceText().equals(userChoice))
                 .findFirst()
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_INVALID_CHOICE));
+                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_INVALID_CHOICE));
         
         int nextStep = currentStep + 1;
         List<SimulationStep> allSteps = stepRepository.findBySimulationIdOrderByStepOrder(simulationId);
@@ -108,7 +87,7 @@ public class SimulationServiceImpl implements SimulationService {
         
         if (!isCompleted) {
             SimulationStep nextStepData = stepRepository.findBySimulationIdAndStepOrder(simulationId, nextStep)
-                    .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
+                    .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
             
             List<BifChoice> nextStepChoices = choiceRepository.findByStepIdOrderByChoiceId(nextStepData.getStepId());
             nextScenario = nextStepData.getCharacterLine();
@@ -121,7 +100,7 @@ public class SimulationServiceImpl implements SimulationService {
         
         return SimulationChoiceResponse.builder()
                 .sessionId(nextSessionId)
-                .selectedChoice(request.getChoice())
+                .selectedChoice(userChoice)
                 .feedback(selectedChoice.getFeedbackText() != null ? selectedChoice.getFeedbackText() : "")
                 .nextScenario(nextScenario)
                 .nextChoices(nextChoices)
@@ -137,16 +116,35 @@ public class SimulationServiceImpl implements SimulationService {
     @Override
     public String getFeedbackText(Long simulationId, int score) {
         log.info("피드백 조회 요청: simulationId={}, score={}", simulationId, score);
+
+        List<SimulationFeedback> allFeedbacks = feedbackRepository.findBySimulationId(simulationId);
+        log.info("시뮬레이션 {}의 전체 피드백 개수: {}", simulationId, allFeedbacks.size());
+
+        allFeedbacks.forEach(feedback ->
+            log.info("피드백 ID: {}, 점수 범위: {}~{}, 피드백: {}", 
+                feedback.getFeedbackId(), feedback.getMinScore(), feedback.getMaxScore(), feedback.getFeedbackText())
+        );
         
         Optional<SimulationFeedback> feedback = feedbackRepository.findBySimulationIdAndScore(simulationId, score);
         
         if (feedback.isPresent()) {
-            log.info("피드백 조회 성공");
+            log.info("피드백 조회 성공: {}", feedback.get().getFeedbackText());
             return feedback.get().getFeedbackText();
         }
         
-        log.warn("피드백을 찾을 수 없음, 기본 메시지 반환");
-        return "피드백 에러입니다.";
+        log.warn("정확한 점수 범위 매칭 실패, 가장 가까운 피드백 찾기 시도");
+        
+        Optional<SimulationFeedback> closestFeedback = allFeedbacks.stream()
+                .filter(f -> score >= f.getMinScore() && score <= f.getMaxScore())
+                .findFirst();
+        
+        if (closestFeedback.isPresent()) {
+            log.info("가장 가까운 피드백 찾음: {}", closestFeedback.get().getFeedbackText());
+            return closestFeedback.get().getFeedbackText();
+        }
+
+        log.warn("점수 {}에 맞는 피드백을 찾을 수 없음, 기본 메시지 반환", score);
+        return "피드백을 찾을 수 없습니다. 점수: " + score;
     }
     
     @Override
@@ -154,7 +152,7 @@ public class SimulationServiceImpl implements SimulationService {
         log.info("시뮬레이션 상세 정보 조회 요청: simulationId={}", simulationId);
         
         Simulation simulation = simulationRepository.findById(simulationId)
-                .orElseThrow(() -> new SimulationException(SimulationErrorCode.SIM_NOT_FOUND));
+                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
         
         List<SimulationStep> steps = stepRepository.findBySimulationIdOrderByStepOrder(simulationId);
         
@@ -196,7 +194,7 @@ public class SimulationServiceImpl implements SimulationService {
 
     @Override
     public void recommendSimulation(Long simulationId) {
-        log.info("시뮬레이션 추천 기능 호출(구현 예정)", simulationId);
+        log.info("시뮬레이션 추천 기능 호출(구현 예정)");
         throw new UnsupportedOperationException("시뮬레이션 추천 기능은 아직 구현되지 않았습니다.");
     }
 
@@ -215,6 +213,5 @@ public class SimulationServiceImpl implements SimulationService {
         }
         throw new IllegalArgumentException("잘못된 sessionId 형식: " + sessionId);
     }
-    
 
-} 
+}
