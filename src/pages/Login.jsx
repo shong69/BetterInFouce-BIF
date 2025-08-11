@@ -6,7 +6,7 @@ export default function Login() {
     <>
       <Logo />
       <div>Login</div>
-      <Footer />
+      <Footer />x
     </>
   );
 }

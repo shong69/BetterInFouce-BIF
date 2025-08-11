@@ -2,7 +2,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Todo from "@pages/Todo";
 import Login from "@pages/Login";
 import Diary from "@pages/Diary";
-import Profile from "@pages/Profile";
+import BifProfile from "@pages/BifProfile";
+import GuardianStats from "@pages/GuardianStats";
+import GuardianProfile from "@pages/GuardianProfile";
 import Simulation from "@pages/Simulation";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
@@ -16,7 +18,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/diaries" element={<Diary />} />
           <Route path="/simulations" element={<Simulation />} />
-          <Route path="/bif-profile" element={<Profile />} />
+          <Route path="/bif-profile" element={<BifProfile />} />
+          <Route path="/guardian-profile" element={<GuardianProfile />} />
+          <Route path="/stats" element={<GuardianStats />} />
         </Routes>
       </BrowserRouter>
 
