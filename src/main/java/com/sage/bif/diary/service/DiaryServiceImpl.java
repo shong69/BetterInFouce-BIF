@@ -1,12 +1,6 @@
 package com.sage.bif.diary.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sage.bif.common.client.ai.AiServiceClient;
-import com.sage.bif.common.client.ai.AzureOpenAiModerationClient;
-import com.sage.bif.common.client.ai.dto.AiRequest;
-import com.sage.bif.common.client.ai.dto.AiResponse;
-import com.sage.bif.common.client.ai.dto.ModerationResponse;
-import com.sage.bif.common.client.ai.AiSettings;
 
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
@@ -17,6 +11,7 @@ import com.sage.bif.diary.dto.response.DiaryResponse;
 import com.sage.bif.diary.dto.response.MonthlySummaryResponse;
 import com.sage.bif.diary.entity.AiFeedback;
 import com.sage.bif.diary.entity.Diary;
+import com.sage.bif.diary.exception.AiServiceException;
 import com.sage.bif.diary.exception.DiaryNotFoundException;
 import com.sage.bif.diary.exception.BifAccessForbiddenException;
 import com.sage.bif.diary.exception.DiaryAlreadyExistsException;
@@ -28,7 +23,7 @@ import com.sage.bif.user.repository.BifRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,8 +33,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.sage.bif.common.exception.ErrorCode.COMMON_FORBIDDEN;
-import static com.sage.bif.common.exception.ErrorCode.DIARY_NOT_FOUND;
+import com.sage.bif.diary.event.model.DiaryCreatedEvent;
+import com.sage.bif.diary.event.model.DiaryUpdatedEvent;
+import com.sage.bif.diary.event.model.DiaryDeletedEvent;
+
+import static com.sage.bif.common.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -49,11 +47,10 @@ public class DiaryServiceImpl implements DiaryService {
     private final DiaryRepository diaryRepository;
     private final AiFeedbackRepository aiFeedbackRepository;
     private final BifRepository bifRepository;
-
     private final ObjectMapper objectMapper;
     private final RedisService redisService;
-    private final AsyncService asyncService;
     private final AiFeedbackService aiFeedbackService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public MonthlySummaryResponse getMonthlySummary(Long bifId, MonthlySummaryRequest request) {
@@ -146,12 +143,20 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     @Transactional
     public DiaryResponse createDiary(Long bifId, DiaryRequest request) {
+
+        log.info("AiFeedbackService 주입 확인: {}", 
+        aiFeedbackService != null ? "성공" : "실패");
+        if (aiFeedbackService == null) {
+            log.error("AiFeedbackService가 null입니다!");
+            throw new AiServiceException(COMMON_AI_SERVICE_UNAVAILABLE,"AiFeedbackService 주입 실패");
+        }
+
         Bif user = bifRepository.findById(bifId)
         .orElseThrow(() -> new BaseException(ErrorCode.COMMON_NOT_FOUND, "사용자를 찾을 수 없습니다."));
-
-        boolean exists = diaryRepository.existsByUserIdAndDate(bifId, request.getDate().toLocalDate());
+        boolean exists = diaryRepository.existsByUserIdAndDate(bifId, request.getDate().toLocalDate())>0;
         
         if (exists) {
+            log.info("!!!!!!!!!!!!!!!!!!오늘 작성한 일기가 존재함!!!!!!!!!!!!!!");
             throw new DiaryAlreadyExistsException(request.getDate().toLocalDate());
         }
 
@@ -165,30 +170,62 @@ public class DiaryServiceImpl implements DiaryService {
         
         Diary savedDiary = diaryRepository.save(diary);
 
-        AiFeedback feedback = AiFeedback.builder()
-        .diary(savedDiary)
-        .content(null) 
-        .build();
-    
-        aiFeedbackService.checkModeration(request.getContent(), feedback, bifId, savedDiary.getId());
-
-        if (!feedback.isContentFlagged()) {
-            String aiFeedbackContent = aiFeedbackService.generateAiFeedback(request.getContent());
-            feedback.setContent(aiFeedbackContent);
+        AiFeedback feedback = null;
+        
+        log.info("checkModeration 호출 시작 - content: {}", request.getContent());
+        
+        try {
+            AiFeedback tempFeedback = AiFeedback.builder()
+                .diary(savedDiary)
+                .content("")
+                .build();
+            
+            aiFeedbackService.checkModeration(request.getContent(), tempFeedback, bifId, savedDiary.getId());
+            log.info("checkModeration 호출 완료 - flagged: {}", tempFeedback.isContentFlagged());
+            
+            if (!tempFeedback.isContentFlagged()) {
+                String aiFeedbackContent = aiFeedbackService.generateAiFeedback(request.getContent(), request.getEmotion());
+                if (aiFeedbackContent != null && !aiFeedbackContent.trim().isEmpty()) {
+                    feedback = AiFeedback.builder()
+                        .diary(savedDiary)
+                        .content(aiFeedbackContent)
+                        .contentFlagged(false)
+                        .contentFlaggedCategories(null)
+                        .build();
+                    
+                    feedback = aiFeedbackRepository.save(feedback);
+                    log.info("AI 피드백 저장 완료 - ID: {}", feedback.getId());
+                } else {
+                    log.warn("AI 피드백 생성 실패 또는 빈 내용 - content: {}", aiFeedbackContent);
+                }
+            } else {
+                feedback = AiFeedback.builder()
+                    .diary(savedDiary)
+                    .content(null)
+                    .contentFlagged(true)
+                    .contentFlaggedCategories(tempFeedback.getContentFlaggedCategories())
+                    .build();
+                 
+                feedback = aiFeedbackRepository.save(feedback);
+                log.info("Moderation 결과만 저장 - flagged: true, categories: {}", 
+                    tempFeedback.getContentFlaggedCategories());
+             }
+            
+        } catch (Exception e) {
+            log.error("AI 서비스 호출 중 예외 발생: {}", e.getMessage(), e);
         }
 
-        aiFeedbackRepository.save(feedback);
-
-        asyncService.invalidateCacheAsync(bifId, request.getDate().toLocalDate());//비동기
+        DiaryCreatedEvent event = new DiaryCreatedEvent(this, savedDiary);
+        eventPublisher.publishEvent(event);
         
         return DiaryResponse.builder()
             .id(savedDiary.getId())
             .content(savedDiary.getContent())
             .userId(bifId)
             .emotion(savedDiary.getEmotion())
-            .aiFeedback(feedback.getContent())
-            .contentFlagged(feedback.isContentFlagged())
-            .contentFlaggedCategories(feedback.getContentFlaggedCategories())
+            .aiFeedback(Optional.ofNullable(feedback).map(AiFeedback::getContent).orElse(null))
+            .contentFlagged(Optional.ofNullable(feedback).map(AiFeedback::isContentFlagged).orElse(false))
+            .contentFlaggedCategories(Optional.ofNullable(feedback).map(AiFeedback::getContentFlaggedCategories).orElse(null))
             .createdAt(savedDiary.getCreatedAt())
             .updatedAt(savedDiary.getUpdatedAt())
             .build();
@@ -204,6 +241,7 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BifAccessForbiddenException(COMMON_FORBIDDEN, "일기 수정 권한이 없습니다.");
         }
 
+        String previousContent = diary.getContent();
         diary.setContent(content);
         diary.setUpdatedAt(LocalDateTime.now());
 
@@ -214,7 +252,8 @@ public class DiaryServiceImpl implements DiaryService {
             aiFeedbackRepository.save(feedback);
         }
 
-        asyncService.invalidateCacheAsync(bifId, diary.getCreatedAt().toLocalDate());
+        DiaryUpdatedEvent event = new DiaryUpdatedEvent(this, diary, previousContent);
+        eventPublisher.publishEvent(event);
 
         return DiaryResponse.builder()
             .id(diary.getId())
@@ -239,8 +278,14 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BifAccessForbiddenException(COMMON_FORBIDDEN, "일기 삭제 권한이 없습니다.");
         }
 
+        Long deletedDiaryId = diary.getId();
+        String deletedContent = diary.getContent();
+        String emotion = diary.getEmotion().toString();
+
         diary.setDeleted(true);
 
-        asyncService.invalidateCacheAsync(bifId, diary.getCreatedAt().toLocalDate());
+        DiaryDeletedEvent event = new DiaryDeletedEvent(this, deletedDiaryId, bifId, deletedContent, emotion);
+        eventPublisher.publishEvent(event);
     }
-} 
+
+}

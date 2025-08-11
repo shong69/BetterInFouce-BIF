@@ -13,7 +13,7 @@ public class OAuth2UserInfoFactory {
     private OAuth2UserInfoFactory() {
     }
 
-    public static OAuth2UserInfo get(String registrationId, Map<String, Object> attributes) throws IllegalAccessException {
+    public static OAuth2UserInfo get(String registrationId, Map<String, Object> attributes) {
 
         return switch (registrationId.toLowerCase()) {
             case "kakao" -> new KakaoOAuth2UserInfo(attributes);

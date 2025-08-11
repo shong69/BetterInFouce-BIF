@@ -13,5 +13,6 @@ public interface SocialLoginService {
     void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt);
     boolean validateRefreshToken(Long socialId, String refreshToken);
     void deleteRefreshTokenFromRedis(Long socialId);
+    void deleteBySocialId(Long socialId);
 
 }

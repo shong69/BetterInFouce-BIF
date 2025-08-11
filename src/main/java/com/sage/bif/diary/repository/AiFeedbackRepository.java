@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AiFeedbackRepository extends JpaRepository<AiFeedback,Long> {
+
     Optional<AiFeedback> findByDiaryId(Long diaryId);
+
     Optional<AiFeedback> findByDiary(Diary diary);
+
 }

@@ -1,7 +1,6 @@
 package com.sage.bif.diary.service;
 
 import com.sage.bif.common.client.ai.AiServiceClient;
-import com.sage.bif.common.client.ai.AzureOpenAiModerationClient;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.client.ai.dto.ModerationResponse;
@@ -9,6 +8,7 @@ import com.sage.bif.common.client.ai.AiSettings;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.diary.entity.AiFeedback;
 import com.sage.bif.diary.entity.Diary;
+import com.sage.bif.diary.model.Emotion;
 import com.sage.bif.diary.repository.AiFeedbackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,7 @@ public class AiFeedbackService {
     
     private final AiFeedbackRepository aiFeedbackRepository;
     private final AiServiceClient aiModelClient;
-    private final AzureOpenAiModerationClient moderationClient;
-    
+
     @Transactional
     public void regenerateAiFeedbackIfNeeded(Diary diary, AiFeedback feedback) {
         boolean needsRegeneration = false;
@@ -39,7 +38,7 @@ public class AiFeedbackService {
         if (needsRegeneration) {
             log.info("AI 피드백 재생성 시작 - 일기 ID: {}", diary.getId());
             try {
-                String aiFeedbackContent = generateAiFeedback(diary.getContent());
+                String aiFeedbackContent = generateAiFeedback(diary.getContent(), diary.getEmotion());
                 
                 feedback.setContent(aiFeedbackContent);
                 checkModeration(diary.getContent(), feedback, diary.getUser().getBifId(), diary.getId());
@@ -54,40 +53,51 @@ public class AiFeedbackService {
     }
     
     public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
-        try {
-            ModerationResponse moderationResponse = moderationClient.moderate(content);
-            if (moderationResponse.isFlagged()) {
-                feedback.setContentFlagged(true);
-                feedback.setContentFlaggedCategories(moderationResponse.getFlaggedCategories());
-                log.warn("부적절한 콘텐츠 감지 - 사용자: {}, 일기: {}, 카테고리: {}", 
-                    bifId, diaryId, moderationResponse.getFlaggedCategories());
-            } else {
-                feedback.setContentFlagged(false);
-                feedback.setContentFlaggedCategories(null);
-            }
-        } catch (Exception e) {
-            log.warn("Moderation 체크 실패: {}", e.getMessage());
-            feedback.setContentFlagged(false);
-            feedback.setContentFlaggedCategories(null);
-        }
+
     }
     
-    public String generateAiFeedback(String content) {
+    public String generateAiFeedback(String content, Emotion emotion) {
+        log.info("=== generateAiFeedback 메서드 시작 ===");
+        log.info("입력 파라미터 - content: {}, emotion: {}", content, emotion);
+        
         try {
-            log.info("AI 피드백 생성 시작");
+            log.info("AI 피드백 생성 시작 - 감정: {}, 콘텐츠: {}", emotion, content);
             
-            AiRequest request = new AiRequest(content);
+            if (aiModelClient == null) {
+                log.error("aiModelClient가 null입니다!");
+                throw new RuntimeException("aiModelClient가 null입니다");
+            }
+            
+            String userPrompt = content;
+            if (emotion != null) {
+                userPrompt = String.format("감정: %s%n%n일기 내용:%n%s", 
+                    emotion.name(), content);
+            }
+            
+            log.info("AI 모델에 전송할 프롬프트: {}", userPrompt);
+            
+            AiRequest request = new AiRequest(userPrompt);
+            log.info("AiRequest 생성 완료: {}", request);
+            
+            log.info("aiModelClient.generate() 호출 시작");
             AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
+            log.info("AI 응답 수신 완료: {}", response);
             
-            log.info("AI 피드백 생성 완료");
+            log.info("AI 피드백 생성 완료: {}", response.getContent());
+            log.info("=== generateAiFeedback 메서드 정상 완료 ===");
             return response.getContent();
             
         } catch (BaseException e) {
-            log.error("AI 피드백 생성 BaseException: {}", e.getMessage());
+            log.error("=== generateAiFeedback 메서드에서 BaseException 발생 ===");
+            log.error("AI 피드백 생성 BaseException - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
+            log.error("BaseException 스택 트레이스:", e);
             return null;
         } catch (Exception e) {
-            log.error("AI 피드백 생성 예상치 못한 오류: {}", e.getMessage());
+            log.error("=== generateAiFeedback 메서드에서 예상치 못한 예외 발생 ===");
+            log.error("AI 피드백 생성 예상치 못한 오류 - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
+            log.error("예외 스택 트레이스:", e);
             return null;
         }
     }
-} 
+    
+}

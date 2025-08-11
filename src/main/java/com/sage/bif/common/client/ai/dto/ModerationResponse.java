@@ -27,4 +27,5 @@ public class ModerationResponse {
     public void setFlaggedCategories(String flaggedCategories) {
         this.flaggedCategories = flaggedCategories;
     }
-} 
+
+}

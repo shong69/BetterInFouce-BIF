@@ -15,9 +15,9 @@ spring:
 
   # MySQL 데이터베이스 설정 (운영용)
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: root
-    password: password
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bif}?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -26,6 +26,7 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
+
 
   # 서버 설정
   server:
@@ -114,4 +115,4 @@ app:
 #     url: jdbc:sqlserver://${AZURE_SQL_HOST}.database.windows.net:1433;database=${AZURE_SQL_DATABASE};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
 #     username: ${AZURE_SQL_USERNAME}
 #     password: ${AZURE_SQL_PASSWORD}
-#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver 
+#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

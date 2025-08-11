@@ -26,7 +26,7 @@ public class MonthlyStatsScheduler {
         log.info("매월 1일 자정 - 모든 BIF 월별 통계 생성 시작");
         
         try {
-            List<Bif> activeBifs = bifRepository.findByIsActiveTrue();
+            List<Bif> activeBifs = bifRepository.findAll();
             
             LocalDateTime lastMonth = LocalDateTime.now().minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
             

@@ -23,4 +23,5 @@ public class BaseException extends RuntimeException {
         this.errorCode = errorCode;
         this.details = cause != null ? cause.getMessage() : null;
     }
+
 }

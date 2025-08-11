@@ -7,7 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 class BifApplicationTests {
 
 	@Test
-	void contextLoads() {
-	}
+	void contextLoads() {}
 
 }

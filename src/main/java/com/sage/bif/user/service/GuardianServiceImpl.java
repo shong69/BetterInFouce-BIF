@@ -58,4 +58,12 @@ public class GuardianServiceImpl implements GuardianService {
         return guardianRepository.findByNickname(nickname).isPresent();
     }
 
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
+        if (bifOpt.isPresent()) {
+            bifRepository.delete(bifOpt.get());
+        }
+    }
+
 }

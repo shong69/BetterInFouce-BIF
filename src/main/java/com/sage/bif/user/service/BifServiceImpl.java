@@ -45,11 +45,6 @@ public class BifServiceImpl implements BifService {
     }
 
     @Override
-    public Optional<Bif> findByConnectionCode(String connectionCode) {
-        return bifRepository.findByConnectionCode(connectionCode);
-    }
-
-    @Override
     public Optional<Bif> findBySocialId(Long socialId) {
         return bifRepository.findBySocialLogin_SocialId(socialId);
     }
@@ -61,5 +56,13 @@ public class BifServiceImpl implements BifService {
     private boolean isConnectionCodeExists(String connectionCode) {
         return bifRepository.findByConnectionCode(connectionCode).isPresent();
     }
-    
+
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
+        if (bifOpt.isPresent()) {
+            bifRepository.delete(bifOpt.get());
+        }
+    }
+
 }

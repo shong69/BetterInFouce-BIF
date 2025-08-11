@@ -78,7 +78,15 @@ $RECYCLE.BIN/
 *.swo
 *~
 
+# 환경변수 설정 파일
+set-env.bat
+set-env.sh
+.env
+*.env
 
 # Logs
 *.log
 logs/
+
+# api key
+src/main/resources/application-secret.yml

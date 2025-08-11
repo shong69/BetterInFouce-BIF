@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name="emotion_feedback")
 public class AiFeedback {
+
     @Id
     @Column(name="feedback_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +32,7 @@ public class AiFeedback {
     @JoinColumn(name="diary_id", nullable = false, unique = true)
     private Diary diary;
     
-    @Column(columnDefinition = "TEXT", nullable=false)
+    @Column(columnDefinition = "TEXT", nullable=true)
     private String content;
 
     @Column(name="content_flagged", nullable=false)
@@ -48,4 +49,5 @@ public class AiFeedback {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
 }

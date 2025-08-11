@@ -26,24 +26,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String jwt = getJwtFromRequest(request);
 
-        if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-            Long bifId = jwtTokenProvider.getBifIdFromToken(jwt);
-            String nickname = jwtTokenProvider.getNicknameFromToken(jwt);
-            String provider = jwtTokenProvider.getProviderFromToken(jwt);
-            String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(jwt);
-            JwtTokenProvider.UserRole role = JwtTokenProvider.UserRole.valueOf(jwtTokenProvider.getRoleFromToken(jwt));
-            Long socialId = jwtTokenProvider.getSocialIdFromToken(jwt);
+        if (StringUtils.hasText(jwt)) {
+            String result = jwtTokenProvider.validateToken(jwt);
+            if (result.equals("SUCCESS")) {
+                Long bifId = jwtTokenProvider.getBifIdFromToken(jwt);
+                String nickname = jwtTokenProvider.getNicknameFromToken(jwt);
+                String provider = jwtTokenProvider.getProviderFromToken(jwt);
+                String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(jwt);
+                JwtTokenProvider.UserRole role = JwtTokenProvider.UserRole.valueOf(jwtTokenProvider.getRoleFromToken(jwt));
+                Long socialId = jwtTokenProvider.getSocialIdFromToken(jwt);
 
-            CustomUserDetails userDetails = new CustomUserDetails(jwt, bifId, nickname, provider, providerUniqueId, role, socialId);
+                CustomUserDetails userDetails = new CustomUserDetails(jwt, bifId, nickname, provider, providerUniqueId, role, socialId);
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+
+                String jsonResponse = String.format(
+                        "{\"success\":false,\"message\":\"%s\",\"errorCode\":\"%s\",\"timestamp\":\"%s\"}",
+                        result, result, java.time.LocalDateTime.now()
+                );
+                response.getWriter().write(jsonResponse);
+                return;
+            }
         }
-
         filterChain.doFilter(request, response);
     }
 

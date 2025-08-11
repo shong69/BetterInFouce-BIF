@@ -33,7 +33,7 @@ public class Diary {
     @Column(name="selected_emotion", nullable = false)
     private Emotion emotion;
     
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false, length = 800)
     private String content;
 
     @Column(name="created_at", nullable = false)
@@ -59,4 +59,5 @@ public class Diary {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-} 
+
+}

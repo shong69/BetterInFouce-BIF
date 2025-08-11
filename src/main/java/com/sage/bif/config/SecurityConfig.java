@@ -65,20 +65,8 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorization -> authorization
-                        .requestMatchers(
-                                "/api/swagger-ui.html",
-                                "/api/swagger-ui/**",
-                                "/api/api-docs",
-                                "/api/api-docs/**",
-                                "/api/v3/api-docs",
-                                "/api/v3/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers("/api/h2-console/**").permitAll()
-                        .requestMatchers("/api/stats/test/stat").permitAll()
-                        .requestMatchers("/api/diaries/test/**").permitAll()
                         .requestMatchers("/api/auth/admin-login", "/api/oauth2/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers("/api/auth/register/**", "/api/auth/session-info", "/api/auth/logout", "/api/auth/refresh").permitAll()

@@ -15,4 +15,5 @@ public class DiaryAlreadyExistsException extends BaseException {
         super(ErrorCode.DIARY_ALREADY_EXISTS, 
             "해당 날짜(" + date + ")에 이미 일기가 존재합니다.");
     }
-} 
+
+}

@@ -9,4 +9,5 @@ public interface AiServiceClient {
     AiResponse generate(AiRequest request);
 
     AiResponse generate(AiRequest request, AiChatSettings settings);
-} 
+
+}
