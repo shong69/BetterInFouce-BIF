@@ -8,7 +8,7 @@ public class SimulationNotFoundException extends BaseException {
     public SimulationNotFoundException(Long simulationId) {
         super(ErrorCode.SIM_NOT_FOUND, "Simulation not found with id: " + simulationId);
     }
-    
+
     public SimulationNotFoundException(Long userId, Long simulationId) {
         super(ErrorCode.SIM_NOT_FOUND, "Simulation not found with id: " + simulationId + " for user: " + userId);
     }
@@ -16,5 +16,4 @@ public class SimulationNotFoundException extends BaseException {
     public SimulationNotFoundException(ErrorCode errorCode, String message) {
         super(errorCode, message);
     }
-
-}
+} 

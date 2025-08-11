@@ -15,9 +15,9 @@ spring:
   
   # MySQL 데이터베이스 설정 (운영용)
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bif}?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
+    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: root
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -27,24 +27,9 @@ spring:
       max-lifetime: 1800000
       leak-detection-threshold: 60000
   
-  # Spring AI 설정 (Azure OpenAI)
-  ai:
-    azure:
-      openai:
-        endpoint: ${AZURE_OPENAI_ENDPOINT}
-        api-key: ${AZURE_OPENAI_API_KEY}
-        deployment:
-          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
-  
-  # Spring Security 설정
-  security:
-    user:
-      name: ${ADMIN_USERNAME:admin}
-      password: ${ADMIN_PASSWORD:admin123}
-  
   # 서버 설정
   server:
-    port: ${SERVER_PORT:8080}
+    port: 8080
     servlet:
       context-path: /api
     compression:
@@ -129,4 +114,4 @@ app:
 #     url: jdbc:sqlserver://${AZURE_SQL_HOST}.database.windows.net:1433;database=${AZURE_SQL_DATABASE};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
 #     username: ${AZURE_SQL_USERNAME}
 #     password: ${AZURE_SQL_PASSWORD}
-#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver 
+#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
