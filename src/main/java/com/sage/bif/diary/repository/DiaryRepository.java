@@ -22,4 +22,5 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     
     @Query(value="SELECT COUNT(*) > 0 FROM emotion_diary d WHERE d.bif_id = :userId AND DATE(d.created_at) = :date", nativeQuery = true)
     Long existsByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
 }

@@ -13,6 +13,7 @@ import com.sage.bif.diary.model.Emotion;
 @Setter
 @Builder
 public class DiaryResponse {
+
     private Long id;
     private Emotion emotion;
     private String content;
@@ -23,4 +24,5 @@ public class DiaryResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 }

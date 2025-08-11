@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name="emotion_feedback")
 public class AiFeedback {
+
     @Id
     @Column(name="feedback_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,4 +49,5 @@ public class AiFeedback {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
 }

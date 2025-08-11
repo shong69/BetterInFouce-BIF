@@ -9,7 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 class BifApplicationTests {
 
 	@Test
-	void contextLoads() {
-	}
+	void contextLoads() {}
 
 }
