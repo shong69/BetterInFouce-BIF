@@ -1,6 +1,7 @@
 package com.sage.bif.common.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -89,15 +90,19 @@ public final class JwtTokenProvider {
                 .getPayload();
     }
 
-    public boolean validateToken(String token) {
+    public String validateToken(String token) {
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return "SUCCESS";
+        } catch (ExpiredJwtException e) {
+            return "EXPIRED_TOKEN";
+        } catch (JwtException e) {
+            return "INVALID_TOKEN";
+        } catch (Exception e) {
+            return "SERVER_ERROR";
         }
     }
 

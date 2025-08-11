@@ -12,4 +12,5 @@ public interface BifRepository extends JpaRepository<Bif, Long> {
     Optional<Bif> findByNickname(String nickname);
     Optional<Bif> findByConnectionCode(String connectionCode);
     Optional<Bif> findBySocialLogin_SocialId(Long socialId);
+
 }
