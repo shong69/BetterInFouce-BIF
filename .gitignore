@@ -126,3 +126,6 @@ sketch/
 *.temp
 *.swp
 *.swo
+
+#json file
+*.json
