@@ -1,17 +1,47 @@
 export default function Bubble({
   message,
-  onNextStep,
+  onNextStep = null,
   isLastStep = false,
   isHidden = false,
   showSpeaker = true,
   speakerIcon = "🔊",
+  showNextButton = true,
 }) {
   function speakText(text) {
     if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ko-KR";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.1;
+
+      utterance.rate = 1.1;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.9;
+
+      // 사용 가능한 음성들을 가져옵니다.
+      const voices = speechSynthesis.getVoices();
+
+      const preferredVoiceName = "Google 한국의";
+
+      let selectedVoice = voices.find(
+        (voice) => voice.name === preferredVoiceName,
+      );
+
+      // 만약 선호하는 음성이 없으면, 일반적인 한국어 여성 음성을 찾습니다.
+      if (!selectedVoice) {
+        selectedVoice =
+          voices.find(
+            (voice) =>
+              voice.lang.includes("ko") &&
+              voice.name.toLowerCase().includes("female"),
+          ) ||
+          voices.find(
+            (voice) => voice.lang.includes("ko"), // 마지막으로, 그냥 한국어 음성 아무거나
+          );
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
       speechSynthesis.speak(utterance);
     }
   }
@@ -42,7 +72,7 @@ export default function Bubble({
           </span>
         </div>
         <span className="mb-3 block text-sm text-gray-800">{message}</span>
-        {!isHidden && onNextStep && (
+        {!isHidden && showNextButton && onNextStep && (
           <div className="flex justify-end">
             <button
               className="bg-secondary rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"

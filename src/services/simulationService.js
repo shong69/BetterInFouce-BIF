@@ -3,7 +3,6 @@ import axios from "axios";
 const API_BASE_URL = "http://localhost:8080/api";
 export default function mapBackendToFrontend(backendData) {
   if (!Array.isArray(backendData)) {
-    console.error("백엔드 데이터가 배열이 아닙니다:", backendData);
     return [];
   }
 
@@ -74,15 +73,29 @@ function getDifficultyByCategory(category) {
   return difficultyMap[category] || "중급";
 }
 
-async function getSimulationDetails(simulationId) {
-  try {
+export const simulationService = {
+  getSimulations: async function () {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/simulations`);
+      if (response.data && response.data.success && response.data.data) {
+        const backendData = response.data.data;
+        return mapBackendToFrontend(backendData);
+      } else if (Array.isArray(response.data)) {
+        return mapBackendToFrontend(response.data);
+      } else {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+  },
+
+  getSimulationDetails: async function (simulationId) {
     const response = await axios.get(
       `${API_BASE_URL}/simulations/${simulationId}/details`,
     );
     if (response.data && response.data.success) {
       const simulationData = response.data.data;
-      console.log("백엔드에서 받은 시뮬레이션 데이터:", simulationData);
-      console.log("백엔드 카테고리 필드:", simulationData.category);
       const simulation = {
         id: simulationData.simulationId || simulationData.simulation_id || 0,
         title:
@@ -113,81 +126,52 @@ async function getSimulationDetails(simulationId) {
           good: "잘하셨어요!",
           poor: "조금 더 연습해보세요!",
         },
+        sessionId: response.data.sessionId,
       };
 
       return simulation;
     } else {
-      console.error("시뮬레이션 상세 정보 조회 실패:", response.data);
       throw new Error("시뮬레이션 상세 정보를 가져올 수 없습니다.");
     }
-  } catch (error) {
-    console.log("백엔드 API 연결 실패:", error.message);
-    throw error;
-  }
-}
-
-export const simulationService = {
-  getSimulations: async function () {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/simulations`);
-      console.log("백엔드 응답 데이터:", response.data);
-      if (response.data && response.data.success && response.data.data) {
-        const backendData = response.data.data;
-        console.log("백엔드 데이터:", backendData);
-        return mapBackendToFrontend(backendData);
-      } else if (Array.isArray(response.data)) {
-        console.log("직접 배열 응답:", response.data);
-        return mapBackendToFrontend(response.data);
-      } else {
-        console.error("예상치 못한 백엔드 응답 구조:", response.data);
-        return [];
-      }
-    } catch (error) {
-      console.log("백엔드 API 연결 실패:", error.message);
-      return [];
-    }
   },
-
-  getSimulationDetails: getSimulationDetails,
 
   startSimulation: async function (simulationId) {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/simulations/${simulationId}/start`,
-      );
-      // 백엔드에서 생성한 세션 ID 반환
-      return response.data;
-    } catch (error) {
-      console.log("백엔드 API 연결 실패:", error.message);
-      throw error;
-    }
+    const response = await axios.post(
+      `${API_BASE_URL}/simulations/${simulationId}/start`,
+    );
+
+    return response.data;
   },
 
-  // 점수 업데이트
-  updateScore: async function (sessionId, stepScore) {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/sessions/${sessionId}/score`,
-        { score: stepScore },
-      );
-      return response.data;
-    } catch (error) {
-      console.log("점수 업데이트 실패:", error.message);
-      throw error;
+  getFeedback: async function (simulationId, score) {
+    const response = await axios.get(
+      `${API_BASE_URL}/simulations/${simulationId}/feedback`,
+      { params: { score } },
+    );
+    return response.data;
+  },
+  submitChoice: async function (sessionId, choice, choiceId = null) {
+    const requestBody = { sessionId: sessionId, choice: choice };
+    if (choiceId) {
+      requestBody.choiceId = choiceId;
     }
+
+    const response = await axios.post(
+      `${API_BASE_URL}/simulations/choice`,
+      requestBody,
+    );
+    return response.data;
   },
 
-  // 시뮬레이션 완료
   completeSimulation: async function (sessionId, totalScore) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/sessions/${sessionId}/complete`,
+        `${API_BASE_URL}/simulations/complete`,
         { totalScore: totalScore },
       );
       return response.data;
-    } catch (error) {
-      console.log("시뮬레이션 완료 처리 실패:", error.message);
-      throw error;
+    } catch {
+      return { success: false, message: "시뮬레이션 완료 처리 실패" };
     }
   },
 };

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { simulationService } from "../services/simulationService";
+import { simulationService } from "../../services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
-import Card from "@components/common/Card";
+import SimulationCard from "../../pages/simulation/components/SimulationCard";
 
 export default function Simulation() {
   const [simulations, setSimulations] = useState([]);
@@ -87,7 +87,7 @@ export default function Simulation() {
             </h2>
             <div className="w-full space-y-3">
               {recommendedSimulations.map((simulation) => (
-                <Card
+                <SimulationCard
                   key={simulation.id}
                   id={simulation.id}
                   title={simulation.title}
@@ -107,7 +107,7 @@ export default function Simulation() {
             </h2>
             <div className="w-full space-y-3">
               {otherSimulations.map((simulation) => (
-                <Card
+                <SimulationCard
                   key={simulation.id}
                   id={simulation.id}
                   title={simulation.title}

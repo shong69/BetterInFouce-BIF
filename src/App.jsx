@@ -3,8 +3,8 @@ import Todo from "@pages/Todo";
 import Login from "@pages/Login";
 import Diary from "@pages/Diary";
 import Profile from "@pages/Profile";
-import Simulation from "@pages/Simulation";
-import SimulationProgress from "@pages/SimulationProgress";
+import Simulation from "./pages/simulation/Simulation";
+import SimulationProgress from "./pages/simulation/SimulationProgress";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
 

@@ -1,75 +1,137 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { simulationService } from "../services/simulationService";
+
+import { simulationService } from "../../services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import LoadingSpinner from "@components/ui/LoadingSpinner";
-import ProgressBar from "@components/ui/ProgressBar";
 import Bubble from "@components/common/Bubble";
-import { useLoadingStore } from "@stores/loadingStore";
+
+function ProgressBar({ progress = 0, label = "진행도" }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] font-medium text-gray-500">{label}</span>
+        <span className="text-[9px] font-medium text-gray-500">
+          {Math.round(progress)}%
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-[#D3EACA]">
+        <div
+          className="bg-toggle h-2 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function SimulationProgress() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showLoading, hideLoading } = useLoadingStore();
+
   const [simulation, setSimulation] = useState(null);
-  const [_sessionId, setSessionId] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
   const [showFinal, setShowFinal] = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
-  const [setFinalScore] = useState(0);
+  // eslint-disable-next-line no-unused-vars
+  const [finalScore, setFinalScore] = useState(0);
   const [finalMessage, setFinalMessage] = useState("");
   const [shuffledChoices, setShuffledChoices] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
   const conversationRef = useRef(null);
+  const sessionCreatedRef = useRef(false);
+  const isInitializedRef = useRef(false);
 
   useEffect(
     function () {
-      const loadSimulation = async function () {
+      if (isInitializedRef.current) {
+        return;
+      }
+
+      isInitializedRef.current = true;
+
+      const loadSimulationAndStartSession = async function () {
         try {
-          showLoading("시뮬레이션을 불러오는 중...");
+          const sessionKey = `sim_${id}_session`;
+          const existingSessionId = localStorage.getItem(sessionKey);
 
-          const sessionResponse = await simulationService.startSimulation(
-            parseInt(id),
-          );
-          if (sessionResponse && sessionResponse.sessionId) {
-            setSessionId(sessionResponse.sessionId);
-          }
+          if (existingSessionId) {
+            console.log(
+              "localStorage에서 기존 세션 ID 사용:",
+              existingSessionId,
+            );
+            setSessionId(existingSessionId);
+            sessionCreatedRef.current = true;
 
-          const data = await simulationService.getSimulationDetails(
-            parseInt(id),
-          );
-          if (data) {
-            setSimulation(data);
-            if (data.steps && data.steps.length > 0) {
-              const firstMessage = {
-                type: "opponent",
-                message:
-                  data.steps[0].scenarioText ||
-                  data.steps[0].character_line ||
-                  "",
-                step: 0,
-              };
-              setConversationHistory([firstMessage]);
-            }
+            const totalKey = `sim_${id}_total`;
+            const existingTotal = Number(localStorage.getItem(totalKey) || 0);
+            setScore(existingTotal);
+            console.log("기존 누적 점수 불러옴:", existingTotal);
           } else {
-            return;
+            console.log("새 세션 생성 시도 중");
+            try {
+              const startRes = await simulationService.startSimulation(
+                parseInt(id),
+              );
+              console.log("startSimulation 응답:", startRes);
+              const startSessionId = startRes?.data?.sessionId;
+
+              if (startSessionId) {
+                setSessionId(startSessionId);
+                localStorage.setItem(sessionKey, startSessionId);
+                sessionCreatedRef.current = true;
+                console.log(
+                  "세션 생성 완료 및 localStorage 저장:",
+                  startSessionId,
+                );
+
+                const totalKey = `sim_${id}_total`;
+                localStorage.setItem(totalKey, "0");
+                setScore(0);
+                console.log("새 세션 점수 초기화");
+              } else {
+                console.error("세션 ID를 받지 못했습니다:", startRes);
+              }
+            } catch (sessionError) {
+              console.error("세션 생성 실패:", sessionError);
+            }
+          }
+          try {
+            const data = await simulationService.getSimulationDetails(
+              parseInt(id),
+            );
+            if (data) {
+              setSimulation(data);
+              if (data.steps && data.steps.length > 0) {
+                const firstMessage = {
+                  type: "opponent",
+                  message:
+                    data.steps[0].scenarioText ||
+                    data.steps[0].character_line ||
+                    "",
+                  step: 0,
+                };
+                setConversationHistory([firstMessage]);
+              }
+            } else {
+              console.error("시뮬레이션 데이터를 받지 못했습니다:", data);
+            }
+          } catch (simulationError) {
+            console.error("시뮬레이션 상세 조회 실패:", simulationError);
           }
         } catch (error) {
-          console.error("시뮬레이션 로드 오류:", error);
-        } finally {
-          hideLoading();
+          console.error("시뮬레이션 로드 또는 세션 시작 오류:", error);
         }
       };
 
-      loadSimulation();
+      loadSimulationAndStartSession();
     },
-    [id, navigate, showLoading, hideLoading],
+    [id],
   );
-
   useEffect(
     function () {
       if (conversationRef.current) {
@@ -95,8 +157,8 @@ export default function SimulationProgress() {
     if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ko-KR";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.1;
+      utterance.rate = 1.0;
+      utterance.pitch = 2.5;
       speechSynthesis.speak(utterance);
     }
   };
@@ -105,7 +167,7 @@ export default function SimulationProgress() {
     speakText(text);
   };
 
-  const handleOptionSelect = function (optionIndex) {
+  const handleOptionSelect = async function (optionIndex) {
     if (selectedOption !== null) return;
 
     setSelectedOption(optionIndex);
@@ -116,6 +178,44 @@ export default function SimulationProgress() {
         ? selectedChoice
         : selectedChoice.choiceText || "선택지"
       : "선택지 없음";
+    const choiceId =
+      selectedChoice && typeof selectedChoice === "object"
+        ? selectedChoice.id ||
+          selectedChoice.choiceId ||
+          selectedChoice.choice_id
+        : null;
+
+    if (sessionId) {
+      try {
+        const apiRes = await simulationService.submitChoice(
+          sessionId,
+          selectedOptionText,
+          choiceId,
+        );
+        console.log("선택지 제출 완료");
+
+        const payload = apiRes?.data ?? apiRes;
+        const serverScore =
+          payload?.currentScore ?? payload?.current_score ?? 0;
+
+        if (typeof serverScore === "number" && serverScore > 0) {
+          // 로컬스토리지에서 기존 점수 가져오기
+          const sessionKey = `sim_${id}_total`;
+          const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
+          const newTotal = existingTotal + serverScore;
+
+          localStorage.setItem(sessionKey, newTotal.toString());
+
+          // 상태도 업데이트
+          setScore(newTotal);
+          console.log(
+            `로컬스토리지 점수 누적: ${serverScore} → 총점: ${newTotal}`,
+          );
+        }
+      } catch (error) {
+        console.error("선택지 제출 실패:", error);
+      }
+    }
 
     const userResponse = {
       type: "user",
@@ -127,6 +227,22 @@ export default function SimulationProgress() {
       return [...prev, userResponse];
     });
 
+    let choiceScore = 0;
+    if (selectedChoice && typeof selectedChoice === "object") {
+      choiceScore = selectedChoice.choice_score || 0;
+      if (choiceScore > 0) {
+        const sessionKey = `sim_${id}_total`;
+        const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
+        const newTotal = existingTotal + choiceScore;
+
+        localStorage.setItem(sessionKey, newTotal.toString());
+
+        setScore(newTotal);
+        console.log(
+          `로컬 choice_score 누적: ${choiceScore} → 총점: ${newTotal}`,
+        );
+      }
+    }
     setShowTyping(true);
 
     setTimeout(function () {
@@ -165,30 +281,6 @@ export default function SimulationProgress() {
       });
       setShowTyping(false);
     }, 1400);
-
-    if (
-      selectedChoice &&
-      typeof selectedChoice === "object" &&
-      selectedChoice.choiceScore !== undefined
-    ) {
-      setScore(function (prev) {
-        return prev + selectedChoice.choiceScore;
-      });
-    } else {
-      if (optionIndex === 0) {
-        setScore(function (prev) {
-          return prev + 10;
-        });
-      } else if (optionIndex === 1) {
-        setScore(function (prev) {
-          return prev + 5;
-        });
-      } else {
-        setScore(function (prev) {
-          return prev + 0;
-        });
-      }
-    }
   };
 
   const handleNextStep = function () {
@@ -212,6 +304,20 @@ export default function SimulationProgress() {
         return [...prev, opponentMessage];
       });
     } else {
+      if (sessionId) {
+        const totalPossibleScore = simulation.steps.length * 10;
+        const percentage = Math.round((score / totalPossibleScore) * 100);
+
+        simulationService
+          .completeSimulation(sessionId, percentage)
+          .then((response) => {
+            console.log("시뮬레이션 완료 성공:", response);
+          })
+          .catch((error) => {
+            console.error("시뮬레이션 완료 오류:", error);
+          });
+      }
+
       const totalPossibleScore = simulation.steps.length * 10;
       const percentage = Math.round((score / totalPossibleScore) * 100);
 
@@ -234,6 +340,9 @@ export default function SimulationProgress() {
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel();
     }
+    const sessionKey = `sim_${id}_session`;
+    localStorage.removeItem(sessionKey);
+    console.log("세션 ID 삭제:", sessionKey);
     navigate("/simulations");
   };
 
@@ -259,7 +368,6 @@ export default function SimulationProgress() {
   if (!simulation) {
     return (
       <>
-        <LoadingSpinner />
         <Header />
         <TabBar />
       </>
@@ -273,7 +381,6 @@ export default function SimulationProgress() {
 
   return (
     <>
-      <LoadingSpinner />
       <Header />
 
       <div className="bg-white px-5 py-5">
@@ -290,12 +397,12 @@ export default function SimulationProgress() {
       </div>
 
       <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
-        <div className="mb-6 rounded-xl bg-white p-5 shadow-sm">
+        <div className="sticky top-20 z-10 mb-6 rounded-xl bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3
-              className={`font-bold text-[14ox] ${
+              className={`text-[14px] font-bold ${
                 simulation.category === "업무"
-                  ? "text-warning"
+                  ? "text-[#EF4444]"
                   : simulation.category === "일상"
                     ? "text-[#F59E0B]"
                     : "text-[#0B70F5]"
@@ -306,7 +413,7 @@ export default function SimulationProgress() {
             <span
               className={`rounded-xl px-3 py-1 text-xs font-medium ${
                 simulation.category === "업무"
-                  ? "bg-[#FEE2E2] text-[warning]"
+                  ? "bg-[#FEE2E2] text-[#EF4444]"
                   : simulation.category === "일상"
                     ? "bg-[#FEF3C7] text-[#F59E0B]"
                     : "bg-[#C2DCFF] text-[#0B70F5]"
@@ -380,7 +487,7 @@ export default function SimulationProgress() {
                   alt="현명한 거북이"
                   className="h-7 w-7"
                 />
-                <div className="max-w-full min-w-[200px] rounded-2xl rounded-tl-md bg-[#F2F7FB] px-2 py-4 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+                <div className="max-w-full min-w-[200px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-gray-800">
                       현명한 거북이

@@ -40,6 +40,7 @@ export default function TabBar() {
       <div className="flex justify-around">
         {tabs.map(function (tab) {
           const isActive = tab.isActive(currentPath);
+
           const IconComponent = tab.icon;
 
           return (
