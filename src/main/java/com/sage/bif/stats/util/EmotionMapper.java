@@ -1,0 +1,40 @@
+package com.sage.bif.stats.util;
+
+import com.sage.bif.diary.model.Emotion;
+import com.sage.bif.stats.entity.EmotionType;
+import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+public class EmotionMapper {
+    
+    private static final Map<Emotion, EmotionType> DIARY_TO_STATS_MAP = new HashMap<>();
+    
+    static {
+        DIARY_TO_STATS_MAP.put(Emotion.EXCELLENT, EmotionType.GREAT);    
+        DIARY_TO_STATS_MAP.put(Emotion.JOY, EmotionType.GOOD);         
+        DIARY_TO_STATS_MAP.put(Emotion.NEUTRAL, EmotionType.OKAY);      
+        DIARY_TO_STATS_MAP.put(Emotion.SAD, EmotionType.DOWN);          
+        DIARY_TO_STATS_MAP.put(Emotion.ANGER, EmotionType.ANGRY);   
+    }
+    
+    public static EmotionType mapDiaryEmotionToStats(Emotion diaryEmotion) {
+        EmotionType statsEmotion = DIARY_TO_STATS_MAP.get(diaryEmotion);
+        if (statsEmotion == null) {
+            log.warn("Unknown diary emotion: {}, mapping to NEUTRAL", diaryEmotion);
+            return EmotionType.OKAY;
+        }
+        return statsEmotion;
+    }
+    
+    public static Emotion mapStatsEmotionToDiary(EmotionType statsEmotion) {
+        for (Map.Entry<Emotion, EmotionType> entry : DIARY_TO_STATS_MAP.entrySet()) {
+            if (entry.getValue() == statsEmotion) {
+                return entry.getKey();
+            }
+        }
+        log.warn("Unknown stats emotion: {}, mapping to NEUTRAL", statsEmotion);
+        return Emotion.NEUTRAL; 
+    }
+}

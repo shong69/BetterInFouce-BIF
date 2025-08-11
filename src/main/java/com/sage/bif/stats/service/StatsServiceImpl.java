@@ -8,26 +8,26 @@ import com.sage.bif.stats.entity.EmotionStatisticsTemplate;
 import com.sage.bif.stats.entity.EmotionType;
 import com.sage.bif.stats.entity.GuardianAdviceTemplate;
 import com.sage.bif.stats.entity.Stats;
-import com.sage.bif.stats.exception.StatsDataParseException;
 import com.sage.bif.stats.repository.EmotionStatisticsTemplateRepository;
 import com.sage.bif.stats.repository.GuardianAdviceTemplateRepository;
 import com.sage.bif.stats.repository.StatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import com.sage.bif.stats.event.model.StatsUpdatedEvent;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.lang.NonNull;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sage.bif.diary.repository.DiaryRepository;
+import com.sage.bif.diary.model.Emotion;
+import com.sage.bif.stats.util.EmotionMapper;
+import com.sage.bif.diary.entity.Diary;
+import com.sage.bif.user.repository.BifRepository;
+import com.sage.bif.user.entity.Bif;
 
 
 //todo: 일부 기능 사용자화 필요
@@ -35,102 +35,132 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class StatsServiceImpl implements StatsService, ApplicationContextAware {
+public class StatsServiceImpl implements StatsService {
 
     private static final String LABEL_MONTHLY_CHANGE = "감정별 변화";
 
     private final StatsRepository statsRepository;
     private final EmotionStatisticsTemplateRepository templateRepository;
     private final GuardianAdviceTemplateRepository guardianAdviceTemplateRepository;
-    private final ApplicationEventPublisher eventPublisher; // 추가
+    private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
-    
-    private ApplicationContext applicationContext;
-    
-    @Override
-    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
+    private final DiaryRepository diaryRepository;
+    private final BifRepository bifRepository;
 
     @Override
     @Transactional(readOnly = true)
     public StatsResponse getMonthlyStats(final Long bifId) {
-        final Integer year = getCurrentYear();
-        final Integer month = getCurrentMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
         
-        final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+        final Optional<Stats> stats = statsRepository.findByBifIdAndYearMonth(bifId, currentYearMonth);
+        
+        final Map<EmotionType, Integer> realTimeEmotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
         
         if (stats.isEmpty()) {
-            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
-            return applicationContext.getBean(StatsServiceImpl.class).getMonthlyStats(bifId);
+            generateMonthlyStatsAsync(bifId, currentYearMonth);
+            return createEmptyStatsResponse(bifId, currentYearMonth);
         }
 
-        return buildStatsResponse(stats.get(), bifId, year, month);
+        return buildStatsResponseWithRealTimeData(stats.get(), bifId, currentYearMonth, realTimeEmotionCounts);
     }
 
     @Override
     @Transactional(readOnly = true)
     public GuardianStatsResponse getGuardianStats(final Long bifId) {
-        // Guardian은 연결된 BIF의 통계 조회
-        final StatsResponse bifStats = getMonthlyStatsByBifId(bifId);
+        log.info("보호자가 BIF ID {}의 통계를 조회합니다.", bifId);
         
-        final String bifNickname = getBifNickname(bifId);
-        final String advice = getGuardianAdviceFromStats(bifId);
+        try {
+            final StatsResponse bifStats = getMonthlyStatsByBifId(bifId);
+            
+            final String bifNickname = getBifNickname(bifId);
+     
+            final String advice = getGuardianAdviceFromStats(bifId);
+            
+            log.debug("BIF ID {}의 보호자 통계 생성 완료 - 닉네임: {}, 조언 길이: {}", 
+                bifId, bifNickname, advice.length());
 
-        return GuardianStatsResponse.builder()
-                .bifNickname(bifNickname)
-                .advice(advice)
-                .emotionRatio(bifStats.getEmotionRatio())
-                .monthlyChange(bifStats.getMonthlyChange())
-                .build();
+            return GuardianStatsResponse.builder()
+                    .bifNickname(bifNickname)
+                    .advice(advice)
+                    .emotionRatio(bifStats.getEmotionRatio())      
+                    .monthlyChange(bifStats.getMonthlyChange())   
+                    .build();
+                    
+        } catch (Exception e) {
+            log.error("보호자 통계 조회 중 오류 발생 - BIF ID: {}", bifId, e);
+            throw new RuntimeException("보호자 통계 조회 실패", e);
+        }
     }
     
     private StatsResponse getMonthlyStatsByBifId(final Long bifId) {
-        final Integer year = getCurrentYear();
-        final Integer month = getCurrentMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
         
-        final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+        final Optional<Stats> stats = statsRepository.findByBifIdAndYearMonth(bifId, currentYearMonth);
         
         if (stats.isEmpty()) {
-            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
-            return getMonthlyStatsByBifId(bifId);
+            generateMonthlyStatsAsync(bifId, currentYearMonth);
+            return createEmptyStatsResponse(bifId, currentYearMonth);
         }
 
-        return buildStatsResponse(stats.get(), bifId, year, month);
+        return buildStatsResponse(stats.get(), bifId, currentYearMonth);
     }
 
     @Override
     @Transactional
-    public void generateMonthlyStats(final Long bifId, final Integer year, final Integer month) {
-        final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
-        final String statisticsText = generateStatisticsTextFromTemplate(emotionCounts);
-        final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
-    
-        final Stats stats = Stats.builder()
-                .bifId(bifId)
-                .year(year)
-                .month(month)
-                .emotionStatisticsText(statisticsText)
-                .guardianAdviceText(guardianAdvice)
-                .emotionCounts(null) 
-                .topKeywords(null)
-                .build();
-    
-        final Stats savedStats = statsRepository.save(stats);
+    public void generateMonthlyStats(final Long bifId, final LocalDateTime yearMonth) {
+        log.info("BIF ID {}의 {}년 {}월 감정 분석 텍스트 생성 시작", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
         
-        // 이벤트 발행
-        eventPublisher.publishEvent(new StatsUpdatedEvent(this, savedStats, bifId, "CREATE", "월별 통계 생성"));
+        try {
+            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, yearMonth);
+            final String statisticsText = generateStatisticsTextFromTemplate(emotionCounts);
+            final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
         
-        log.info("BIF ID {}의 {}년 {}월 통계 생성 완료", bifId, year, month);
+            final Stats stats = Stats.builder()
+                    .bifId(bifId)
+                    .yearMonth(yearMonth)
+                    .emotionStatisticsText(statisticsText)
+                    .guardianAdviceText(guardianAdvice)
+                    .emotionCounts(null)
+                    .topKeywords(null)
+                    .build();
+        
+            final Stats savedStats = statsRepository.save(stats);
+            
+            eventPublisher.publishEvent(new StatsUpdatedEvent(this, savedStats, bifId, "CREATE", "월별 감정 분석 텍스트 생성"));
+            
+            log.info("BIF ID {}의 {}년 {}월 감정 분석 텍스트 생성 완료", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
+            
+        } catch (Exception e) {
+            log.error("BIF ID {}의 {}년 {}월 감정 분석 텍스트 생성 중 오류 발생: {}", 
+                bifId, yearMonth.getYear(), yearMonth.getMonthValue(), e.getMessage(), e);
+        }
     }
-    
+
     @Override
-    public void generateMonthlyEmotionStatistics(final Long bifId, final Integer year, final Integer month) {
-        final Optional<Stats> existingStats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
+    @Transactional
+    public void updateRealTimeStats(final Long bifId) {
+        log.info("BIF ID {}의 실시간 통계 갱신 시작", bifId);
+        
+        try {
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            
+            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
+            saveEmotionCountsToStats(bifId, currentYearMonth, emotionCounts);
+            
+            log.debug("BIF ID {}의 실시간 통계 갱신 완료", bifId);
+            
+        } catch (Exception e) {
+            log.error("BIF ID {}의 실시간 통계 갱신 중 오류 발생: {}", bifId, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void generateMonthlyEmotionStatistics(final Long bifId, final LocalDateTime yearMonth) {
+        final Optional<Stats> existingStats = statsRepository.findByBifIdAndYearMonth(bifId, yearMonth);
         
         if (existingStats.isPresent()) {
             final Stats stats = existingStats.get();
-            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, year, month);
+            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, yearMonth);
             final String statisticsText = generateStatisticsTextFromTemplate(emotionCounts);
             final String guardianAdvice = generateGuardianAdviceFromTemplate(emotionCounts);
             
@@ -140,42 +170,128 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             
             eventPublisher.publishEvent(new StatsUpdatedEvent(this, updatedStats, bifId, "UPDATE", "감정 통계 텍스트 업데이트"));
             
-            log.info("BIF ID {}의 {}년 {}월 감정 통계 텍스트와 보호자 조언 업데이트 완료", bifId, year, month);
+            log.info("BIF ID {}의 {}년 {}월 감정 통계 텍스트와 보호자 조언 업데이트 완료", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
         } else {
-            log.warn("BIF ID {}의 {}년 {}월 통계 데이터가 없어 전체 통계를 생성합니다.", bifId, year, month);
-            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, year, month);
+            log.warn("BIF ID {}의 {}년 {}월 통계 데이터가 없어 전체 통계를 생성합니다.", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
+            generateMonthlyStats(bifId, yearMonth);
         }
     }
 
-    private Map<EmotionType, Integer> calculateEmotionCounts(final Long bifId, final Integer year, final Integer month) {
-        final Optional<com.sage.bif.stats.entity.Stats> statsOptional =
-                statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
-
-        final Map<EmotionType, Integer> counts = initializeEmotionCounts();
-
-        if (statsOptional.isEmpty()) {
-            return counts;
-        }
-
-        final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
-        if (stat.getEmotionCounts() == null) {
-            log.debug("No emotion counts data available for BIF ID {} in {}년 {}월", bifId, year, month);
-            return counts;
-        }
-
+    @Async
+    @Transactional
+    public void generateMonthlyStatsAsync(final Long bifId, final LocalDateTime yearMonth) {
         try {
-            final Map<String, Integer> rawCounts = parseEmotionCountsJson(unwrapIfQuoted(stat.getEmotionCounts()));
-            mergeEmotionCounts(rawCounts, counts, bifId);
-            return counts;
-        } catch (JsonMappingException e) {
-            log.error("JSON mapping error parsing emotion counts for BIF ID {}: {}", bifId, e.getMessage());
-            throw new StatsDataParseException("감정 데이터 파싱 중 매핑 오류가 발생했습니다.", e);
-        } catch (JsonProcessingException e) {
-            log.error("JSON processing error parsing emotion counts for BIF ID {}: {}", bifId, e.getMessage());
-            throw new StatsDataParseException("감정 데이터 파싱 중 처리 오류가 발생했습니다.", e);
+            generateMonthlyStats(bifId, yearMonth);
         } catch (Exception e) {
-            log.error("Unexpected error parsing emotion counts for BIF ID {}: {}", bifId, e.getMessage());
-            throw new StatsDataParseException("감정 데이터 파싱 중 예상치 못한 오류가 발생했습니다.", e);
+            log.error("BIF ID {}의 {}년 {}월 통계 생성 중 오류 발생: {}", 
+                bifId, yearMonth.getYear(), yearMonth.getMonthValue(), e.getMessage(), e);
+        }
+    }
+
+    private StatsResponse createEmptyStatsResponse(final Long bifId, final LocalDateTime yearMonth) {
+        return StatsResponse.builder()
+                .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
+                .emotionRatio(Collections.emptyList())
+                .topKeywords(Collections.emptyList())
+                .monthlyChange(Collections.emptyList())
+                .build();
+    }
+
+    private Map<EmotionType, Integer> calculateEmotionCounts(final Long bifId, final LocalDateTime yearMonth) {
+        log.debug("BIF ID {}의 {}년 {}월 감정 데이터 계산 시작", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
+        
+        LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
+                                          .withHour(23).withMinute(59).withSecond(59);
+        
+        List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
+        
+        if (monthlyDiaries.isEmpty()) {
+            log.debug("BIF ID {}의 {}년 {}월에 작성된 일기가 없습니다.", bifId, yearMonth.getYear(), yearMonth.getMonthValue());
+            return initializeEmotionCounts();
+        }
+        
+        Map<EmotionType, Integer> emotionCounts = initializeEmotionCounts();
+        
+        for (Diary diary : monthlyDiaries) {
+            Emotion diaryEmotion = diary.getEmotion();
+            EmotionType statsEmotion = EmotionMapper.mapDiaryEmotionToStats(diaryEmotion);
+            
+            emotionCounts.put(statsEmotion, emotionCounts.get(statsEmotion) + 1);
+        }
+        
+        saveEmotionCountsToStats(bifId, yearMonth, emotionCounts);
+        
+        log.debug("BIF ID {}의 {}년 {}월 감정 데이터 계산 완료: {}", 
+            bifId, yearMonth.getYear(), yearMonth.getMonthValue(), emotionCounts);
+        
+        return emotionCounts;
+    }
+
+    private void saveEmotionCountsToStats(Long bifId, LocalDateTime yearMonth, Map<EmotionType, Integer> emotionCounts) {
+        try {
+            Optional<Stats> existingStats = statsRepository.findByBifIdAndYearMonth(bifId, yearMonth);
+            Stats stats;
+            
+            if (existingStats.isPresent()) {
+                stats = existingStats.get();
+            } else {
+                stats = Stats.builder()
+                    .bifId(bifId)
+                    .yearMonth(yearMonth)
+                    .emotionStatisticsText("")
+                    .guardianAdviceText("")
+                    .build();
+            }
+            
+            String emotionCountsJson = objectMapper.writeValueAsString(emotionCounts);
+            stats.setEmotionCounts(emotionCountsJson);
+            
+            statsRepository.save(stats);
+            
+        } catch (Exception e) {
+            log.error("감정 카운트 저장 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+
+    private List<StatsResponse.EmotionRatio> calculateEmotionRatio(Map<EmotionType, Integer> emotionCounts) {
+        int totalCount = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
+        
+        if (totalCount == 0) {
+            return Collections.emptyList();
+        }
+        
+        List<StatsResponse.EmotionRatio> emotionRatios = new ArrayList<>();
+        
+        for (Map.Entry<EmotionType, Integer> entry : emotionCounts.entrySet()) {
+            EmotionType emotionType = entry.getKey();
+            Integer count = entry.getValue();
+            
+            StatsResponse.EmotionRatio ratio = StatsResponse.EmotionRatio.builder()
+                .emotion(emotionType)
+                .value(count)
+                .build();
+            
+            emotionRatios.add(ratio);
+        }
+        
+        emotionRatios.sort((a, b) -> {
+            int orderA = getEmotionOrder(a.getEmotion());
+            int orderB = getEmotionOrder(b.getEmotion());
+            return Integer.compare(orderA, orderB);
+        });
+        
+        return emotionRatios;
+    }
+    
+    private int getEmotionOrder(EmotionType emotionType) {
+        switch (emotionType) {
+            case GREAT: return 1;    
+            case GOOD: return 2;     
+            case OKAY: return 3;     
+            case DOWN: return 4;     
+            case ANGRY: return 5;   
+            default: return 6;
         }
     }
 
@@ -187,75 +303,49 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return counts;
     }
 
-    private Map<String, Integer> parseEmotionCountsJson(final String json) throws JsonProcessingException {
+    private Map<EmotionType, Integer> parseEmotionCountsJson(final String json) throws JsonProcessingException {
         if (json == null || json.trim().isEmpty()) {
             log.debug("Empty or null emotion counts JSON, returning empty map");
-            return new HashMap<>();
+            return new EnumMap<>(EmotionType.class);
         }
         
         try {
             final String cleanedJson = unwrapIfQuoted(json.trim());
             log.debug("Parsing emotion counts JSON: {}", cleanedJson);
-            return objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
+            Map<String, Integer> rawCounts = objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
+            
+            Map<EmotionType, Integer> emotionCounts = new EnumMap<>(EmotionType.class);
+            for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
+                try {
+                    EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
+                    emotionCounts.put(emotionType, entry.getValue());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown emotion type found in JSON: {}", entry.getKey());
+                }
+            }
+            
+            return emotionCounts;
         } catch (Exception e) {
             log.error("Failed to parse emotion counts JSON: '{}'. Error: {}", json, e.getMessage());
-            throw new JsonProcessingException("Failed to parse emotion counts JSON", e) {};
+            throw new RuntimeException("Failed to parse emotion counts JSON", e);
         }
     }
 
-    private void mergeEmotionCounts(final Map<String, Integer> rawCounts,
-                                    final Map<EmotionType, Integer> counts,
-                                    final Long bifId) {
-        for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
-            final EmotionType emotionType = toEmotionTypeOrNull(entry.getKey());
-            if (emotionType == null) {
-                log.warn("Unknown emotion type found in stats: {} for BIF ID {}", entry.getKey(), bifId);
-                continue;
-            }
-            counts.put(emotionType, counts.get(emotionType) + entry.getValue());
-        }
-    }
 
-    private EmotionType toEmotionTypeOrNull(final String key) {
+    private List<Map<String, Object>> parseTopKeywordsJson(final String json) throws JsonProcessingException {
+        if (json == null || json.trim().isEmpty()) {
+            log.debug("Empty or null top keywords JSON, returning empty list");
+            return new ArrayList<>();
+        }
         try {
-            return EmotionType.valueOf(key.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            return null;
+            final String cleanedJson = unwrapIfQuoted(json.trim());
+            log.debug("Parsing top keywords JSON: {}", cleanedJson);
+            return objectMapper.readValue(cleanedJson, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception e) {
+            log.error("Failed to parse top keywords JSON: '{}'. Error: {}", json, e.getMessage());
+            throw new RuntimeException("Failed to parse top keywords JSON", e);
         }
     }
-
-    private List<Map<String, Object>> calculateTopKeywords(final Long bifId, final Integer year, final Integer month) {
-        final Optional<com.sage.bif.stats.entity.Stats> statsOptional = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
-        
-        if (statsOptional.isPresent()) {
-            final com.sage.bif.stats.entity.Stats stat = statsOptional.get();
-            try {
-                if (stat.getTopKeywords() != null && !stat.getTopKeywords().trim().isEmpty()) {
-                    final String cleanedJson = unwrapIfQuoted(stat.getTopKeywords().trim());
-                    log.debug("Parsing top keywords for BIF {}: {}", bifId, cleanedJson);
-                    final List<Map<String, Object>> keywords = objectMapper.readValue(cleanedJson, new TypeReference<List<Map<String, Object>>>() {});
-                    log.debug("Retrieved {} keywords from stats for BIF ID {}: {}", keywords.size(), bifId, keywords);
-                    return keywords;
-                } else {
-                    log.debug("No top keywords data available for BIF ID {} in {}년 {}월", bifId, year, month);
-                    return new ArrayList<>();
-                }
-            } catch (JsonMappingException e) {
-                log.error("JSON mapping error parsing top keywords for BIF ID {}: {}", bifId, e.getMessage());
-                return new ArrayList<>();
-            } catch (JsonProcessingException e) {
-                log.error("JSON processing error parsing top keywords for BIF ID {}: {}", bifId, e.getMessage());
-                return new ArrayList<>();
-            } catch (Exception e) {
-                log.error("Unexpected error parsing top keywords for BIF ID {}: {}", bifId, e.getMessage());
-                return new ArrayList<>();
-            }
-        }
-
-        log.debug("No stats found for BIF ID {} in {}년 {}월", bifId, year, month);
-        return new ArrayList<>();
-    }
-
 
 
     private String generateStatisticsTextFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
@@ -350,64 +440,110 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    private List<StatsResponse.MonthlyChange> getMonthlyChange(final Long bifId, final Integer year, final Integer month) {
-        final Integer lastMonth = month == 1 ? 12 : month - 1;
-        final Integer lastYear = month == 1 ? year - 1 : year;
+    private List<StatsResponse.MonthlyChange> getMonthlyChange(final Long bifId, final LocalDateTime yearMonth) {
+        final LocalDateTime lastYearMonth = yearMonth.minusMonths(1);
 
-        final Optional<Stats> currentStats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
-        final Optional<Stats> lastStats = statsRepository.findByBifIdAndYearAndMonth(bifId, lastYear, lastMonth);
+        final Optional<Stats> currentStats = statsRepository.findByBifIdAndYearMonth(bifId, yearMonth);
+        final Optional<Stats> lastStats = statsRepository.findByBifIdAndYearMonth(bifId, lastYearMonth);
 
         final List<StatsResponse.MonthlyChange> monthlyChange = new ArrayList<>();
 
         try {
-            final Map<String, Integer> currentCounts = parseCountsOrEmpty(currentStats);
-            final Map<String, Integer> lastCounts = parseCountsOrEmpty(lastStats);
+            final Map<EmotionType, Integer> currentCounts = parseEmotionCountsFromStats(currentStats);
+            final Map<EmotionType, Integer> lastCounts = parseEmotionCountsFromStats(lastStats);
 
             for (EmotionType emotion : EmotionType.values()) {
-                monthlyChange.add(buildMonthlyChangeItem(emotion,
-                        currentCounts.getOrDefault(emotion.name(), 0),
-                        lastCounts.getOrDefault(emotion.name(), 0)));
+                final Integer currentValue = currentCounts.getOrDefault(emotion, 0);
+                final Integer previousValue = lastCounts.getOrDefault(emotion, 0);
+                
+                monthlyChange.add(buildMonthlyComparisonItem(emotion, currentValue, previousValue));
             }
 
-        } catch (JsonMappingException e) {
-            log.error("JSON mapping error calculating monthly changes for bifId: {}, year: {}, month: {}", bifId, year, month, e);
-            addDefaultMonthlyChangeItems(monthlyChange);
-        } catch (JsonProcessingException e) {
-            log.error("JSON processing error calculating monthly changes for bifId: {}, year: {}, month: {}", bifId, year, month, e);
-            addDefaultMonthlyChangeItems(monthlyChange);
+            monthlyChange.sort((a, b) -> {
+                int orderA = getEmotionOrder(a.getEmotion());
+                int orderB = getEmotionOrder(b.getEmotion());
+                return Integer.compare(orderA, orderB);
+            });
+
         } catch (Exception e) {
-            log.error("Unexpected error calculating monthly changes for bifId: {}, year: {}, month: {}", bifId, year, month, e);
+            log.error("월별 감정 비교 데이터 생성 중 오류 발생 - bifId: {}, yearMonth: {}", bifId, yearMonth, e);
             addDefaultMonthlyChangeItems(monthlyChange);
         }
 
         return monthlyChange;
     }
 
-    private Map<String, Integer> parseCountsOrEmpty(final Optional<Stats> statsOpt) throws JsonProcessingException {
+    private StatsResponse.MonthlyChange buildMonthlyComparisonItem(final EmotionType emotion,
+                                                                  final Integer currentValue,
+                                                                  final Integer previousValue) {
+        final Double changePercentage = calculateChangePercentage(previousValue, currentValue);
+        final String changeStatus = determineChangeStatus(currentValue, previousValue);
+        final String changeDescription = generateChangeDescription(emotion, currentValue, previousValue, changePercentage);
+        
+        return StatsResponse.MonthlyChange.builder()
+                .month(LABEL_MONTHLY_CHANGE)
+                .emotion(emotion)
+                .value(currentValue)           
+                .previousValue(previousValue)  
+                .changePercentage(changePercentage)
+                .changeStatus(changeStatus)    
+                .changeDescription(changeDescription)
+                .build();
+    }
+
+    private String determineChangeStatus(final Integer currentValue, final Integer previousValue) {
+        if (previousValue == 0) {
+            return currentValue > 0 ? "NEW" : "SAME";
+        }
+        
+        double change = ((double) (currentValue - previousValue) / previousValue) * 100.0;
+        
+        if (change > 20.0) {
+            return "INCREASE";
+        } else if (change < -20.0) {
+            return "DECREASE";
+        } else {
+            return "STABLE";
+        }
+    }
+
+    private String generateChangeDescription(final EmotionType emotion, 
+                                           final Integer currentValue, 
+                                           final Integer previousValue, 
+                                           final Double changePercentage) {
+        if (previousValue == 0) {
+            if (currentValue > 0) {
+                return String.format("지난달에는 없었던 %s 감정이 이번달에 %d회 나타났습니다.", 
+                    getEmotionKoreanName(emotion), currentValue);
+            }
+            return String.format("지난달과 이번달 모두 %s 감정이 나타나지 않았습니다.", 
+                getEmotionKoreanName(emotion));
+        }
+        
+        if (changePercentage > 20.0) {
+            return String.format("지난달보다 %s 감정이 %.1f%% 증가했습니다.", 
+                getEmotionKoreanName(emotion), changePercentage);
+        } else if (changePercentage < -20.0) {
+            return String.format("지난달보다 %s 감정이 %.1f%% 감소했습니다.", 
+                getEmotionKoreanName(emotion), Math.abs(changePercentage));
+        } else {
+            return String.format("지난달과 비슷한 수준의 %s 감정을 보였습니다.", 
+                getEmotionKoreanName(emotion));
+        }
+    }
+
+    private Map<EmotionType, Integer> parseEmotionCountsFromStats(final Optional<Stats> statsOpt) throws JsonProcessingException {
         if (statsOpt.isPresent() && statsOpt.get().getEmotionCounts() != null && !statsOpt.get().getEmotionCounts().trim().isEmpty()) {
             try {
                 final String countsJson = unwrapIfQuoted(statsOpt.get().getEmotionCounts());
                 log.debug("Parsing emotion counts from stats: {}", countsJson);
-                return objectMapper.readValue(countsJson, new TypeReference<Map<String, Integer>>() {});
+                return objectMapper.readValue(countsJson, new TypeReference<Map<EmotionType, Integer>>() {});
             } catch (Exception e) {
                 log.error("Failed to parse emotion counts from stats: {}. Error: {}", statsOpt.get().getEmotionCounts(), e.getMessage());
-                return new HashMap<>();
+                return new EnumMap<>(EmotionType.class); 
             }
         }
-        return new HashMap<>();
-    }
-
-    private StatsResponse.MonthlyChange buildMonthlyChangeItem(final EmotionType emotion,
-                                                               final Integer currentValue,
-                                                               final Integer previousValue) {
-        final Double changePercentage = calculateChangePercentage(previousValue, currentValue);
-        return StatsResponse.MonthlyChange.builder()
-                .month(LABEL_MONTHLY_CHANGE)
-                .emotion(emotion)
-                .value(currentValue)
-                .previousValue(previousValue)
-                .changePercentage(changePercentage)
-                .build();
+        return new EnumMap<>(EmotionType.class);
     }
 
     private void addDefaultMonthlyChangeItems(final List<StatsResponse.MonthlyChange> monthlyChange) {
@@ -430,16 +566,23 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
 
     private String getBifNickname(final Long bifId) {
-        // todo: 실제 사용자 서비스에서 BIF 닉네임 조회 로직 구현 필요
         if (bifId == null) {
-            log.warn("BIF ID is null, using default nickname");
+            log.warn("BIF ID is null");
             return "BIF";
         }
         
-        // 더미 닉네임 생성 (개발/테스트용)
-        final String dummyNickname = "BIF_" + bifId;
-        log.debug("Generated dummy nickname {} for BIF ID {}", dummyNickname, bifId);
-        return dummyNickname;
+        try {
+            final Bif bif = bifRepository.findById(bifId)
+                    .orElseThrow(() -> new RuntimeException("BIF not found: " + bifId));
+            
+            final String nickname = bif.getNickname();
+            log.debug("BIF ID {}의 닉네임 조회 완료: {}", bifId, nickname);
+            return nickname;
+            
+        } catch (Exception e) {
+            log.error("BIF 닉네임 조회 중 오류 발생 - BIF ID: {}", bifId, e);
+            return "BIF_" + bifId;
+        }
     }
     
     /**
@@ -469,64 +612,54 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
     
-    private Integer getCurrentMonth() {
-        return LocalDateTime.now().getMonthValue();
+    private LocalDateTime getCurrentYearMonth() {
+        final LocalDateTime now = LocalDateTime.now();
+        return LocalDateTime.of(now.getYear(), now.getMonth(), 1, 0, 0, 0);
     }
     
-    private Integer getCurrentYear() {
-        return LocalDateTime.now().getYear();
-    }
-    
-    private StatsResponse buildStatsResponse(final Stats statsData, final Long bifId, final Integer year, final Integer month) {
+    private StatsResponse buildStatsResponse(final Stats statsData, final Long bifId, final LocalDateTime yearMonth) {
         try {
-            List<StatsResponse.EmotionRatio> emotionRatio = new ArrayList<>();
+            Map<EmotionType, Integer> emotionCounts = parseEmotionCountsJson(statsData.getEmotionCounts());
             
-            if (statsData.getEmotionCounts() != null && !statsData.getEmotionCounts().trim().isEmpty()) {
-                try {
-                    final String countsJson = unwrapIfQuoted(statsData.getEmotionCounts());
-                    log.debug("Parsing emotion counts for BIF {}: {}", bifId, countsJson);
-                    final Map<String, Integer> emotionCounts = objectMapper.readValue(countsJson, new TypeReference<Map<String, Integer>>() {});
-                    
-                    emotionRatio = emotionCounts.entrySet().stream()
-                            .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-                            .map(entry -> {
-                                try {
-                                    return StatsResponse.EmotionRatio.builder()
-                                            .emotion(EmotionType.valueOf(entry.getKey().toUpperCase()))
-                                            .value(entry.getValue())
-                                            .build();
-                                } catch (IllegalArgumentException e) {
-                                    log.warn("Invalid emotion type '{}' for BIF {}, skipping", entry.getKey(), bifId);
-                                    return null;
-                                }
-                            })
-                            .filter(Objects::nonNull)
-                            .toList();
-                    
-                    log.debug("Successfully parsed {} emotion ratios for BIF {}", emotionRatio.size(), bifId);
-                } catch (Exception e) {
-                    log.error("Failed to parse emotion counts for BIF {}: {}. Raw data: {}", bifId, e.getMessage(), statsData.getEmotionCounts());
-                    // JSON 파싱 실패 시 빈 리스트 사용
-                    emotionRatio = new ArrayList<>();
-                }
-            } else {
-                log.debug("No emotion counts data for BIF {} in {}년 {}월", bifId, year, month);
-            }
-
-            final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, year, month);
-            final List<Map<String, Object>> topKeywordsData = calculateTopKeywords(bifId, year, month);
-            final List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(topKeywordsData);
-
+            List<StatsResponse.EmotionRatio> emotionRatio = calculateEmotionRatio(emotionCounts);
+            
+            List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(
+                parseTopKeywordsJson(statsData.getTopKeywords()));
+            
+            List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, yearMonth);
+            
             return StatsResponse.builder()
-                    .statisticsText(statsData.getEmotionStatisticsText())
-                    .emotionRatio(emotionRatio)
-                    .topKeywords(topKeywords)
-                    .monthlyChange(monthlyChange)
-                    .build();
-
+                .statisticsText(statsData.getEmotionStatisticsText())
+                .emotionRatio(emotionRatio)
+                .topKeywords(topKeywords)
+                .monthlyChange(monthlyChange)
+                .build();
+                
         } catch (Exception e) {
-            log.error("Error building stats response for bifId: {}, year: {}, month: {}", bifId, year, month, e);
-            throw new StatsDataParseException("Failed to build stats response", e);
+            log.error("통계 응답 생성 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("통계 응답 생성 실패", e);
+        }
+    }
+
+    private StatsResponse buildStatsResponseWithRealTimeData(final Stats statsData, final Long bifId, final LocalDateTime yearMonth, final Map<EmotionType, Integer> realTimeEmotionCounts) {
+        try {
+            List<StatsResponse.EmotionRatio> emotionRatio = calculateEmotionRatio(realTimeEmotionCounts);
+            
+            List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(
+                parseTopKeywordsJson(statsData.getTopKeywords()));
+            
+            List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, yearMonth);
+            
+            return StatsResponse.builder()
+                .statisticsText(statsData.getEmotionStatisticsText())
+                .emotionRatio(emotionRatio)
+                .topKeywords(topKeywords)
+                .monthlyChange(monthlyChange)
+                .build();
+                
+        } catch (Exception e) {
+            log.error("통계 응답 생성 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("통계 응답 생성 실패", e);
         }
     }
 
@@ -534,9 +667,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         if (jsonLike == null || jsonLike.isEmpty()) return jsonLike;
         final String trimmed = jsonLike.trim();
         if (trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
-            // remove outer quotes
             String result = trimmed.substring(1, trimmed.length() - 1);
-            // unescape backslashes before double quotes
             result = result.replace("\\\"", "\"");
             return result;
         }
@@ -544,15 +675,26 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
     
     private String getGuardianAdviceFromStats(final Long bifId) {
-        final Integer year = getCurrentYear();
-        final Integer month = getCurrentMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
         
-        final Optional<Stats> stats = statsRepository.findByBifIdAndYearAndMonth(bifId, year, month);
-        if (stats.isPresent()) {
-            return stats.get().getGuardianAdviceText();
+        try {
+            final Optional<Stats> stats = statsRepository.findByBifIdAndYearMonth(bifId, currentYearMonth);
+            
+            if (stats.isPresent() && stats.get().getGuardianAdviceText() != null && 
+                !stats.get().getGuardianAdviceText().trim().isEmpty()) {
+                
+                log.debug("BIF ID {}의 저장된 보호자 조언을 사용합니다.", bifId);
+                return stats.get().getGuardianAdviceText();
+            }
+            
+            log.debug("BIF ID {}의 보호자 조언을 새로 생성합니다.", bifId);
+            final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
+            return generateGuardianAdviceFromTemplate(emotionCounts);
+            
+        } catch (Exception e) {
+            log.error("보호자 조언 조회 중 오류 발생 - BIF ID: {}", bifId, e);
+            return "BIF의 감정 상태를 확인할 수 없어 조언을 제공할 수 없습니다.";
         }
-    
-        return generateGuardianAdviceFromTemplate(calculateEmotionCounts(bifId, year, month));
     }
     
     private String generateGuardianAdviceFromTemplate(final Map<EmotionType, Integer> emotionCounts) {

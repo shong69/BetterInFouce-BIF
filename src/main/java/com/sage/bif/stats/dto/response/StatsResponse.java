@@ -41,6 +41,8 @@ public class StatsResponse {
         private Integer value;
         private Integer previousValue;
         private Double changePercentage;
+        private String changeStatus;
+        private String changeDescription;
     }
 
     @Data
