@@ -5,6 +5,7 @@ import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.jwt.JwtTokenProvider;
+import com.sage.bif.user.dto.request.NicknameChangeRequest;
 import com.sage.bif.user.dto.request.SocialRegistrationRequest;
 import com.sage.bif.user.dto.response.BifResponse;
 import com.sage.bif.user.dto.response.GuardianResponse;
@@ -12,6 +13,7 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -345,6 +347,73 @@ public class UserController {
             log.error("회원탈퇴 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("회원탈퇴 중 오류가 발생했습니다.", "SERVER_ERROR"));
+        }
+    }
+
+    @PostMapping("/changenickname")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> changeNickname(
+            @Valid @RequestBody NicknameChangeRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("인증되지 않은 사용자입니다.", "UNAUTHORIZED"));
+            }
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long socialId = userDetails.getSocialId();
+            JwtTokenProvider.UserRole userRole = userDetails.getRole();
+            String newNickname = request.getNickname();
+
+            if (userRole == JwtTokenProvider.UserRole.BIF) {
+                bifService.updateNickname(socialId, newNickname);
+            } else if (userRole == JwtTokenProvider.UserRole.GUARDIAN) {
+                guardianService.updateNickname(socialId, newNickname);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("유효하지 않은 사용자 역할입니다.", "INVALID_USER_ROLE"));
+            }
+
+            var socialLoginOpt = socialLoginService.findBySocialId(socialId);
+            if (socialLoginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponse.error("사용자 정보를 찾을 수 없습니다."));
+            }
+
+            var socialLogin = socialLoginOpt.get();
+            Long bifId = userDetails.getBifId();
+
+            String newAccessToken = jwtTokenProvider.generateAccessToken(
+                    userRole, bifId, newNickname,
+                    socialLogin.getProvider().name(),
+                    socialLogin.getProviderUniqueId(),
+                    socialId
+            );
+
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                session.setAttribute("accessToken", newAccessToken);
+                session.setAttribute("nickname", newNickname);
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("accessToken", newAccessToken);
+            responseData.put("nickname", newNickname);
+            responseData.put("message", "닉네임이 성공적으로 변경되었습니다.");
+
+            return ResponseEntity.ok(ApiResponse.success(responseData, "닉네임 변경 성공"));
+
+        } catch (BaseException e) {
+            log.error("닉네임 변경 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage(), e.getErrorCode().name()));
+        } catch (Exception e) {
+            log.error("닉네임 변경 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("서버 오류가 발생했습니다.", "SERVER_ERROR"));
         }
     }
 
