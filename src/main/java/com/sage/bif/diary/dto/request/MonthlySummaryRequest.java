@@ -35,4 +35,4 @@ public class MonthlySummaryRequest {
             .month(now.getMonthValue())
             .build();
     }
-} 
+}

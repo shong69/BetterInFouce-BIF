@@ -89,4 +89,4 @@ set-env.sh
 logs/
 
 # api key
-application-secret.yml
+src/main/resources/application-secret.yml

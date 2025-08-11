@@ -26,4 +26,4 @@ public class DiaryUpdatedEvent extends BaseEvent {
     public String getEventType() {
         return "DIARY_UPDATED";
     }
-} 
+}

@@ -16,5 +16,4 @@ public class DiaryNotFoundException extends BaseException {
     public DiaryNotFoundException(ErrorCode errorCode, String message) {
         super(errorCode, message);
     }
-
 }
