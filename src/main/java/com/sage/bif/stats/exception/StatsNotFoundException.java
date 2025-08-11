@@ -16,4 +16,5 @@ public class StatsNotFoundException extends BaseException {
     public StatsNotFoundException(final ErrorCode errorCode, final String message) {
         super(errorCode, message);
     }
+
 }

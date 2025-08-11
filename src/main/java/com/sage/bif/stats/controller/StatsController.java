@@ -33,7 +33,7 @@ public class StatsController {
     private final StatsService statsService;
     private final GuardianRepository guardianRepository;
 
-    @GetMapping("/stat")
+    @GetMapping("/stats")
     @Operation(summary = "월별 통계 조회", description = "BIF 사용자의 월별 감정 통계를 조회합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "통계 조회 성공",
@@ -113,4 +113,5 @@ public class StatsController {
                     .body(ApiResponse.error("보호자 통계 조회 중 오류가 발생했습니다."));
         }
     }
+
 }

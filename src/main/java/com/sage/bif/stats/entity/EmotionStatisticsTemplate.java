@@ -33,4 +33,5 @@ public class EmotionStatisticsTemplate {
 
     @Column(name = "statistics_text", columnDefinition = "TEXT", nullable = false)
     private String statisticsText;
+
 } 

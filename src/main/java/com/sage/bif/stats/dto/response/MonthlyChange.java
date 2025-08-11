@@ -14,4 +14,5 @@ public class MonthlyChange {
     private String month;
     
     private Integer value;
+
 } 
