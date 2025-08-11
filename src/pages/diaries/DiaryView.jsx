@@ -8,7 +8,7 @@ import DeleteButton from "@components/ui/DeleteButton";
 import DateBox from "@components/ui/DateBox";
 import Modal from "@components/ui/Modal";
 
-import ErrorPageManager from "@components/ui/ErrorPageManager";
+import ErrorPageManager from "@pages/errors/ErrorPageManager";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { formatDate } from "@utils/dateUtils";
@@ -25,39 +25,32 @@ export default function DiaryView() {
   const { fetchDiary, deleteDiary } = useDiaryStore();
   const { showSuccess, showError } = useToastStore();
 
-  const emotions = EMOTIONS;
-
   useEffect(
     function () {
       async function loadDiary() {
         try {
           const diaryData = await fetchDiary(id);
           if (diaryData) {
-            console.log("DiaryView - diary 객체:", diaryData);
             setDiary(diaryData);
-            setError(null); // 에러 상태 초기화
+            setError(null);
           }
         } catch (error) {
           console.error("일기 로딩 실패:", error);
 
-          // 백엔드에서 보내는 에러 정보 처리
           if (error.response && error.response.data) {
-            const { errorCode, message, details } = error.response.data;
+            const { message, details } = error.response.data;
             setError({
-              errorCode: errorCode || "500",
+              errorCode: error.response.status.toString(),
               message: message || "일기를 불러오는데 실패했습니다.",
               details: details || null,
             });
           } else {
-            // 네트워크 에러 등 백엔드 에러 정보가 없는 경우
             setError({
               errorCode: "500",
               message: "일기를 불러오는데 실패했습니다.",
               details: error.message || "네트워크 오류가 발생했습니다.",
             });
           }
-
-          // showError 제거 - 에러 페이지만으로 충분
         } finally {
           setLoading(false);
         }
@@ -68,15 +61,12 @@ export default function DiaryView() {
     [id, fetchDiary, showError],
   );
 
-  // 컴포넌트 마운트 시 history entry 교체 (중복 방지)
   useEffect(() => {
     window.history.replaceState(null, "", window.location.href);
   }, []);
 
-  // DiaryView에서 뒤로가기 시 Diary (목록)으로 이동
   useEffect(() => {
     function handleDiaryViewPopState(_event) {
-      // 현재 경로가 /diaries/:id인지 확인
       if (window.location.pathname.match(/^\/diaries\/\d+$/)) {
         navigate("/diaries");
       }
@@ -141,12 +131,9 @@ export default function DiaryView() {
     return warningText;
   }
 
-  // 현명한 거북이 메시지 렌더링 함수
   function renderTurtleMessage() {
-    // diary가 null이면 렌더링하지 않음
     if (!diary) return null;
 
-    // 공통 스타일과 내용을 결정
     let messageConfig = {
       title: "현명한 거북이",
       content: "현명한 거북이의 답장이 생성중입니다...! 🐢",
@@ -158,7 +145,6 @@ export default function DiaryView() {
     };
 
     if (diary.contentFlagged) {
-      // 부적절한 내용이 감지된 경우 - 주의 메시지 표시
       const categories = diary.contentFlaggedCategories
         ? diary.contentFlaggedCategories.split(",")
         : [];
@@ -173,7 +159,6 @@ export default function DiaryView() {
         contentWeight: "font-semibold",
       };
     } else if (diary.aiFeedback) {
-      // 일반 AI 피드백이 있는 경우
       messageConfig = {
         title: "현명한 거북이",
         content: diary.aiFeedback,
@@ -217,16 +202,15 @@ export default function DiaryView() {
     );
   }
 
-  // 에러가 발생한 경우
   if (error) {
     return (
       <>
         <Header />
         <ErrorPageManager
-          errorCode={error.errorCode}
+          errorCode={error.response.status.toString()}
           message={error.message}
           details={error.details}
-          onHomeClick={() => navigate("/diaries")}
+          buttonType={error.errorCode === "403" ? "back" : "home"}
         />
         <TabBar />
       </>
@@ -252,7 +236,7 @@ export default function DiaryView() {
           <div className="mr-4">
             <img
               src={
-                emotions.find(function (e) {
+                EMOTIONS.find(function (e) {
                   return e.id === diary.emotion;
                 })?.icon
               }
@@ -287,7 +271,6 @@ export default function DiaryView() {
       </div>
       <TabBar />
 
-      {/* 삭제 확인 모달 */}
       <Modal
         isOpen={showDeleteModal}
         onClose={handleDeleteCancel}

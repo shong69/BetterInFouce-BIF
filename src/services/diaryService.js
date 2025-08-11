@@ -1,6 +1,5 @@
 import api from "./api.js";
 
-// 월별 일기 목록 가져오기
 export const fetchMonthlyDiaries = async (year, month) => {
   try {
     const response = await api.get(
@@ -13,7 +12,6 @@ export const fetchMonthlyDiaries = async (year, month) => {
   }
 };
 
-// 특정 일기 가져오기
 export const fetchDiary = async (id) => {
   try {
     const response = await api.get(`/api/diaries/test/${id}`);
@@ -24,7 +22,6 @@ export const fetchDiary = async (id) => {
   }
 };
 
-// 일기 생성
 export const createDiary = async (diaryData) => {
   try {
     const response = await api.post("/api/diaries/test", diaryData);
@@ -35,10 +32,8 @@ export const createDiary = async (diaryData) => {
   }
 };
 
-// 일기 수정
 export const updateDiary = async (id, diaryData) => {
   try {
-    // TODO: 실제 API 호출로 변경
     const response = await api.patch(`/api/diaries/test/${id}`, diaryData);
     return response.data;
   } catch (error) {
@@ -47,7 +42,6 @@ export const updateDiary = async (id, diaryData) => {
   }
 };
 
-// 일기 삭제
 export const deleteDiary = async (id) => {
   try {
     await api.delete(`/api/diaries/test/${id}`);

@@ -37,7 +37,6 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    // 특정 일기 가져오기
     fetchDiary: async function (id) {
       set({ loading: true });
       try {
@@ -51,16 +50,21 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    // 일기 생성
     createDiary: async (diaryData) => {
       set({ loading: true });
       try {
         const newDiary = await createDiaryService(diaryData);
 
-        set((state) => ({
-          diaries: [...state.diaries, newDiary],
-          loading: false,
-        }));
+        set(function (state) {
+          const currentDiaries = Array.isArray(state.diaries)
+            ? state.diaries
+            : [];
+
+          return {
+            diaries: [...currentDiaries, newDiary],
+            loading: false,
+          };
+        });
 
         return newDiary;
       } catch (error) {
@@ -70,20 +74,14 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    // 일기 수정
     updateDiary: async (id, data) => {
       set({ loading: true });
       try {
         const updatedDiary = await updateDiaryService(id, data);
-
-        set((state) => ({
-          diaries: state.diaries.map((d) =>
-            d.id === parseInt(id) ? updatedDiary : d,
-          ),
+        set({
           currentDiary: updatedDiary,
           loading: false,
-        }));
-
+        });
         return updatedDiary;
       } catch (error) {
         console.error("일기 수정 실패:", error);
@@ -92,16 +90,23 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    // 일기 삭제
     deleteDiary: async (id) => {
       set({ loading: true });
       try {
         await deleteDiaryService(id);
-        set((state) => ({
-          diaries: state.diaries.filter((d) => d.id !== parseInt(id)),
-          currentDiary: null,
-          loading: false,
-        }));
+        set(function (state) {
+          const currentDiaries = Array.isArray(state.diaries)
+            ? state.diaries
+            : [];
+
+          return {
+            diaries: currentDiaries.filter(function (d) {
+              return d.id !== parseInt(id);
+            }),
+            currentDiary: null,
+            loading: false,
+          };
+        });
       } catch (error) {
         console.error("일기 삭제 실패:", error);
         set({ loading: false });

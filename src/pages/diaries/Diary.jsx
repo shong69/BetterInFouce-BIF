@@ -11,37 +11,31 @@ import { EMOTIONS } from "@constants/emotions";
 
 export default function Diary() {
   const navigate = useNavigate();
-  const [_selectedEmotion, setSelectedEmotion] = useState(null);
   const { setSelectedEmotion: setStoreEmotion, fetchMonthlyDiaries } =
     useDiaryStore();
   const [monthlyData, setMonthlyData] = useState({});
-
+  const [canWriteToday, setCanWriteToday] = useState(false);
   const emotions = EMOTIONS;
 
-  // 월별 일기 데이터 가져오기
   const fetchMonthlyData = async function (year, month) {
-    console.log(
-      "fetchMonthlyData 호출됨:",
-      year,
-      month,
-      "시간:",
-      new Date().toISOString(),
-    );
     try {
       const response = await fetchMonthlyDiaries(year, month);
-      console.log("받아온 월별 데이터:", response);
 
       const monthlyDataMap = response.dailyEmotions;
 
+      if (response.canWriteToday !== undefined) {
+        setCanWriteToday(response.canWriteToday);
+      }
       setMonthlyData(monthlyDataMap);
     } catch (error) {
       console.error("월별 데이터 가져오기 실패:", error);
       setMonthlyData({});
     }
   };
-
   function handleEmotionSelect(emotionId) {
-    setSelectedEmotion(emotionId);
+    if (!canWriteToday) {
+      return;
+    }
     setStoreEmotion(emotionId);
     navigate(`/diaries/create`);
   }
@@ -50,8 +44,6 @@ export default function Diary() {
     const diaryId = dailyInfo.diaryId;
     navigate(`/diaries/${diaryId}`);
   }
-
-  const calendarEvents = []; // 빈 배열로 설정
 
   return (
     <>
@@ -77,29 +69,53 @@ export default function Diary() {
           <DateBox />
         </div>
 
-        {/* 감정 선택 영역 */}
-        <div className="mx-3 mb-6 rounded-lg border border-gray-200 p-4 sm:mb-8">
-          <h5 className="m-3 text-center text-sm font-semibold sm:m-4 sm:text-xl">
-            오늘의 기분
+        <div
+          className={`mx-3 mb-6 rounded-lg border p-4 sm:mb-8 ${
+            !canWriteToday
+              ? "border-gray-200 bg-gray-50 opacity-60"
+              : "border-gray-200"
+          }`}
+        >
+          <h5
+            className={`m-3 text-center text-sm font-semibold sm:m-4 sm:text-xl ${
+              !canWriteToday ? "text-gray-500" : "text-gray-800"
+            }`}
+          >
+            {!canWriteToday ? "오늘은 이미 일기를 작성했어요!" : "오늘의 기분"}
           </h5>
           <div className="grid grid-cols-5">
             {emotions.map(function (emotion) {
+              const isDisabled = !canWriteToday;
+
               return (
                 <button
                   key={emotion.id}
                   onClick={function () {
                     handleEmotionSelect(emotion.id);
                   }}
-                  className="group cursor-pointer touch-manipulation rounded-lg p-2 text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 sm:p-6"
+                  disabled={isDisabled}
+                  className={`group rounded-lg p-2 text-center transition-all duration-200 sm:p-6 ${
+                    isDisabled
+                      ? "cursor-not-allowed opacity-50"
+                      : "cursor-pointer touch-manipulation hover:border-blue-300 hover:bg-blue-50"
+                  }`}
                 >
-                  <div className="mb-1 transition-transform group-hover:scale-110 sm:mb-2">
+                  <div
+                    className={`mb-1 transition-transform sm:mb-2 ${
+                      isDisabled ? "" : "group-hover:scale-110"
+                    }`}
+                  >
                     <img
                       src={emotion.icon}
                       alt={emotion.name}
                       className="mx-auto h-10 w-10 drop-shadow-lg sm:h-12 sm:w-12"
                     />
                   </div>
-                  <div className="text-xs leading-tight font-medium text-gray-700 sm:text-sm">
+                  <div
+                    className={`text-xs leading-tight font-medium sm:text-sm ${
+                      isDisabled ? "text-gray-400" : "text-gray-700"
+                    }`}
+                  >
                     {emotion.name}
                   </div>
                 </button>
@@ -124,15 +140,6 @@ export default function Diary() {
                 locale="ko"
                 height="auto"
                 fixedWeekCount={false}
-                events={calendarEvents}
-                dayMaxEvents={1}
-                moreLinkClick="popover"
-                eventDisplay="block"
-                eventTimeFormat={{
-                  hour: "numeric",
-                  minute: "2-digit",
-                  meridiem: "short",
-                }}
                 datesSet={(dateInfo) => {
                   const centerDate = new Date(
                     dateInfo.start.getTime() +
@@ -140,20 +147,13 @@ export default function Diary() {
                   );
                   const year = centerDate.getFullYear();
                   const month = centerDate.getMonth() + 1;
-                  console.log(
-                    "datesSet 호출됨:",
-                    year,
-                    month,
-                    "시간:",
-                    new Date().toISOString(),
-                  );
                   fetchMonthlyData(year, month);
                 }}
                 dayCellContent={function (arg) {
                   const date = arg.date;
                   const dateStr = date.toLocaleDateString("en-CA");
 
-                  const dailyInfo = monthlyData[dateStr];
+                  const dailyInfo = monthlyData && monthlyData[dateStr];
                   return (
                     <div className="fc-daygrid-day-number">
                       {dailyInfo ? (

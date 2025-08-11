@@ -19,41 +19,37 @@ export default function DiaryCreate() {
   const { showSuccess, showError } = useToastStore();
   const [showExitModal, setShowExitModal] = useState(false);
 
-  const emotions = EMOTIONS;
   const todayFormatted = formatDate(new Date().toISOString());
 
-  useEffect(
-    function () {
-      if (!window.handleDiaryCreatePopState) {
-        window.handleDiaryCreatePopState = function (_event) {
-          const currentContent = window.currentDiaryCreateContent || "";
+  useEffect(function () {
+    if (!window.handleDiaryCreatePopState) {
+      window.handleDiaryCreatePopState = function (_event) {
+        const currentContent = window.currentDiaryCreateContent || "";
 
-          if (currentContent.trim()) {
-            const confirm = window.confirm(
-              "작성 중인 일기가 있습니다. 나가시겠습니까?",
-            );
-            if (!confirm) {
-              window.history.replaceState(null, "", window.location.href);
-            } else {
-              clearSelectedEmotion();
-              window.history.pushState(null, "", "/diaries");
-              navigate("/diaries");
-            }
+        if (currentContent.trim()) {
+          const confirm = window.confirm(
+            "작성 중인 일기가 있습니다. 나가시겠습니까?",
+          );
+          if (!confirm) {
+            window.history.replaceState(null, "", window.location.href);
+          } else {
+            clearSelectedEmotion();
+            window.history.pushState(null, "", "/diaries");
+            navigate("/diaries");
           }
-        };
-      }
+        }
+      };
+    }
 
-      window.history.replaceState(null, "", window.location.href);
+    window.history.replaceState(null, "", window.location.href);
 
-      if (!window.diaryCreatePopStateListenerAdded) {
-        window.addEventListener("popstate", window.handleDiaryCreatePopState);
-        window.diaryCreatePopStateListenerAdded = true;
-      }
+    if (!window.diaryCreatePopStateListenerAdded) {
+      window.addEventListener("popstate", window.handleDiaryCreatePopState);
+      window.diaryCreatePopStateListenerAdded = true;
+    }
 
-      return function () {};
-    },
-    [], // 빈 의존성 배열로 변경
-  );
+    return function () {};
+  }, []);
 
   useEffect(() => {
     window.currentDiaryCreateContent = content;
@@ -132,7 +128,7 @@ export default function DiaryCreate() {
           <div className="mr-4">
             <img
               src={
-                emotions.find(function (e) {
+                EMOTIONS.find(function (e) {
                   return e.id === selectedEmotion;
                 })?.icon
               }

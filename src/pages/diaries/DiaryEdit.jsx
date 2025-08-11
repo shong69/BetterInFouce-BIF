@@ -24,15 +24,12 @@ export default function DiaryEdit() {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const emotions = EMOTIONS;
-
   useEffect(() => {
     const loadDiary = async () => {
       try {
         const diaryData = await fetchDiary(id);
         if (diaryData) {
           setDiary(diaryData);
-          // localStorage에서 저장된 content 복원
           const savedContent = localStorage.getItem(`diaryEditContent_${id}`);
           if (savedContent) {
             setContent(savedContent);
@@ -53,7 +50,6 @@ export default function DiaryEdit() {
     loadDiary();
   }, [id]);
 
-  // content와 diary가 변경될 때마다 window 객체에 저장
   useEffect(() => {
     window.currentDiaryEditContent = content;
     window.currentDiaryEditDiary = diary;
@@ -61,13 +57,8 @@ export default function DiaryEdit() {
   }, [content, diary, id]);
 
   useEffect(function () {
-    // 전역 함수로 등록 (컴포넌트 재마운트 방지)
     if (!window.handleDiaryEditPopState) {
       window.handleDiaryEditPopState = function (_event) {
-        // popstate 이벤트가 발생하면 이미 URL이 변경된 상태
-        // 이전 경로가 /diaries/edit/:id였는지 확인
-
-        // window 객체에 저장된 최신 값들 사용
         const currentContent = window.currentDiaryEditContent || "";
         const currentDiary = window.currentDiaryEditDiary || null;
 
@@ -78,14 +69,11 @@ export default function DiaryEdit() {
           if (!confirm) {
             window.history.replaceState(null, "", window.location.href);
           } else {
-            // 저장된 id 사용
             const currentId = window.currentDiaryEditId;
-            // content를 localStorage에 저장하여 DiaryView에서 돌아올 때 복원
             localStorage.setItem(
               `diaryEditContent_${currentId}`,
               currentContent,
             );
-            // navigate 대신 pushState 사용하여 popstate 이벤트 발생시키기
             window.history.pushState(null, "", `/diaries/${currentId}`);
             navigate(`/diaries/${currentId}`);
           }
@@ -93,38 +81,31 @@ export default function DiaryEdit() {
       };
     }
 
-    // 컴포넌트 마운트 시 history entry 교체 (중복 방지)
     window.history.replaceState(null, "", window.location.href);
 
-    // 이벤트 리스너가 이미 추가되었는지 확인
     if (!window.diaryEditPopStateListenerAdded) {
       window.addEventListener("popstate", window.handleDiaryEditPopState);
       window.diaryEditPopStateListenerAdded = true;
     }
 
-    return function () {
-      // 컴포넌트가 언마운트되어도 이벤트 리스너는 유지
-    };
+    return function () {};
   }, []);
 
-  useEffect(
-    function () {
-      function handleBeforeUnload(event) {
-        if (content.trim() && content !== diary?.content) {
-          event.preventDefault();
-          event.returnValue =
-            "수정 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
-          return event.returnValue;
-        }
+  useEffect(function () {
+    function handleBeforeUnload(event) {
+      if (content.trim() && content !== diary?.content) {
+        event.preventDefault();
+        event.returnValue =
+          "수정 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
+        return event.returnValue;
       }
+    }
 
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      return function () {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    },
-    [], // 빈 의존성 배열로 변경
-  );
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return function () {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const handleBack = function () {
     if (content.trim() && content !== diary?.content) {
@@ -149,13 +130,11 @@ export default function DiaryEdit() {
       return;
     }
 
-    // 변경사항이 있는지 확인
     if (content.trim() === diary?.content.trim()) {
       showError("수정할 내용이 없습니다.");
       return;
     }
 
-    // 수정 확인 모달 표시
     setShowSaveModal(true);
   };
 
@@ -214,7 +193,7 @@ export default function DiaryEdit() {
           <div className="mr-4">
             <img
               src={
-                emotions.find(function (e) {
+                EMOTIONS.find(function (e) {
                   return e.id === selectedEmotion;
                 })?.icon
               }
