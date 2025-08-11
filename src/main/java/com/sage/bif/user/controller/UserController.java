@@ -12,7 +12,6 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -215,7 +214,6 @@ public class UserController {
                         .body(ApiResponse.error("토큰에서 사용자 정보를 추출할 수 없습니다.", "INVALID_TOKEN_FORMAT"));
             }
 
-
             var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
             if (socialLoginOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -254,10 +252,12 @@ public class UserController {
             HttpSession session = request.getSession(false);
             Map<String, Object> sessionData = new HashMap<>();
 
-            if (session != null) {
+            if(session == null ) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("세션이 없습니다."));
+            } else {
                 String accessToken = (String) session.getAttribute(ACCESS_TOKEN);
                 if (accessToken != null) {
-                    // 로그인된 사용자
                     sessionData.put(ACCESS_TOKEN, accessToken);
                     sessionData.put(PROVIDER_UNIQUE_ID, session.getAttribute(PROVIDER_UNIQUE_ID));
                     sessionData.put(ROLE, session.getAttribute(ROLE));
@@ -282,14 +282,10 @@ public class UserController {
                     var guardian = guardianService.findBySocialId(socialId);
 
                     if (bif.isPresent() || guardian.isPresent()) {
-                        Map<String, Object> tokenData = generateNewTokens(socialLoginOpt.get(), response);
-                        sessionData.putAll(tokenData);
-
-                        session.removeAttribute("registration_socialId");
-                        session.removeAttribute("registration_email");
-                        session.removeAttribute("registration_provider");
-                        session.removeAttribute("registration_providerUniqueId");
-
+                        SecurityContextHolder.clearContext();
+                        session.invalidate();
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.","EXISTING_USER_LOGOUT_REQUIRED"));
                     } else {
                         String email = oauth2Token.getPrincipal().getAttribute("email");
                         String provider = oauth2Token.getAuthorizedClientRegistrationId();
@@ -303,11 +299,6 @@ public class UserController {
                         sessionData.put("registrationInfo", registrationInfo);
                     }
                 }
-            }
-
-            if (sessionData.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("세션 정보가 없습니다."));
             }
 
             return ResponseEntity.ok(ApiResponse.success(sessionData, "세션 정보 조회 성공"));
