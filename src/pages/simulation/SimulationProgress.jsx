@@ -36,8 +36,6 @@ export default function SimulationProgress() {
   // eslint-disable-next-line no-unused-vars
   const [score, setScore] = useState(0);
   const [conversationHistory, setConversationHistory] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [finalScore, setFinalScore] = useState(0);
   const [shuffledChoices, setShuffledChoices] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
@@ -137,7 +135,7 @@ export default function SimulationProgress() {
     [currentStep, simulation],
   );
 
-  const speakText = function (text) {
+  function speakText(text) {
     if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ko-KR";
@@ -145,13 +143,13 @@ export default function SimulationProgress() {
       utterance.pitch = 2.5;
       speechSynthesis.speak(utterance);
     }
-  };
+  }
 
-  const handleSpeakerClick = function (text) {
+  function handleSpeakerClick(text) {
     speakText(text);
-  };
+  }
 
-  const handleOptionSelect = async function (optionIndex) {
+  async function handleOptionSelect(optionIndex) {
     if (selectedOption !== null) return;
 
     setSelectedOption(optionIndex);
@@ -256,9 +254,9 @@ export default function SimulationProgress() {
       });
       setShowTyping(false);
     }, 1400);
-  };
+  }
 
-  const handleNextStep = function () {
+  function handleNextStep() {
     setHiddenFeedbackButtons(function (prev) {
       return new Set([...prev, currentStep]);
     });
@@ -279,18 +277,18 @@ export default function SimulationProgress() {
         return [...prev, opponentMessage];
       });
     }
-  };
+  }
 
-  const handleBackToMain = function () {
+  function handleBackToMain() {
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel();
     }
     const sessionKey = `sim_${id}_session`;
     localStorage.removeItem(sessionKey);
     navigate("/simulations");
-  };
+  }
 
-  const shuffleChoices = function (choices) {
+  function shuffleChoices(choices) {
     if (!choices || choices.length === 0) return [];
 
     const shuffled = [...choices];
@@ -299,15 +297,15 @@ export default function SimulationProgress() {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-  };
+  }
 
-  const getCurrentDate = function () {
+  function getCurrentDate() {
     const now = new Date();
     const month = now.getMonth() + 1;
     const date = now.getDate();
     const day = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
     return `${month}월 ${date}일 ${day}요일`;
-  };
+  }
 
   if (!simulation) {
     return (
@@ -331,13 +329,7 @@ export default function SimulationProgress() {
         <div className="text-black-600 mb-3 text-[13px] font-medium">
           {getCurrentDate()}
         </div>
-        <button
-          className="text-black-600 flex items-center text-[15px] font-extrabold transition-colors hover:text-gray-900"
-          onClick={handleBackToMain}
-        >
-          <span className="mr-2">&#x276E;</span>
-          뒤로가기
-        </button>
+        <BackButton />
       </div>
 
       <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
