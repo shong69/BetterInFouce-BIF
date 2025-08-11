@@ -21,7 +21,7 @@ public class BaseException extends RuntimeException {
     public BaseException(ErrorCode errorCode, Throwable cause) {
         super(errorCode.getMessage(), cause);
         this.errorCode = errorCode;
-        this.details = cause != null ? cause.getMessage() : null; 
+        this.details = cause != null ? cause.getMessage() : null;
     }
 
 }

@@ -1,34 +1,34 @@
 spring:
   application:
     name: bif-dev
-  
-  # JPA 설정
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
         use_sql_comments: true
-        connection:
-          characterEncoding: utf8
-          useUnicode: true
-        globally_quoted_identifiers: true
-        globally_quoted_identifiers_skip_column_definitions: true
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
 
-  # MySQL 데이터베이스 설정 (Docker)
+  # H2 데이터베이스 설정 (개발용)
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-    username: root
-    password: root1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 30000
+
+  # Azure Mysql Flexible Database(배포용) 추가 필요
 
   h2:
     console:
@@ -50,6 +50,7 @@ spring:
       openai:
         endpoint: ${AZURE_OPENAI_ENDPOINT:https://your-resource.openai.azure.com}
         api-key: ${AZURE_OPENAI_API_KEY:your-api-key}
+        resource-name: ${AZURE_OPENAI_RESOURCE_NAME:your-resource}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
 

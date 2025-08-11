@@ -40,7 +40,7 @@ public enum ErrorCode {
     COMMON_DATA_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DATA_SYNC_FAILED", "데이터 동기화에 실패했습니다."),
     COMMON_DATA_INCONSISTENCY(HttpStatus.CONFLICT, "DATA_INCONSISTENCY", "데이터 불일치가 감지되었습니다."),
     COMMON_DATA_VERSION_CONFLICT(HttpStatus.CONFLICT, "DATA_VERSION_CONFLICT", "데이터 버전 충돌이 발생했습니다."),
-    
+
     COMMON_AI_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI_SERVICE_UNAVAILABLE", "AI 서비스를 사용할 수 없습니다."),
     COMMON_AI_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_REQUEST_FAILED", "AI 서비스 요청에 실패했습니다."),
     COMMON_AI_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY, "AI_RESPONSE_INVALID", "AI 서비스 응답이 올바르지 않습니다."),
@@ -116,6 +116,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_ALREADY_EXISTS", "이미 존재하는 사용자입니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "접근 권한이 없습니다."),
+    SIMULATION_NOT_FOUND(HttpStatus.NOT_FOUND, "SIMULATION_NOT_FOUND", "시뮬레이션을 찾을 수 없습니다."),
     STATS_NOT_FOUND(HttpStatus.NOT_FOUND, "STATS_NOT_FOUND", "통계를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
