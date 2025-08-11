@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import api from "@services/api";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -183,7 +182,10 @@ export const useUserStore = create((set, get) => ({
 
   logout: async () => {
     try {
-      await api.post("/api/auth/logout");
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
     } finally {
       sessionStorage.removeItem("accessToken");
       set({
@@ -245,28 +247,38 @@ export const useUserStore = create((set, get) => ({
       return { success: false, error };
     }
   },
+
   withdraw: async () => {
     try {
-      await api.delete("/api/auth/withdraw");
-
-      sessionStorage.removeItem("accessToken");
-
-      set({
-        accessToken: null,
-        user: null,
-        registrationInfo: null,
-        isLoading: false,
+      const response = await fetch(`${API_BASE_URL}/api/auth/withdraw`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${get().accessToken}`,
+        },
       });
+      if (response.ok) {
+        sessionStorage.removeItem("accessToken");
 
-      return { success: true, message: "회원탈퇴가 완료되었습니다." };
-    } catch (error) {
-      console.error("회원탈퇴 실패", error);
+        set({
+          accessToken: null,
+          user: null,
+          registrationInfo: null,
+          isLoading: false,
+        });
+
+        return { success: true, message: "회원탈퇴가 완료되었습니다." };
+      } else {
+        return {
+          success: false,
+          message: "회원탈퇴 중 오류가 발생했습니다.",
+        };
+      }
+    } catch {
+      return {
+        success: false,
+        message: "회원탈퇴 중 오류가 발생했습니다.",
+      };
     }
-    return {
-      success: false,
-      message:
-        // eslint-disable-next-line no-undef
-        error.response?.data?.message || "회원탈퇴 중 오류가 발생했습니다.",
-    };
   },
 }));
