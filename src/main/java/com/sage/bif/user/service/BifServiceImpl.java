@@ -5,12 +5,9 @@ import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.SocialLogin;
-import com.sage.bif.user.event.model.BifRegisteredEvent;
-import com.sage.bif.user.event.model.BifRegistrationRequestedEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +19,11 @@ public class BifServiceImpl implements BifService {
 
     private final BifRepository bifRepository;
     private final SocialLoginRepository socialLoginRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public Bif registerBySocialId(Long socialId, String email) {
+
         SocialLogin socialLogin = socialLoginRepository.findById(socialId)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
 
@@ -35,7 +32,7 @@ public class BifServiceImpl implements BifService {
             return existingBif.get();
         }
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("사용자", this::isNicknameExists);
         String connectionCode = RandomGenerator.generateUniqueConnectionCode(this::isConnectionCodeExists);
 
         Bif bif = Bif.builder()
@@ -44,20 +41,7 @@ public class BifServiceImpl implements BifService {
                 .connectionCode(connectionCode)
                 .build();
 
-        BifRegistrationRequestedEvent requestedEvent = new BifRegistrationRequestedEvent(bif);
-        eventPublisher.publishEvent(requestedEvent);
-
-        Bif savedBif = bifRepository.save(bif);
-
-        BifRegisteredEvent registeredEvent = new BifRegisteredEvent(savedBif);
-        eventPublisher.publishEvent(registeredEvent);
-
-        return savedBif;
-    }
-
-    @Override
-    public Optional<Bif> findByConnectionCode(String connectionCode) {
-        return bifRepository.findByConnectionCode(connectionCode);
+        return bifRepository.save(bif);
     }
 
     @Override
@@ -72,4 +56,13 @@ public class BifServiceImpl implements BifService {
     private boolean isConnectionCodeExists(String connectionCode) {
         return bifRepository.findByConnectionCode(connectionCode).isPresent();
     }
+
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
+        if (bifOpt.isPresent()) {
+            bifRepository.delete(bifOpt.get());
+        }
+    }
+
 }

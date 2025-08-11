@@ -6,12 +6,14 @@ import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.service.SocialLoginService;
 import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
+import com.sage.bif.user.service.LoginLogService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -24,30 +26,32 @@ import java.util.Optional;
 
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     private final JwtTokenProvider jwtTokenProvider;
     private final SocialLoginService socialLoginService;
     private final BifService bifService;
     private final GuardianService guardianService;
+    private final LoginLogService loginLogService;
 
     public OAuth2AuthenticationSuccessHandler(JwtTokenProvider jwtTokenProvider, SocialLoginService socialLoginService,
-                                              BifService bifService, GuardianService guardianService) {
+                                              BifService bifService, GuardianService guardianService,
+                                              LoginLogService loginLogService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.socialLoginService = socialLoginService;
         this.bifService = bifService;
         this.guardianService = guardianService;
+        this.loginLogService = loginLogService;
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+
         String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         Map<String, Object> attributes = ((OAuth2User) authentication.getPrincipal()).getAttributes();
 
-        OAuth2UserInfo userInfo = null;
-        try {
-            userInfo = OAuth2UserInfoFactory.get(registrationId, attributes);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        OAuth2UserInfo userInfo = OAuth2UserInfoFactory.get(registrationId, attributes);
 
         if (userInfo == null) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "사용자 정보를 가져올 수 없습니다.");
@@ -73,6 +77,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         Optional<com.sage.bif.user.entity.Bif> bif = bifService.findBySocialId(socialLogin.getSocialId());
 
         if (bif.isPresent()) {
+            loginLogService.recordLogin(socialLogin.getSocialId());
             processBifLogin(bif.get().getBifId(), bif.get().getNickname(),
                     providerUniqueId, registrationId,
                     socialLogin.getSocialId(), request, response);
@@ -80,6 +85,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             Optional<com.sage.bif.user.entity.Guardian> guardian = guardianService.findBySocialId(socialLogin.getSocialId());
 
             if (guardian.isPresent()) {
+                loginLogService.recordLogin(socialLogin.getSocialId());
                 processGuardianLogin(guardian.get().getBif().getBifId(), guardian.get().getNickname(),
                         providerUniqueId, registrationId,
                         socialLogin.getSocialId(), request, response);
@@ -98,14 +104,14 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setRefreshTokenCookie(response, refreshToken);
 
         saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.BIF, socialId));
 
-        response.sendRedirect("/api/test-token.html");
+        response.sendRedirect(frontendUrl + "/");
     }
 
 
@@ -118,14 +124,14 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(30);
+        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setRefreshTokenCookie(response, refreshToken);
 
         saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.GUARDIAN, socialId));
 
-        response.sendRedirect("/api/test-token.html");
+        response.sendRedirect(frontendUrl + "/");
     }
 
     private void handleIncompleteRegistration(SocialLogin socialLogin, String providerUniqueId,
@@ -138,7 +144,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        response.sendRedirect("/api/register-choice.html");
+        response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void handleNewUser(String email, String providerUniqueId,
@@ -154,7 +160,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        response.sendRedirect("/api/register-choice.html");
+        response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

@@ -13,18 +13,19 @@ import com.sage.bif.simulation.dto.response.SimulationSessionResponse;
 import com.sage.bif.simulation.dto.response.SimulationDetailsResponse;
 
 import com.sage.bif.simulation.dto.response.SimulationChoiceResponse;
-import com.sage.bif.simulation.dto.response.SimulationResultResponse;
 import com.sage.bif.simulation.dto.request.SimulationChoiceRequest;
 import com.sage.bif.simulation.service.SimulationService;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import com.sage.bif.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 @RestController
 @RequestMapping("/simulations")
 @RequiredArgsConstructor
+@Slf4j
 @CrossOrigin(origins = "*")
 public class SimulationController { 
 
@@ -46,27 +47,21 @@ public class SimulationController {
     public ResponseEntity<ApiResponse<SimulationChoiceResponse>> submitChoice(
             @RequestBody Map<String, Object> request) {
         try {
-            System.out.println("=== 컨트롤러 submitChoice 호출 ===");
-            System.out.println("요청 데이터: " + request);
+            log.info("=== 컨트롤러 submitChoice 호출 ===");
+            log.info("요청 데이터: {}", request);
             
             String sessionId = (String) request.get("sessionId");
             SimulationChoiceRequest choiceRequest = new SimulationChoiceRequest();
             choiceRequest.setChoice((String) request.get("choice"));
-            
-            System.out.println("sessionId: " + sessionId);
-            System.out.println("choice: " + choiceRequest.getChoice());
-            
+
             SimulationChoiceResponse response = simulationService.submitChoice(sessionId, choiceRequest);
             return ResponseEntity.ok(ApiResponse.success(response, "선택지 제출 성공"));
         } catch (Exception e) {
-            System.err.println("컨트롤러에서 예외 발생: " + e.getMessage());
-            e.printStackTrace();
+            log.error("선택지 제출 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
     }
     
-
-
     @GetMapping("/{simulationId}/feedback")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFeedback(
             @PathVariable Long simulationId,
@@ -89,33 +84,23 @@ public class SimulationController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSimulationResult(
             @RequestBody Map<String, Object> request) {
         try {
-            System.out.println("=== /result 엔드포인트 호출 ===");
-            System.out.println("요청 데이터: " + request);
             
             String sessionId = (String) request.get("sessionId");
             Object totalScoreObj = request.get("totalScore");
-            
-            System.out.println("sessionId: " + sessionId);
-            System.out.println("totalScoreObj: " + totalScoreObj + " (타입: " + (totalScoreObj != null ? totalScoreObj.getClass().getSimpleName() : "null") + ")");
-            
-            // sessionId에서 simulationId 추출 (예: "session_1754840583885_6_4" -> 6)
+
             Long simulationId = extractSimulationIdFromSessionId(sessionId);
             int totalScore;
             
-            if (totalScoreObj instanceof Integer) {
-                totalScore = (Integer) totalScoreObj;
-            } else if (totalScoreObj instanceof Number) {
-                totalScore = ((Number) totalScoreObj).intValue();
+            if (totalScoreObj instanceof Integer integer) {
+                totalScore = integer;
+            } else if (totalScoreObj instanceof Number number) {
+                totalScore = number.intValue();
             } else if (totalScoreObj == null) {
-                // totalScore가 null이면 기본값 0 사용
                 totalScore = 0;
-                System.out.println("totalScore가 null이므로 기본값 0을 사용합니다.");
             } else {
                 throw new IllegalArgumentException("totalScore가 올바른 형식이 아닙니다: " + totalScoreObj);
             }
-            
-            System.out.println("변환된 값 - simulationId: " + simulationId + ", totalScore: " + totalScore);
-            
+
             String feedbackText = simulationService.getFeedbackText(simulationId, totalScore);
             
             Map<String, Object> result = Map.of(
@@ -126,14 +111,12 @@ public class SimulationController {
             
             return ResponseEntity.ok(ApiResponse.success(result, "시뮬레이션 결과 조회 성공"));
         } catch (Exception e) {
-            System.err.println("/result 엔드포인트에서 예외 발생: " + e.getMessage());
-            e.printStackTrace();
+            log.error("시뮬레이션 결과 조회 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
     }
     
     private Long extractSimulationIdFromSessionId(String sessionId) {
-        // session_{timestamp}_{simulationId}_{currentStep} 형식에서 simulationId 추출
         String[] parts = sessionId.split("_");
         if (parts.length >= 3) {
             return Long.valueOf(parts[2]);

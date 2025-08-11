@@ -12,4 +12,5 @@ public interface GuardianRepository extends JpaRepository<Guardian, Long> {
 
     Optional<Guardian> findByNickname(String nickname);
     Optional<Guardian> findBySocialLogin_SocialId(Long socialId);
+
 }
