@@ -6,6 +6,10 @@ import com.sage.bif.stats.dto.response.StatsResponse;
 import com.sage.bif.stats.service.StatsService;
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.jwt.JwtTokenProvider;
+import com.sage.bif.user.entity.Guardian;
+import com.sage.bif.user.repository.GuardianRepository;
+import com.sage.bif.common.exception.BaseException;
+import com.sage.bif.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class StatsController {
 
     private final StatsService statsService;
+    private final GuardianRepository guardianRepository;
 
     @GetMapping("/stat")
     @Operation(summary = "월별 통계 조회", description = "BIF 사용자의 월별 감정 통계를 조회합니다.")
@@ -39,7 +44,6 @@ public class StatsController {
     public ResponseEntity<ApiResponse<StatsResponse>> getMonthlyStats(
             @AuthenticationPrincipal final UserDetails userDetails) {
 
-        // UserDetails를 CustomUserDetails로 캐스팅
         if (!(userDetails instanceof CustomUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
@@ -47,7 +51,6 @@ public class StatsController {
         
         CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
-        // BIF 사용자만 접근 가능
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.BIF) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("BIF 사용자만 접근할 수 있습니다."));
@@ -63,19 +66,19 @@ public class StatsController {
         }
     }
 
-    @GetMapping("/guardian")
+    @GetMapping("/bif_stats")
     @Operation(summary = "보호자 통계 조회", description = "보호자가 연결된 BIF의 통계를 조회합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "보호자 통계 조회 성공",
                     content = @Content(schema = @Schema(implementation = GuardianStatsResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "연결된 BIF를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<GuardianStatsResponse>> getGuardianStats(
             @AuthenticationPrincipal final UserDetails userDetails,
             @RequestParam final Long bifId) {
 
-        // UserDetails를 CustomUserDetails로 캐스팅
         if (!(userDetails instanceof CustomUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
@@ -83,35 +86,31 @@ public class StatsController {
         
         CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
-        // Guardian 사용자만 접근 가능
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.GUARDIAN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("보호자만 접근할 수 있습니다."));
         }
 
         try {
+            // 가디언이 해당 BIF와 연결되어 있는지 검증
+            Guardian guardian = guardianRepository.findBySocialLogin_SocialId(customUserDetails.getSocialId())
+                    .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, "가디언 정보를 찾을 수 없습니다."));
+            
+            if (!guardian.getBif().getBifId().equals(bifId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("연결되지 않은 BIF의 통계는 조회할 수 없습니다."));
+            }
+
             final GuardianStatsResponse guardianStatsResponse = statsService.getGuardianStats(bifId);
             return ResponseEntity.ok(ApiResponse.success(guardianStatsResponse));
+        } catch (BaseException e) {
+            log.error("보호자 통계 조회 중 비즈니스 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("보호자 통계 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("보호자 통계 조회 중 오류가 발생했습니다."));
-        }
-    }
-
-    // ========== 테스트용 공개 엔드포인트 ==========
-    @GetMapping("/test/stat")
-    @Operation(summary = "[테스트] 월별 통계 조회", description = "인증 없이 월별 통계를 조회합니다. (테스트용)")
-    public ResponseEntity<ApiResponse<StatsResponse>> getMonthlyStatsTest(
-            @RequestParam(name = "bifId", required = false) final Long bifIdParam) {
-        try {
-            final Long bifId = bifIdParam != null ? bifIdParam : 1L;
-            final StatsResponse statsResponse = statsService.getMonthlyStats(bifId);
-            return ResponseEntity.ok(ApiResponse.success(statsResponse));
-        } catch (Exception e) {
-            log.error("[테스트] 월별 통계 조회 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("통계 조회 중 오류가 발생했습니다."));
         }
     }
 }
