@@ -18,4 +18,4 @@ public class ValidationUtils {
     public static boolean isPositiveNumber(Long number) {
         return number != null && number > 0;
     }
-} 
+}

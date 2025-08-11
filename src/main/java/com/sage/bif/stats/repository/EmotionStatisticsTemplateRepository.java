@@ -17,6 +17,4 @@ public interface EmotionStatisticsTemplateRepository extends JpaRepository<Emoti
                                                           @Param("downRange") final String downRange,
                                                           @Param("greatRange") final String greatRange);
 
-    @Query("SELECT t FROM EmotionStatisticsTemplate t ORDER BY RAND() LIMIT 1")
-    Optional<EmotionStatisticsTemplate> findRandomTemplate();
 }
