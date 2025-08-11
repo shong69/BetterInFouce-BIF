@@ -55,8 +55,25 @@ public class AiFeedbackService {
     }
     
     public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
+        log.info("=== checkModeration 메서드 시작 ===");
+        log.info("입력 파라미터 - content: {}, bifId: {}, diaryId: {}", content, bifId, diaryId);
+        log.info("feedback 객체 상태 - ID: {}, Diary: {}", 
+            feedback != null ? feedback.getId() : "null", 
+            feedback != null && feedback.getDiary() != null ? feedback.getDiary().getId() : "null");
         try {
+            log.info("Moderation 체크 시작 - 콘텐츠: {}", content);
+        
+            // moderationClient null 체크
+            if (moderationClient == null) {
+                log.error("moderationClient가 null입니다!");
+                throw new RuntimeException("moderationClient가 null입니다");
+            }
+            
+            log.info("moderationClient.moderate() 호출 시작");
             ModerationResponse moderationResponse = moderationClient.moderate(content);
+
+            log.info("Moderation 응답: {}", moderationResponse);
+             
             if (moderationResponse.isFlagged()) {
                 feedback.setContentFlagged(true);
                 feedback.setContentFlaggedCategories(moderationResponse.getFlaggedCategories());
@@ -65,17 +82,31 @@ public class AiFeedbackService {
             } else {
                 feedback.setContentFlagged(false);
                 feedback.setContentFlaggedCategories(null);
+                log.info("콘텐츠 검토 통과");
             }
+            log.info("=== checkModeration 메서드 정상 완료 ===");
         } catch (Exception e) {
-            log.warn("Moderation 체크 실패: {}", e.getMessage());
+            log.error("=== checkModeration 메서드에서 예외 발생 ===");
+            log.error("Moderation 체크 실패 - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
+            log.error("예외 스택 트레이스:", e);
+
             feedback.setContentFlagged(false);
             feedback.setContentFlaggedCategories(null);
+            log.info("예외 발생 후 feedback 객체 기본값 설정 완료");
         }
     }
     
     public String generateAiFeedback(String content, Emotion emotion) {
+        log.info("=== generateAiFeedback 메서드 시작 ===");
+        log.info("입력 파라미터 - content: {}, emotion: {}", content, emotion);
+        
         try {
-            log.info("AI 피드백 생성 시작 - 감정: {}", emotion);
+            log.info("AI 피드백 생성 시작 - 감정: {}, 콘텐츠: {}", emotion, content);
+            
+            if (aiModelClient == null) {
+                log.error("aiModelClient가 null입니다!");
+                throw new RuntimeException("aiModelClient가 null입니다");
+            }
             
             String userPrompt = content;
             if (emotion != null) {
@@ -83,17 +114,28 @@ public class AiFeedbackService {
                     emotion.name(), content);
             }
             
-            AiRequest request = new AiRequest(userPrompt);
-            AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
+            log.info("AI 모델에 전송할 프롬프트: {}", userPrompt);
             
-            log.info("AI 피드백 생성 완료");
+            AiRequest request = new AiRequest(userPrompt);
+            log.info("AiRequest 생성 완료: {}", request);
+            
+            log.info("aiModelClient.generate() 호출 시작");
+            AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
+            log.info("AI 응답 수신 완료: {}", response);
+            
+            log.info("AI 피드백 생성 완료: {}", response.getContent());
+            log.info("=== generateAiFeedback 메서드 정상 완료 ===");
             return response.getContent();
             
         } catch (BaseException e) {
-            log.error("AI 피드백 생성 BaseException: {}", e.getMessage());
+            log.error("=== generateAiFeedback 메서드에서 BaseException 발생 ===");
+            log.error("AI 피드백 생성 BaseException - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
+            log.error("BaseException 스택 트레이스:", e);
             return null;
         } catch (Exception e) {
-            log.error("AI 피드백 생성 예상치 못한 오류: {}", e.getMessage());
+            log.error("=== generateAiFeedback 메서드에서 예상치 못한 예외 발생 ===");
+            log.error("AI 피드백 생성 예상치 못한 오류 - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
+            log.error("예외 스택 트레이스:", e);
             return null;
         }
     }

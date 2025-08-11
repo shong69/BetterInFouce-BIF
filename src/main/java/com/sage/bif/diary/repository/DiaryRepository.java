@@ -20,6 +20,6 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     @Query("SELECT d FROM Diary d JOIN FETCH d.user LEFT JOIN FETCH d.aiFeedback WHERE d.id = :diaryId AND d.isDeleted = false")
     Optional<Diary> findByIdWithUser(@Param("diaryId") Long diaryId);
     
-    @Query("SELECT COUNT(d) > 0 FROM Diary d WHERE d.user.bifId = :userId AND DATE(d.createdAt) = :date AND d.isDeleted = false")
-    boolean existsByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+    @Query(value="SELECT COUNT(*) > 0 FROM emotion_diary d WHERE d.bif_id = :userId AND DATE(d.created_at) = :date", nativeQuery = true)
+    Long existsByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 } 

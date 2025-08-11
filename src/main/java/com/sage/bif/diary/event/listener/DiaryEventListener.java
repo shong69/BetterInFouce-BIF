@@ -27,10 +27,8 @@ public class DiaryEventListener {
                 event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getEmotion(), event.getEventId());
         
         try {
-            // 1. 캐시 무효화 (모든 관련 캐시)
             invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
             
-            // 2. 통계 업데이트 이벤트 발행
             publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
             
         } catch (Exception e) {
@@ -44,14 +42,11 @@ public class DiaryEventListener {
                 event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getEventId());
         
         try {
-            // 1. 캐시 무효화 (모든 관련 캐시)
             invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
             
-            // 2. 내용 변경 감지 및 처리
             if (!event.getPreviousContent().equals(event.getDiary().getContent())) {
                 log.info("Diary content changed significantly for diary: {}", event.getDiary().getId());
                 
-                // 3. 통계 업데이트 이벤트 발행
                 publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_UPDATED", "일기 수정으로 인한 통계 업데이트");
             }
 
@@ -66,10 +61,8 @@ public class DiaryEventListener {
                 event.getDiaryId(), event.getUserId(), event.getEmotion(), event.getEventId());
         
         try {
-            // 1. 관련 캐시 정리
             invalidateAllDiaryCache(event.getUserId());
             
-            // 2. 통계 업데이트 이벤트 발행
             publishStatsEvent(event.getUserId(), "DIARY_DELETED", "일기 삭제로 인한 통계 업데이트");
             
         } catch (Exception e) {
