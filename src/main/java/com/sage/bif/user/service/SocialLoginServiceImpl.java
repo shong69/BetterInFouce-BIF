@@ -18,7 +18,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class SocialLoginServiceImpl implements SocialLoginService {
 
     private final SocialLoginRepository socialLoginRepository;

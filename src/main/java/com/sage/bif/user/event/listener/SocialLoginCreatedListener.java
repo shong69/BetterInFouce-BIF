@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@SuppressWarnings("unused")
 public class SocialLoginCreatedListener {
 
     @EventListener
