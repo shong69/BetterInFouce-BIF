@@ -187,10 +187,6 @@ public class SimulationServiceImpl implements SimulationService {
                 .steps(stepResponses)
                 .build();
     }
-    
-    public void saveScore(String sessionId, int score) {
-        log.info("점수 저장 요청: sessionId={}, score={} (로컬스토리지에서 처리)", sessionId, score);
-    }
 
     @Override
     public void recommendSimulation(Long simulationId) {
@@ -215,3 +211,4 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
 }
+
