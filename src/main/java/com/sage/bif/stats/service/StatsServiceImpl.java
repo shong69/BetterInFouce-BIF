@@ -535,7 +535,10 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         final String trimmed = jsonLike.trim();
         if (trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
             // remove outer quotes
-            return trimmed.substring(1, trimmed.length() - 1);
+            String result = trimmed.substring(1, trimmed.length() - 1);
+            // unescape backslashes before double quotes
+            result = result.replace("\\\"", "\"");
+            return result;
         }
         return trimmed;
     }
