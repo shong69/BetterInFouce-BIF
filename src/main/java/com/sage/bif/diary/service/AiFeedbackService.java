@@ -1,7 +1,6 @@
 package com.sage.bif.diary.service;
 
 import com.sage.bif.common.client.ai.AiServiceClient;
-import com.sage.bif.common.client.ai.AzureOpenAiModerationClient;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.client.ai.dto.ModerationResponse;
@@ -23,8 +22,7 @@ public class AiFeedbackService {
     
     private final AiFeedbackRepository aiFeedbackRepository;
     private final AiServiceClient aiModelClient;
-    private final AzureOpenAiModerationClient moderationClient;
-    
+
     @Transactional
     public void regenerateAiFeedbackIfNeeded(Diary diary, AiFeedback feedback) {
         boolean needsRegeneration = false;
@@ -55,45 +53,7 @@ public class AiFeedbackService {
     }
     
     public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
-        log.info("=== checkModeration 메서드 시작 ===");
-        log.info("입력 파라미터 - content: {}, bifId: {}, diaryId: {}", content, bifId, diaryId);
-        log.info("feedback 객체 상태 - ID: {}, Diary: {}", 
-            feedback != null ? feedback.getId() : "null", 
-            feedback != null && feedback.getDiary() != null ? feedback.getDiary().getId() : "null");
-        try {
-            log.info("Moderation 체크 시작 - 콘텐츠: {}", content);
-        
-            // moderationClient null 체크
-            if (moderationClient == null) {
-                log.error("moderationClient가 null입니다!");
-                throw new RuntimeException("moderationClient가 null입니다");
-            }
-            
-            log.info("moderationClient.moderate() 호출 시작");
-            ModerationResponse moderationResponse = moderationClient.moderate(content);
 
-            log.info("Moderation 응답: {}", moderationResponse);
-             
-            if (moderationResponse.isFlagged()) {
-                feedback.setContentFlagged(true);
-                feedback.setContentFlaggedCategories(moderationResponse.getFlaggedCategories());
-                log.warn("부적절한 콘텐츠 감지 - 사용자: {}, 일기: {}, 카테고리: {}", 
-                    bifId, diaryId, moderationResponse.getFlaggedCategories());
-            } else {
-                feedback.setContentFlagged(false);
-                feedback.setContentFlaggedCategories(null);
-                log.info("콘텐츠 검토 통과");
-            }
-            log.info("=== checkModeration 메서드 정상 완료 ===");
-        } catch (Exception e) {
-            log.error("=== checkModeration 메서드에서 예외 발생 ===");
-            log.error("Moderation 체크 실패 - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
-            log.error("예외 스택 트레이스:", e);
-
-            feedback.setContentFlagged(false);
-            feedback.setContentFlaggedCategories(null);
-            log.info("예외 발생 후 feedback 객체 기본값 설정 완료");
-        }
     }
     
     public String generateAiFeedback(String content, Emotion emotion) {
