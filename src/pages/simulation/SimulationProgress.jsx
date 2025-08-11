@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import { simulationService } from "../../services/simulationService";
+import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
@@ -33,12 +33,11 @@ export default function SimulationProgress() {
   const [sessionId, setSessionId] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [score, setScore] = useState(0);
-  const [showFinal, setShowFinal] = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [finalScore, setFinalScore] = useState(0);
-  const [finalMessage, setFinalMessage] = useState("");
   const [shuffledChoices, setShuffledChoices] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
@@ -60,44 +59,31 @@ export default function SimulationProgress() {
           const existingSessionId = localStorage.getItem(sessionKey);
 
           if (existingSessionId) {
-            console.log(
-              "localStorage에서 기존 세션 ID 사용:",
-              existingSessionId,
-            );
             setSessionId(existingSessionId);
             sessionCreatedRef.current = true;
 
             const totalKey = `sim_${id}_total`;
             const existingTotal = Number(localStorage.getItem(totalKey) || 0);
             setScore(existingTotal);
-            console.log("기존 누적 점수 불러옴:", existingTotal);
           } else {
-            console.log("새 세션 생성 시도 중");
             try {
               const startRes = await simulationService.startSimulation(
                 parseInt(id),
               );
-              console.log("startSimulation 응답:", startRes);
+
               const startSessionId = startRes?.data?.sessionId;
 
               if (startSessionId) {
                 setSessionId(startSessionId);
                 localStorage.setItem(sessionKey, startSessionId);
                 sessionCreatedRef.current = true;
-                console.log(
-                  "세션 생성 완료 및 localStorage 저장:",
-                  startSessionId,
-                );
 
                 const totalKey = `sim_${id}_total`;
                 localStorage.setItem(totalKey, "0");
                 setScore(0);
-                console.log("새 세션 점수 초기화");
-              } else {
-                console.error("세션 ID를 받지 못했습니다:", startRes);
               }
             } catch (sessionError) {
-              console.error("세션 생성 실패:", sessionError);
+              throw ("세션 생성 실패:", sessionError);
             }
           }
           try {
@@ -117,14 +103,12 @@ export default function SimulationProgress() {
                 };
                 setConversationHistory([firstMessage]);
               }
-            } else {
-              console.error("시뮬레이션 데이터를 받지 못했습니다:", data);
             }
           } catch (simulationError) {
-            console.error("시뮬레이션 상세 조회 실패:", simulationError);
+            throw ("시뮬레이션 상세 조회 실패:", simulationError);
           }
         } catch (error) {
-          console.error("시뮬레이션 로드 또는 세션 시작 오류:", error);
+          throw ("시뮬레이션 로드 또는 세션 시작 오류:", error);
         }
       };
 
@@ -192,28 +176,22 @@ export default function SimulationProgress() {
           selectedOptionText,
           choiceId,
         );
-        console.log("선택지 제출 완료");
 
         const payload = apiRes?.data ?? apiRes;
         const serverScore =
           payload?.currentScore ?? payload?.current_score ?? 0;
 
         if (typeof serverScore === "number" && serverScore > 0) {
-          // 로컬스토리지에서 기존 점수 가져오기
           const sessionKey = `sim_${id}_total`;
           const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
           const newTotal = existingTotal + serverScore;
 
           localStorage.setItem(sessionKey, newTotal.toString());
 
-          // 상태도 업데이트
           setScore(newTotal);
-          console.log(
-            `로컬스토리지 점수 누적: ${serverScore} → 총점: ${newTotal}`,
-          );
         }
       } catch (error) {
-        console.error("선택지 제출 실패:", error);
+        throw ("선택지 제출 실패:", error);
       }
     }
 
@@ -238,9 +216,6 @@ export default function SimulationProgress() {
         localStorage.setItem(sessionKey, newTotal.toString());
 
         setScore(newTotal);
-        console.log(
-          `로컬 choice_score 누적: ${choiceScore} → 총점: ${newTotal}`,
-        );
       }
     }
     setShowTyping(true);
@@ -303,36 +278,6 @@ export default function SimulationProgress() {
       setConversationHistory(function (prev) {
         return [...prev, opponentMessage];
       });
-    } else {
-      if (sessionId) {
-        const totalPossibleScore = simulation.steps.length * 10;
-        const percentage = Math.round((score / totalPossibleScore) * 100);
-
-        simulationService
-          .completeSimulation(sessionId, percentage)
-          .then((response) => {
-            console.log("시뮬레이션 완료 성공:", response);
-          })
-          .catch((error) => {
-            console.error("시뮬레이션 완료 오류:", error);
-          });
-      }
-
-      const totalPossibleScore = simulation.steps.length * 10;
-      const percentage = Math.round((score / totalPossibleScore) * 100);
-
-      let completionMessage;
-      if (percentage >= 80) {
-        completionMessage = simulation.completion.excellent;
-      } else if (percentage >= 50) {
-        completionMessage = simulation.completion.good;
-      } else {
-        completionMessage = simulation.completion.poor;
-      }
-
-      setShowFinal(true);
-      setFinalScore(percentage);
-      setFinalMessage(completionMessage);
     }
   };
 
@@ -342,7 +287,6 @@ export default function SimulationProgress() {
     }
     const sessionKey = `sim_${id}_session`;
     localStorage.removeItem(sessionKey);
-    console.log("세션 ID 삭제:", sessionKey);
     navigate("/simulations");
   };
 
@@ -544,62 +488,58 @@ export default function SimulationProgress() {
         )}
       </main>
 
-      {showFinal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-6 text-center">
-              <div className="relative mb-4 inline-block">
-                <div className="from-primary flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br to-[#0a7a06]">
-                  <div className="text-2xl">🐢</div>
-                </div>
-                <div className="absolute -top-2 -right-2">
-                  <span className="animate-pulse text-lg">✨</span>
-                </div>
-                <div className="absolute -bottom-2 -left-2">
-                  <span
-                    className="animate-pulse text-lg"
-                    style={{ animationDelay: "0.5s" }}
-                  >
-                    ✨
-                  </span>
-                </div>
+      <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="mb-6 text-center">
+            <div className="relative mb-4 inline-block">
+              <div className="from-primary flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br to-[#0a7a06]">
+                <div className="text-2xl">🐢</div>
+              </div>
+              <div className="absolute -top-2 -right-2">
+                <span className="animate-pulse text-lg">✨</span>
+              </div>
+              <div className="absolute -bottom-2 -left-2">
+                <span
+                  className="animate-pulse text-lg"
+                  style={{ animationDelay: "0.5s" }}
+                >
+                  ✨
+                </span>
               </div>
             </div>
-            <div className="text-center">
-              <h3 className="mb-4 text-xl font-bold text-gray-800">
-                🎉 시뮬레이션 완료!
-              </h3>
-              <div className="mb-6 text-gray-600">{finalMessage}</div>
-              <div className="space-y-4 text-left">
-                <div>
-                  <h4 className="mb-2 font-semibold text-gray-800">
-                    🌟 잘한 점
-                  </h4>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <div>• 대화 상황에 적절히 대응했습니다</div>
-                    <div>• 정중하고 예의 바른 태도를 보여주었습니다</div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="mb-2 font-semibold text-gray-800">
-                    💡 개선할 점
-                  </h4>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <div>• 더 구체적이고 명확한 표현을 연습해보세요</div>
-                    <div>• 상대방의 상황을 더 고려한 배려심을 기르세요</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button
-              className="bg-primary mt-6 w-full rounded-lg py-3 font-medium text-white transition-colors hover:bg-[#0a7a06]"
-              onClick={handleBackToMain}
-            >
-              확인
-            </button>
           </div>
+          <div className="text-center">
+            <h3 className="mb-4 text-xl font-bold text-gray-800">
+              🎉 시뮬레이션 완료!
+            </h3>
+            <div className="space-y-4 text-left">
+              <div>
+                <h4 className="mb-2 font-semibold text-gray-800">🌟 잘한 점</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>• 대화 상황에 적절히 대응했습니다</div>
+                  <div>• 정중하고 예의 바른 태도를 보여주었습니다</div>
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 font-semibold text-gray-800">
+                  💡 개선할 점
+                </h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>• 더 구체적이고 명확한 표현을 연습해보세요</div>
+                  <div>• 상대방의 상황을 더 고려한 배려심을 기르세요</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button
+            className="bg-primary mt-6 w-full rounded-lg py-3 font-medium text-white transition-colors hover:bg-[#0a7a06]"
+            onClick={handleBackToMain}
+          >
+            확인
+          </button>
         </div>
-      )}
+      </div>
+
       <TabBar />
     </>
   );

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { simulationService } from "../../services/simulationService";
+import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
-import SimulationCard from "../../pages/simulation/components/SimulationCard";
+import SimulationCard from "@pages/simulation/components/SimulationCard";
 
 export default function Simulation() {
   const [simulations, setSimulations] = useState([]);

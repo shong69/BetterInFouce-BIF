@@ -16,7 +16,6 @@ export default function Bubble({
       utterance.pitch = 1.0;
       utterance.volume = 0.9;
 
-      // 사용 가능한 음성들을 가져옵니다.
       const voices = speechSynthesis.getVoices();
 
       const preferredVoiceName = "Google 한국의";
@@ -25,17 +24,13 @@ export default function Bubble({
         (voice) => voice.name === preferredVoiceName,
       );
 
-      // 만약 선호하는 음성이 없으면, 일반적인 한국어 여성 음성을 찾습니다.
       if (!selectedVoice) {
         selectedVoice =
           voices.find(
             (voice) =>
               voice.lang.includes("ko") &&
               voice.name.toLowerCase().includes("female"),
-          ) ||
-          voices.find(
-            (voice) => voice.lang.includes("ko"), // 마지막으로, 그냥 한국어 음성 아무거나
-          );
+          ) || voices.find((voice) => voice.lang.includes("ko"));
       }
 
       if (selectedVoice) {
