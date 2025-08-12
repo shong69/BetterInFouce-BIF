@@ -169,7 +169,7 @@ export const useUserStore = create((set, get) => ({
           }
         }
       } catch (refreshError) {
-        console.log("Refresh failed:", refreshError);
+        throw ("Refresh failed:", refreshError);
       }
     }
     set({

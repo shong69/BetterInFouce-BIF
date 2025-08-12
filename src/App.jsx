@@ -8,7 +8,9 @@ import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
 import Diary from "@pages/Diary";
 import Profile from "@pages/Profile";
-import Simulation from "@pages/Simulation";
+
+import SimulationProgress from "@pages/simulation/SimulationProgress";
+import Simulation from "@pages/simulation/Simulation";
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
@@ -79,6 +81,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/simulations/:id"
+            element={
+              <ProtectedRoute>
+                <SimulationProgress />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/bif-profile"
             element={
