@@ -6,11 +6,16 @@ import Todo from "@pages/Todo";
 import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
-import Diary from "@pages/Diary";
 import Profile from "@pages/Profile";
+
+import Diary from "@pages/diaries/Diary";
+import DiaryCreate from "@pages/diaries/DiaryCreate";
+import DiaryView from "@pages/diaries/DiaryView";
+import DiaryEdit from "@pages/diaries/DiaryEdit";
 
 import SimulationProgress from "@pages/simulation/SimulationProgress";
 import Simulation from "@pages/simulation/Simulation";
+
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
@@ -70,6 +75,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <Diary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/diaries/create"
+            element={
+              <ProtectedRoute>
+                <DiaryCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/diaries/:id"
+            element={
+              <ProtectedRoute>
+                <DiaryView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/diaries/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DiaryEdit />
               </ProtectedRoute>
             }
           />

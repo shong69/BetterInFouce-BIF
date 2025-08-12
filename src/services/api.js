@@ -8,7 +8,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 api.interceptors.request.use((config) => {
   const { accessToken } = useUserStore.getState();
   if (accessToken) {
