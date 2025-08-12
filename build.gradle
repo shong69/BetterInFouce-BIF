@@ -21,11 +21,7 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
-
-ext {
-    springdocVersion = "2.2.0"
+    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {

@@ -2,6 +2,7 @@ package com.sage.bif.diary.controller;
 
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.diary.dto.request.DiaryRequest;
+import com.sage.bif.diary.dto.request.DiaryUpdateRequest;
 import com.sage.bif.diary.dto.request.MonthlySummaryRequest;
 import com.sage.bif.diary.dto.response.DiaryResponse;
 import com.sage.bif.diary.dto.response.MonthlySummaryResponse;
@@ -68,8 +69,8 @@ public class DiaryController {
     @Operation(summary = "일기 내용 수정", description = "기존 일기의 내용을 수정합니다.")
     public ResponseEntity<DiaryResponse> updateDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long diaryId, @RequestBody String content) {
-        DiaryResponse response = diaryService.updateDiaryContent(userDetails.getBifId(), diaryId, content);
+            @PathVariable Long diaryId, @RequestBody DiaryUpdateRequest request) {
+        DiaryResponse response = diaryService.updateDiaryContent(userDetails.getBifId(), diaryId, request.getContent());
         return ResponseEntity.ok(response);
     }
 
@@ -80,79 +81,6 @@ public class DiaryController {
             @PathVariable Long diaryId) {
         diaryService.deleteDiary(userDetails.getBifId(), diaryId);
         return ResponseEntity.noContent().build();
-    }
-
-    // ========== 테스트용 API (인증 없음) ==========
-    
-    @GetMapping("/test/{diaryId}")
-    @Operation(summary = "[테스트] 일기 조회", description = "인증 없이 일기를 조회합니다. (테스트용)")
-    public ResponseEntity<DiaryResponse> getDiaryTest(@PathVariable Long diaryId) {
-        Long testUserId = 1L;
-        DiaryResponse response = diaryService.getDiary(testUserId, diaryId);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/test")
-    @Operation(summary = "[테스트] 일기 생성", description = "인증 없이 일기를 생성합니다. (테스트용)")
-    public ResponseEntity<DiaryResponse> createDiaryTest(@Valid @RequestBody DiaryRequest request) {
-        Long testUserId = 1L;
-        DiaryResponse response = diaryService.createDiary(testUserId, request);
-        URI location = URI.create("/api/diaries/test/" + response.getId());
-        return ResponseEntity.created(location).body(response);
-    }
-
-    @PatchMapping("/test/{diaryId}")
-    @Operation(summary = "[테스트] 일기 내용 수정", description = "인증 없이 일기 내용을 수정합니다. (테스트용)")
-    public ResponseEntity<DiaryResponse> updateDiaryTest(
-            @PathVariable Long diaryId, 
-            @RequestBody Map<String, Object> request) {
-        Long testUserId = 1L;
-        DiaryResponse response = diaryService.updateDiaryContent(testUserId, diaryId, (String) request.get("content"));
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/test/{diaryId}")
-    @Operation(summary = "[테스트] 일기 삭제", description = "인증 없이 일기를 삭제합니다. (테스트용)")
-    public ResponseEntity<Void> deleteDiaryTest(@PathVariable Long diaryId) {
-        Long testUserId = 1L;
-        diaryService.deleteDiary(testUserId, diaryId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/test/monthly-summary")
-    @Operation(summary = "[테스트] 월간 요약 조회", description = "인증 없이 월간 요약을 조회합니다. (테스트용)")
-    public ResponseEntity<MonthlySummaryResponse> getMonthlySummaryTest(
-            @Valid @ModelAttribute MonthlySummaryRequest request) {
-        Long testUserId = 1L;
-        MonthlySummaryResponse response = diaryService.getMonthlySummary(testUserId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/test/list")
-    @Operation(summary = "[테스트] 일기 목록 조회", description = "인증 없이 일기 목록을 조회합니다. (테스트용)")
-    public ResponseEntity<Map<String, Object>> getDiaryListTest() {
-        Long testUserId = 1L;
-        
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            MonthlySummaryRequest request = MonthlySummaryRequest.ofCurrentMonth(testUserId);
-            
-            MonthlySummaryResponse summary = diaryService.getMonthlySummary(testUserId, request);
-            
-            result.put(SUCCESS_FIELD, true);
-            result.put("year", request.getYear());
-            result.put("month", request.getMonth());
-            result.put("daiyDailyEmotions", summary.getDailyEmotions());
-            result.put("dailyEmotionsCount", summary.getDailyEmotions().size());
-
-        } catch (Exception e) {
-            result.put(SUCCESS_FIELD, false);
-            result.put(ERROR_FIELD, e.getMessage());
-            result.put(ERROR_TYPE_FIELD, e.getClass().getSimpleName());
-        }
-        
-        return ResponseEntity.ok(result);
     }
 
 }

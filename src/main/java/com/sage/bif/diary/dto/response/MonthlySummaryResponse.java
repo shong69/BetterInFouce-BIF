@@ -12,6 +12,7 @@ import com.sage.bif.diary.model.Emotion;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class MonthlySummaryResponse {
 
     private int year;
@@ -24,9 +25,9 @@ public class MonthlySummaryResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @ToString
     public static class DailyInfo {
         private Emotion emotion;
         private Long diaryId;
     }
-
 }

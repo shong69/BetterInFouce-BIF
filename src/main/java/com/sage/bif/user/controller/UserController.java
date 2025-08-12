@@ -56,6 +56,7 @@ public class UserController {
 
         try {
             var bif = bifService.registerBySocialId(request.getSocialId(), request.getEmail());
+            System.out.printf(request.getEmail());
             BifResponse response = BifResponse.from(bif);
 
             var socialLoginOpt = socialLoginService.findBySocialId(request.getSocialId());
@@ -287,7 +288,7 @@ public class UserController {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                 .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.","EXISTING_USER_LOGOUT_REQUIRED"));
                     } else {
-                        String email = oauth2Token.getPrincipal().getAttribute("email");
+                        String email = session.getAttribute("registration_email").toString();
                         String provider = oauth2Token.getAuthorizedClientRegistrationId();
 
                         Map<String, Object> registrationInfo = new HashMap<>();

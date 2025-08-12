@@ -1,6 +1,7 @@
 package com.sage.bif.diary.service;
 
 import com.sage.bif.common.client.ai.AiServiceClient;
+import com.sage.bif.common.client.ai.AzureContentSafetyClient;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.client.ai.dto.ModerationResponse;
@@ -22,6 +23,7 @@ public class AiFeedbackService {
     
     private final AiFeedbackRepository aiFeedbackRepository;
     private final AiServiceClient aiModelClient;
+    private final AzureContentSafetyClient contentSafetyClient;
 
     @Transactional
     public void regenerateAiFeedbackIfNeeded(Diary diary, AiFeedback feedback) {
@@ -51,18 +53,80 @@ public class AiFeedbackService {
             }
         }
     }
-    
-    public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
 
+    public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
+        if (content == null || content.trim().isEmpty()) {
+            log.warn("검사할 콘텐츠가 비어있습니다. BIF ID: {}, 일기 ID: {}", bifId, diaryId);
+            feedback.setContentFlagged(false);
+            feedback.setContentFlaggedCategories(null);
+            return;
+        }
+        
+        try {
+            log.info("콘텐츠 유해성 검사 시작 - BIF ID: {}, 일기 ID: {}", bifId, diaryId);
+            
+            ModerationResponse moderationResponse = contentSafetyClient.moderateText(content);
+            
+            boolean isFlagged = !moderationResponse.isContentSafe();
+            feedback.setContentFlagged(isFlagged);
+            
+            if (isFlagged) {
+                String flaggedCategories = buildFlaggedCategoriesString(moderationResponse);
+                feedback.setContentFlaggedCategories(flaggedCategories);
+                log.warn("유해한 콘텐츠 발견 - BIF ID: {}, 일기 ID: {}, 카테고리: {}", 
+                    bifId, diaryId, flaggedCategories);
+            } else {
+                feedback.setContentFlaggedCategories(null);
+                log.info("콘텐츠가 안전합니다 - BIF ID: {}, 일기 ID: {}", bifId, diaryId);
+            }
+            
+            log.info("콘텐츠 유해성 검사 완료 - BIF ID: {}, 일기 ID: {}, flagged: {}", 
+                bifId, diaryId, isFlagged);
+                
+        } catch (Exception e) {
+            log.error("콘텐츠 유해성 검사 중 오류 발생 - BIF ID: {}, 일기 ID: {}, 오류: {}", 
+                bifId, diaryId, e.getMessage(), e);
+            
+            feedback.setContentFlagged(false);
+            feedback.setContentFlaggedCategories(null);
+        }
+    }
+
+    private String buildFlaggedCategoriesString(ModerationResponse response) {
+        StringBuilder categories = new StringBuilder();
+        
+        if (response.getCategoriesAnalysis() != null) {
+            for (ModerationResponse.CategoryAnalysis category : response.getCategoriesAnalysis()) {
+                if (category.getSeverity() != null && category.getSeverity() > 0) {
+                    if (categories.length() > 0) {
+                        categories.append(", ");
+                    }
+                    categories.append(category.getCategory())
+                             .append("(")
+                             .append(getSeverityDescription(category.getSeverity()))
+                             .append(")");
+                }
+            }
+        }
+        
+        return categories.length() > 0 ? categories.toString() : "Unknown";
+    }
+    
+
+    private String getSeverityDescription(Integer severity) {
+        if (severity == null) return "Unknown";
+        
+        switch (severity) {
+            case 1: return "Low";
+            case 2: return "Medium";
+            case 3: return "High";
+            case 4: return "Very High";
+            default: return "Unknown";
+        }
     }
     
     public String generateAiFeedback(String content, Emotion emotion) {
-        log.info("=== generateAiFeedback 메서드 시작 ===");
-        log.info("입력 파라미터 - content: {}, emotion: {}", content, emotion);
-        
         try {
-            log.info("AI 피드백 생성 시작 - 감정: {}, 콘텐츠: {}", emotion, content);
-            
             if (aiModelClient == null) {
                 log.error("aiModelClient가 null입니다!");
                 throw new RuntimeException("aiModelClient가 null입니다");
@@ -73,18 +137,9 @@ public class AiFeedbackService {
                 userPrompt = String.format("감정: %s%n%n일기 내용:%n%s", 
                     emotion.name(), content);
             }
-            
-            log.info("AI 모델에 전송할 프롬프트: {}", userPrompt);
-            
+
             AiRequest request = new AiRequest(userPrompt);
-            log.info("AiRequest 생성 완료: {}", request);
-            
-            log.info("aiModelClient.generate() 호출 시작");
             AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
-            log.info("AI 응답 수신 완료: {}", response);
-            
-            log.info("AI 피드백 생성 완료: {}", response.getContent());
-            log.info("=== generateAiFeedback 메서드 정상 완료 ===");
             return response.getContent();
             
         } catch (BaseException e) {

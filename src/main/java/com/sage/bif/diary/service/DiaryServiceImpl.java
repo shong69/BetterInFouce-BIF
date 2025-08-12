@@ -63,10 +63,20 @@ public class DiaryServiceImpl implements DiaryService {
         if(cached.isPresent()){
             try {
                 MonthlySummaryResponse response = objectMapper.convertValue(cached.get(), MonthlySummaryResponse.class);
-                log.info("캐시에서 월간 요약 조회 : {}", cacheKey);
-                return response;
+                
+                if (response != null && 
+                    response.getYear() == request.getYear() && 
+                    response.getMonth() == request.getMonth() &&
+                    response.getDailyEmotions() != null) {
+                    return response;
+                } else {
+                    log.warn("캐시된 데이터가 유효하지 않음 - Key: {}, Response: {}, dailyEmotions: {}",
+                            cacheKey, response, response != null ? response.getDailyEmotions() : "null");
+                    redisService.delete(cacheKey);
+                }
             } catch (Exception e) {
                 log.error("캐시된 월간 요약 데이터 변환 실패 - Key: {}, Error: {}", cacheKey, e.getMessage());
+                redisService.delete(cacheKey);
             }
         }
         MonthlySummaryResponse response = getMonthlySummaryFromDatabase(bifId, request);
@@ -93,6 +103,7 @@ public class DiaryServiceImpl implements DiaryService {
             return MonthlySummaryResponse.builder()
                     .year(request.getYear())
                     .month(request.getMonth())
+                    .dailyEmotions(new HashMap<>())
                     .canWriteToday(canWriteToday)
                     .build();
         }
@@ -114,7 +125,7 @@ public class DiaryServiceImpl implements DiaryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public DiaryResponse getDiary(Long bifId, Long diaryId) {
         Diary diary = diaryRepository.findByIdWithUser(diaryId)
             .orElseThrow(() -> new DiaryNotFoundException(DIARY_NOT_FOUND, "일기를 찾을 수 없습니다."));
@@ -150,19 +161,11 @@ public class DiaryServiceImpl implements DiaryService {
     @Transactional
     public DiaryResponse createDiary(Long bifId, DiaryRequest request) {
 
-        log.info("AiFeedbackService 주입 확인: {}", 
-        aiFeedbackService != null ? "성공" : "실패");
-        if (aiFeedbackService == null) {
-            log.error("AiFeedbackService가 null입니다!");
-            throw new AiServiceException(COMMON_AI_SERVICE_UNAVAILABLE,"AiFeedbackService 주입 실패");
-        }
-
         Bif user = bifRepository.findById(bifId)
         .orElseThrow(() -> new BaseException(ErrorCode.COMMON_NOT_FOUND, "사용자를 찾을 수 없습니다."));
         boolean exists = diaryRepository.existsByUserIdAndDate(bifId, request.getDate().toLocalDate())>0;
         
         if (exists) {
-            log.info("!!!!!!!!!!!!!!!!!!오늘 작성한 일기가 존재함!!!!!!!!!!!!!!");
             throw new DiaryAlreadyExistsException(request.getDate().toLocalDate());
         }
 
