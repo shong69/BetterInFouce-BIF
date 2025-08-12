@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    @Value("${jwt.secret:your-secret-key-here-make-it-long-enough-for-hs256}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Bean

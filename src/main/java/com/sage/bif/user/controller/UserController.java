@@ -176,7 +176,7 @@ public class UserController {
             clearRefreshTokenCookie(response);
 
             HttpSession session = request.getSession(false);
-            if (session != null) {
+            if(session != null) {
                 session.invalidate();
             }
             SecurityContextHolder.clearContext();
@@ -252,7 +252,7 @@ public class UserController {
             HttpSession session = request.getSession(false);
             Map<String, Object> sessionData = new HashMap<>();
 
-            if (session == null) {
+            if(session == null ) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("세션이 없습니다."));
             } else {
@@ -285,7 +285,7 @@ public class UserController {
                         SecurityContextHolder.clearContext();
                         session.invalidate();
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.", "EXISTING_USER_LOGOUT_REQUIRED"));
+                                .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.","EXISTING_USER_LOGOUT_REQUIRED"));
                     } else {
                         String email = oauth2Token.getPrincipal().getAttribute("email");
                         String provider = oauth2Token.getAuthorizedClientRegistrationId();

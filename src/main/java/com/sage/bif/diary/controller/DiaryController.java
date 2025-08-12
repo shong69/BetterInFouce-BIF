@@ -29,13 +29,14 @@ import jakarta.validation.Valid;
 @Tag(name = "Diary", description = "일기 관련 API")
 public class DiaryController {
 
+    private final DiaryService diaryService;
+
     private static final String SUCCESS_FIELD = "success";
     private static final String ERROR_FIELD = "error";
     private static final String ERROR_TYPE_FIELD = "errorType";
-    private final DiaryService diaryService;
 
     @GetMapping("/monthly-summary")
-    @Operation(summary = "월간 요약 조회", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
+    @Operation(summary="월간 요약 조회", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
     public ResponseEntity<MonthlySummaryResponse> getMonthlySummaryGet(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute MonthlySummaryRequest request) {
@@ -73,7 +74,7 @@ public class DiaryController {
     }
 
     @DeleteMapping("/{diaryId}")
-    @Operation(summary = "일기 삭제", description = "지정한 일기를 삭제합니다.")
+    @Operation(summary="일기 삭제", description = "지정한 일기를 삭제합니다.")
     public ResponseEntity<Void> deleteDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long diaryId) {

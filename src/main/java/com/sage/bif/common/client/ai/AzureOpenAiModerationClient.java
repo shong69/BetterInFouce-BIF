@@ -7,7 +7,11 @@ import com.sage.bif.common.client.ai.dto.ModerationResponse;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -19,12 +23,15 @@ public class AzureOpenAiModerationClient {
     private static final String RESULTS_FIELD = "results";
     private static final String FLAGGED_FIELD = "flagged";
     private static final String CATEGORIES_FIELD = "categories";
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+
     @Value("${spring.ai.azure.openai.api-key}")
     private String apiKey;
+
     @Value("${spring.ai.azure.openai.resource-name}")
     private String resourceName;
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     public AzureOpenAiModerationClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
@@ -121,5 +128,4 @@ public class AzureOpenAiModerationClient {
 
         return flaggedCategories.toString().trim();
     }
-
 }

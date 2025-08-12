@@ -1,4 +1,4 @@
-package com.sage.bif.stats.dto.response;
+package com.sage.bif.todo.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmotionRatio {
-    
-    private String emotion;
-    
-    private Integer value;
-} 
+public class SubTodoCompletionUpdateRequest {
+
+    private Long subTodoId;
+    private Boolean isCompleted;
+
+}
