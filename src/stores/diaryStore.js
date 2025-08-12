@@ -31,7 +31,6 @@ export const useDiaryStore = create(function (set, _get) {
         set({ diaries, loading: false });
         return diaries;
       } catch (error) {
-        console.error("월별 일기 목록 가져오기 실패:", error);
         set({ loading: false });
         throw error;
       }
@@ -44,7 +43,6 @@ export const useDiaryStore = create(function (set, _get) {
         set({ currentDiary: diary, loading: false });
         return diary;
       } catch (error) {
-        console.error("일기 가져오기 실패:", error);
         set({ loading: false });
         throw error;
       }
@@ -68,7 +66,6 @@ export const useDiaryStore = create(function (set, _get) {
 
         return newDiary;
       } catch (error) {
-        console.error("일기 생성 실패:", error);
         set({ loading: false });
         throw error;
       }
@@ -84,7 +81,6 @@ export const useDiaryStore = create(function (set, _get) {
         });
         return updatedDiary;
       } catch (error) {
-        console.error("일기 수정 실패:", error);
         set({ loading: false });
         throw error;
       }
@@ -108,7 +104,6 @@ export const useDiaryStore = create(function (set, _get) {
           };
         });
       } catch (error) {
-        console.error("일기 삭제 실패:", error);
         set({ loading: false });
         throw error;
       }
