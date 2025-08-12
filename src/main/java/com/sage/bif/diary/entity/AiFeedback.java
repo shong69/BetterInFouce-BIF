@@ -31,7 +31,7 @@ public class AiFeedback {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="diary_id", nullable = false, unique = true)
     private Diary diary;
-    
+
     @Column(columnDefinition = "TEXT", nullable=true)
     private String content;
 
@@ -44,7 +44,7 @@ public class AiFeedback {
 
     @Column(name="created_at", columnDefinition = "TIMESTAMP", nullable=false)
     private LocalDateTime createdAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -6,6 +6,7 @@ import com.sage.bif.diary.dto.response.DiaryResponse;
 import com.sage.bif.diary.dto.response.MonthlySummaryResponse;
 
 public interface DiaryService {
+
     MonthlySummaryResponse getMonthlySummary(Long bifId, MonthlySummaryRequest request);
 
     DiaryResponse getDiary(Long bifId, Long diaryId);

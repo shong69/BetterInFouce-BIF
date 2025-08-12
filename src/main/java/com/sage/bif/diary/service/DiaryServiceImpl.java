@@ -63,9 +63,9 @@ public class DiaryServiceImpl implements DiaryService {
         if(cached.isPresent()){
             try {
                 MonthlySummaryResponse response = objectMapper.convertValue(cached.get(), MonthlySummaryResponse.class);
-                
-                if (response != null && 
-                    response.getYear() == request.getYear() && 
+
+                if (response != null &&
+                    response.getYear() == request.getYear() &&
                     response.getMonth() == request.getMonth() &&
                     response.getDailyEmotions() != null) {
                     return response;

@@ -13,4 +13,4 @@ public class BifAccessForbiddenException extends BaseException {
         super(errorCode, message);
     }
 
-} 
+}

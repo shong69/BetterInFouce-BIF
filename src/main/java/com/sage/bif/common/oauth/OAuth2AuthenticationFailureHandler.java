@@ -51,4 +51,5 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
         String jsonResponse = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(jsonResponse);
     }
+
 }

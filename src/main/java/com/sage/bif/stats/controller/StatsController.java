@@ -48,7 +48,7 @@ public class StatsController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-        
+
         CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.BIF) {
@@ -83,7 +83,7 @@ public class StatsController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-        
+
         CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.GUARDIAN) {
@@ -95,7 +95,7 @@ public class StatsController {
             // 가디언이 해당 BIF와 연결되어 있는지 검증
             Guardian guardian = guardianRepository.findBySocialLogin_SocialId(customUserDetails.getSocialId())
                     .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, "가디언 정보를 찾을 수 없습니다."));
-            
+
             if (!guardian.getBif().getBifId().equals(bifId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("연결되지 않은 BIF의 통계는 조회할 수 없습니다."));
