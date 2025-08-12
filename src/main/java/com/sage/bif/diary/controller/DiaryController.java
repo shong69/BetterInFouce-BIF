@@ -28,15 +28,14 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @Tag(name = "Diary", description = "일기 관련 API")
 public class DiaryController {
-    
-    private final DiaryService diaryService;
-    
+
     private static final String SUCCESS_FIELD = "success";
     private static final String ERROR_FIELD = "error";
     private static final String ERROR_TYPE_FIELD = "errorType";
+    private final DiaryService diaryService;
 
     @GetMapping("/monthly-summary")
-    @Operation(summary="월간 요약 조회", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
+    @Operation(summary = "월간 요약 조회", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
     public ResponseEntity<MonthlySummaryResponse> getMonthlySummaryGet(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute MonthlySummaryRequest request) {
@@ -74,7 +73,7 @@ public class DiaryController {
     }
 
     @DeleteMapping("/{diaryId}")
-    @Operation(summary="일기 삭제", description = "지정한 일기를 삭제합니다.")
+    @Operation(summary = "일기 삭제", description = "지정한 일기를 삭제합니다.")
     public ResponseEntity<Void> deleteDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long diaryId) {
@@ -83,7 +82,7 @@ public class DiaryController {
     }
 
     // ========== 테스트용 API (인증 없음) ==========
-    
+
     @GetMapping("/test/{diaryId}")
     @Operation(summary = "[테스트] 일기 조회", description = "인증 없이 일기를 조회합니다. (테스트용)")
     public ResponseEntity<DiaryResponse> getDiaryTest(@PathVariable Long diaryId) {
@@ -104,7 +103,7 @@ public class DiaryController {
     @PatchMapping("/test/{diaryId}")
     @Operation(summary = "[테스트] 일기 내용 수정", description = "인증 없이 일기 내용을 수정합니다. (테스트용)")
     public ResponseEntity<DiaryResponse> updateDiaryTest(
-            @PathVariable Long diaryId, 
+            @PathVariable Long diaryId,
             @RequestBody Map<String, Object> request) {
         Long testUserId = 1L;
         DiaryResponse response = diaryService.updateDiaryContent(testUserId, diaryId, (String) request.get("content"));
@@ -132,14 +131,14 @@ public class DiaryController {
     @Operation(summary = "[테스트] 일기 목록 조회", description = "인증 없이 일기 목록을 조회합니다. (테스트용)")
     public ResponseEntity<Map<String, Object>> getDiaryListTest() {
         Long testUserId = 1L;
-        
+
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
             MonthlySummaryRequest request = MonthlySummaryRequest.ofCurrentMonth(testUserId);
-            
+
             MonthlySummaryResponse summary = diaryService.getMonthlySummary(testUserId, request);
-            
+
             result.put(SUCCESS_FIELD, true);
             result.put("year", request.getYear());
             result.put("month", request.getMonth());
@@ -151,7 +150,7 @@ public class DiaryController {
             result.put(ERROR_FIELD, e.getMessage());
             result.put(ERROR_TYPE_FIELD, e.getClass().getSimpleName());
         }
-        
+
         return ResponseEntity.ok(result);
     }
 

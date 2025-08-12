@@ -12,14 +12,14 @@ import java.time.LocalDate;
 @Service
 @RequiredArgsConstructor
 public class AsyncService {
-    
+
     private final RedisService redisService;
-    
+
     @Async("cacheTaskExecutor")
     public void invalidateCacheAsync(Long bifId, LocalDate date) {
         try {
-            String cacheKey = String.format("monthly_summary:%d:%d:%d", 
-                bifId, date.getYear(), date.getMonthValue());
+            String cacheKey = String.format("monthly_summary:%d:%d:%d",
+                    bifId, date.getYear(), date.getMonthValue());
 
             redisService.delete(cacheKey);
             log.info("캐시 무효화 완료 : {}", cacheKey);

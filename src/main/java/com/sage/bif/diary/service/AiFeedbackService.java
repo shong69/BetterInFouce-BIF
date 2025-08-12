@@ -1,7 +1,6 @@
 package com.sage.bif.diary.service;
 
 import com.sage.bif.common.client.ai.AiServiceClient;
-import com.sage.bif.common.client.ai.AzureOpenAiModerationClient;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.client.ai.dto.ModerationResponse;
@@ -20,113 +19,74 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AiFeedbackService {
-    
+
     private final AiFeedbackRepository aiFeedbackRepository;
     private final AiServiceClient aiModelClient;
-    private final AzureOpenAiModerationClient moderationClient;
-    
+
     @Transactional
     public void regenerateAiFeedbackIfNeeded(Diary diary, AiFeedback feedback) {
         boolean needsRegeneration = false;
-        
+
         if (feedback.getContent() == null){
             needsRegeneration = true;
         }
-        
+
         if (!feedback.isContentFlagged() && feedback.getContentFlaggedCategories() == null) {
             needsRegeneration = true;
         }
-        
+
         if (needsRegeneration) {
             log.info("AI 피드백 재생성 시작 - 일기 ID: {}", diary.getId());
             try {
                 String aiFeedbackContent = generateAiFeedback(diary.getContent(), diary.getEmotion());
-                
+
                 feedback.setContent(aiFeedbackContent);
                 checkModeration(diary.getContent(), feedback, diary.getUser().getBifId(), diary.getId());
                 aiFeedbackRepository.save(feedback);
-                
+
                 log.info("AI 피드백 재생성 완료 - 일기 ID: {}", diary.getId());
-                
+
             } catch (Exception e) {
                 log.error("AI 피드백 재생성 실패 - 일기 ID: {}, 오류: {}", diary.getId(), e.getMessage());
             }
         }
     }
-    
+
     public void checkModeration(String content, AiFeedback feedback, Long bifId, Long diaryId) {
-        log.info("=== checkModeration 메서드 시작 ===");
-        log.info("입력 파라미터 - content: {}, bifId: {}, diaryId: {}", content, bifId, diaryId);
-        log.info("feedback 객체 상태 - ID: {}, Diary: {}", 
-            feedback != null ? feedback.getId() : "null", 
-            feedback != null && feedback.getDiary() != null ? feedback.getDiary().getId() : "null");
-        try {
-            log.info("Moderation 체크 시작 - 콘텐츠: {}", content);
-        
-            // moderationClient null 체크
-            if (moderationClient == null) {
-                log.error("moderationClient가 null입니다!");
-                throw new RuntimeException("moderationClient가 null입니다");
-            }
-            
-            log.info("moderationClient.moderate() 호출 시작");
-            ModerationResponse moderationResponse = moderationClient.moderate(content);
 
-            log.info("Moderation 응답: {}", moderationResponse);
-             
-            if (moderationResponse.isFlagged()) {
-                feedback.setContentFlagged(true);
-                feedback.setContentFlaggedCategories(moderationResponse.getFlaggedCategories());
-                log.warn("부적절한 콘텐츠 감지 - 사용자: {}, 일기: {}, 카테고리: {}", 
-                    bifId, diaryId, moderationResponse.getFlaggedCategories());
-            } else {
-                feedback.setContentFlagged(false);
-                feedback.setContentFlaggedCategories(null);
-                log.info("콘텐츠 검토 통과");
-            }
-            log.info("=== checkModeration 메서드 정상 완료 ===");
-        } catch (Exception e) {
-            log.error("=== checkModeration 메서드에서 예외 발생 ===");
-            log.error("Moderation 체크 실패 - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
-            log.error("예외 스택 트레이스:", e);
-
-            feedback.setContentFlagged(false);
-            feedback.setContentFlaggedCategories(null);
-            log.info("예외 발생 후 feedback 객체 기본값 설정 완료");
-        }
     }
-    
+
     public String generateAiFeedback(String content, Emotion emotion) {
         log.info("=== generateAiFeedback 메서드 시작 ===");
         log.info("입력 파라미터 - content: {}, emotion: {}", content, emotion);
-        
+
         try {
             log.info("AI 피드백 생성 시작 - 감정: {}, 콘텐츠: {}", emotion, content);
-            
+
             if (aiModelClient == null) {
                 log.error("aiModelClient가 null입니다!");
                 throw new RuntimeException("aiModelClient가 null입니다");
             }
-            
+
             String userPrompt = content;
             if (emotion != null) {
-                userPrompt = String.format("감정: %s%n%n일기 내용:%n%s", 
-                    emotion.name(), content);
+                userPrompt = String.format("감정: %s%n%n일기 내용:%n%s",
+                        emotion.name(), content);
             }
-            
+
             log.info("AI 모델에 전송할 프롬프트: {}", userPrompt);
-            
+
             AiRequest request = new AiRequest(userPrompt);
             log.info("AiRequest 생성 완료: {}", request);
-            
+
             log.info("aiModelClient.generate() 호출 시작");
             AiResponse response = aiModelClient.generate(request, AiSettings.DIARY_FEEDBACK);
             log.info("AI 응답 수신 완료: {}", response);
-            
+
             log.info("AI 피드백 생성 완료: {}", response.getContent());
             log.info("=== generateAiFeedback 메서드 정상 완료 ===");
             return response.getContent();
-            
+
         } catch (BaseException e) {
             log.error("=== generateAiFeedback 메서드에서 BaseException 발생 ===");
             log.error("AI 피드백 생성 BaseException - 콘텐츠: {}, 에러: {}", content, e.getMessage(), e);
@@ -139,5 +99,5 @@ public class AiFeedbackService {
             return null;
         }
     }
-    
+
 }

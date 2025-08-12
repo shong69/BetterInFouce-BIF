@@ -32,7 +32,7 @@ public class BifServiceImpl implements BifService {
             return existingBif.get();
         }
 
-        String nickname = RandomGenerator.generateUniqueNickname(this::isNicknameExists);
+        String nickname = RandomGenerator.generateUniqueNickname("사용자", this::isNicknameExists);
         String connectionCode = RandomGenerator.generateUniqueConnectionCode(this::isConnectionCodeExists);
 
         Bif bif = Bif.builder()
@@ -42,11 +42,6 @@ public class BifServiceImpl implements BifService {
                 .build();
 
         return bifRepository.save(bif);
-    }
-
-    @Override
-    public Optional<Bif> findByConnectionCode(String connectionCode) {
-        return bifRepository.findByConnectionCode(connectionCode);
     }
 
     @Override
@@ -60,6 +55,14 @@ public class BifServiceImpl implements BifService {
 
     private boolean isConnectionCodeExists(String connectionCode) {
         return bifRepository.findByConnectionCode(connectionCode).isPresent();
+    }
+
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
+        if (bifOpt.isPresent()) {
+            bifRepository.delete(bifOpt.get());
+        }
     }
 
 }

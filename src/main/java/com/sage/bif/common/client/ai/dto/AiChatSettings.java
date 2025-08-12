@@ -8,7 +8,9 @@ import lombok.Data;
 public class AiChatSettings {
 
     private String systemPrompt;
+
     private double temperature;
+
     private int maxTokens;
 
     public static AiChatSettings getDefault() {

@@ -7,11 +7,7 @@ import com.sage.bif.common.client.ai.dto.ModerationResponse;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -23,15 +19,12 @@ public class AzureOpenAiModerationClient {
     private static final String RESULTS_FIELD = "results";
     private static final String FLAGGED_FIELD = "flagged";
     private static final String CATEGORIES_FIELD = "categories";
-
-    @Value("${spring.ai.azure.openai.api-key}")
-    private String apiKey;
-
-    @Value("${spring.ai.azure.openai.resource-name}")
-    private String resourceName;
-
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    @Value("${spring.ai.azure.openai.api-key}")
+    private String apiKey;
+    @Value("${spring.ai.azure.openai.resource-name}")
+    private String resourceName;
 
     public AzureOpenAiModerationClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
@@ -54,13 +47,13 @@ public class AzureOpenAiModerationClient {
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE,
-                    "Moderation API 호출 실패. HTTP 상태 코드: " + response.getStatusCode());
+                        "Moderation API 호출 실패. HTTP 상태 코드: " + response.getStatusCode());
             }
 
             JsonNode body = response.getBody();
             if (body == null) {
                 throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID,
-                    "Moderation API 응답 본문이 비어있습니다.");
+                        "Moderation API 응답 본문이 비어있습니다.");
             }
 
             return parseModerationResponse(body);
@@ -68,20 +61,20 @@ public class AzureOpenAiModerationClient {
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE,
-                    "Moderation API 키 인증 실패: " + e.getMessage());
+                        "Moderation API 키 인증 실패: " + e.getMessage());
             } else if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
                 throw new BaseException(ErrorCode.COMMON_AI_QUOTA_EXCEEDED,
-                    "Moderation API 호출 한도 초과: " + e.getMessage());
+                        "Moderation API 호출 한도 초과: " + e.getMessage());
             } else {
                 throw new BaseException(ErrorCode.COMMON_AI_REQUEST_FAILED,
-                    "Moderation API HTTP 클라이언트 오류: " + e.getMessage());
+                        "Moderation API HTTP 클라이언트 오류: " + e.getMessage());
             }
         } catch (HttpServerErrorException e) {
             throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE,
-                "Moderation API 서비스 내부 오류: " + e.getMessage());
+                    "Moderation API 서비스 내부 오류: " + e.getMessage());
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_AI_MODEL_ERROR,
-                "Moderation API 예상치 못한 오류: " + e.getMessage());
+                    "Moderation API 예상치 못한 오류: " + e.getMessage());
         }
     }
 
@@ -104,14 +97,14 @@ public class AzureOpenAiModerationClient {
 
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID,
-                "Moderation API 응답 파싱 오류: " + e.getMessage());
+                    "Moderation API 응답 파싱 오류: " + e.getMessage());
         }
     }
 
     private void validateResponseFormat(JsonNode body) {
         if (!body.has(RESULTS_FIELD) || !body.get(RESULTS_FIELD).isArray() || body.get(RESULTS_FIELD).isEmpty()) {
             throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID,
-                "Moderation API 응답 형식이 올바르지 않습니다.");
+                    "Moderation API 응답 형식이 올바르지 않습니다.");
         }
     }
 
@@ -129,4 +122,4 @@ public class AzureOpenAiModerationClient {
         return flaggedCategories.toString().trim();
     }
 
-} 
+}

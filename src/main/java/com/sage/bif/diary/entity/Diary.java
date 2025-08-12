@@ -20,7 +20,7 @@ import org.hibernate.annotations.SQLRestriction;
 })
 @SQLRestriction("is_deleted = false")
 public class Diary {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="diary_id")
@@ -32,7 +32,7 @@ public class Diary {
 
     @Column(name="selected_emotion", nullable = false)
     private Emotion emotion;
-    
+
     @Column(columnDefinition = "TEXT", nullable = false, length = 800)
     private String content;
 

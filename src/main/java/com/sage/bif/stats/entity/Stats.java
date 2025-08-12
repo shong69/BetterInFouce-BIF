@@ -26,7 +26,7 @@ public class Stats {
     @Column(name = "bif_id", nullable = false)
     private Long bifId;
 
-    @Column(name = "`year_month`", nullable = false)
+    @Column(name = "year_month", nullable = false)
     private LocalDateTime yearMonth;
 
     @Column(name = "emotion_statistics_text", columnDefinition = "TEXT", nullable = false)
@@ -44,9 +44,9 @@ public class Stats {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-} 
+}

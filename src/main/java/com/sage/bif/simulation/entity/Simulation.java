@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class Simulation {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "simulation_id")
@@ -26,13 +26,13 @@ public class Simulation {
     @Column(name = "category", nullable = false, length = 10)
     private String category;
 
-    @Column(name = "is_recommended", nullable = false, columnDefinition = "TINYINT(1)")
+    @Column(name = "is_recommended", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isRecommended;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
 }

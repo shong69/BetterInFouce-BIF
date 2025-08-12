@@ -17,36 +17,36 @@ import java.time.LocalDate;
 @Component
 @RequiredArgsConstructor
 public class DiaryEventListener {
-    
+
     private final ApplicationEventPublisher eventPublisher;
     private final RedisService redisService;
-    
+
     @EventListener
     public void handleDiaryCreated(DiaryCreatedEvent event) {
-        log.info("Diary created: {} - User: {} - Emotion: {} - EventId: {}", 
+        log.info("Diary created: {} - User: {} - Emotion: {} - EventId: {}",
                 event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getEmotion(), event.getEventId());
-        
+
         try {
             invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
-            
+
             publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
-            
+
         } catch (Exception e) {
             log.error("Error in handleDiaryCreated: {}", e.getMessage(), e);
         }
     }
-    
+
     @EventListener
     public void handleDiaryUpdated(DiaryUpdatedEvent event) {
-        log.info("Diary updated: {} - User: {} - EventId: {}", 
+        log.info("Diary updated: {} - User: {} - EventId: {}",
                 event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getEventId());
-        
+
         try {
             invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
-            
+
             if (!event.getPreviousContent().equals(event.getDiary().getContent())) {
                 log.info("Diary content changed significantly for diary: {}", event.getDiary().getId());
-                
+
                 publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_UPDATED", "일기 수정으로 인한 통계 업데이트");
             }
 
@@ -54,22 +54,22 @@ public class DiaryEventListener {
             log.error("Error in handleDiaryUpdated: {}", e.getMessage(), e);
         }
     }
-    
+
     @EventListener
     public void handleDiaryDeleted(DiaryDeletedEvent event) {
-        log.info("Diary deleted: {} - User: {} - Emotion: {} - EventId: {}", 
+        log.info("Diary deleted: {} - User: {} - Emotion: {} - EventId: {}",
                 event.getDiaryId(), event.getUserId(), event.getEmotion(), event.getEventId());
-        
+
         try {
             invalidateAllDiaryCache(event.getUserId());
-            
+
             publishStatsEvent(event.getUserId(), "DIARY_DELETED", "일기 삭제로 인한 통계 업데이트");
-            
+
         } catch (Exception e) {
             log.error("Error in handleDiaryDeleted: {}", e.getMessage(), e);
         }
     }
-    
+
 
     private void invalidateAllDiaryCache(Long userId) {
         try {
@@ -77,14 +77,14 @@ public class DiaryEventListener {
             String currentMonth = String.valueOf(LocalDate.now().getMonthValue());
             String monthlyCacheKey = String.format("monthly_summary:%d:%s:%s", userId, currentYear, currentMonth);
             redisService.delete(monthlyCacheKey);
-            
+
             log.info("Monthly summary cache cleared for user: {} - key: {}", userId, monthlyCacheKey);
-            
+
         } catch (Exception e) {
             log.error("Failed to invalidate diary cache for user {}: {}", userId, e.getMessage());
         }
     }
-    
+
 
     private void publishStatsEvent(Long userId, String updateType, String updateReason) {
         StatsUpdatedEvent statsEvent = new StatsUpdatedEvent(

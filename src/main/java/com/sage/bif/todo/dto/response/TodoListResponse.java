@@ -26,6 +26,10 @@ public class TodoListResponse {
     private List<SubTodoInfo> subTodos;
 
     public static TodoListResponse from(Todo todo) {
+        return from(todo, false);
+    }
+
+    public static TodoListResponse from(Todo todo, boolean isRoutineCompletedToday) {
         List<SubTodoInfo> subTodoInfos = Collections.emptyList();
         boolean hasOrder = false;
 
@@ -43,6 +47,10 @@ public class TodoListResponse {
             hasOrder = subTodoInfos.stream().anyMatch(subTodo -> subTodo.getSortOrder() > 0);
         }
 
+        boolean isCompleted = todo.getType() == TodoTypes.ROUTINE
+                ? isRoutineCompletedToday
+                : todo.getIsCompleted();
+
         return TodoListResponse.builder()
                 .todoId(todo.getTodoId())
                 .title(todo.getTitle())
@@ -50,7 +58,7 @@ public class TodoListResponse {
                 .hasOrder(hasOrder)
                 .dueDate(todo.getDueDate())
                 .dueTime(todo.getDueTime())
-                .isCompleted(todo.getIsCompleted())
+                .isCompleted(isCompleted)
                 .subTodos(subTodoInfos)
                 .build();
     }
