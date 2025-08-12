@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    @Value("${jwt.secret:your-secret-key-here-make-it-long-enough-for-hs256}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Bean
@@ -94,7 +94,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -102,7 +102,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

@@ -15,11 +15,11 @@ import java.util.List;
 public class StatsResponse {
 
     private String statisticsText;
-    
+
     private List<EmotionRatio> emotionRatio;
-    
+
     private List<KeywordData> topKeywords;
-    
+
     private List<MonthlyChange> monthlyChange;
 
     @Data
@@ -55,4 +55,4 @@ public class StatsResponse {
         private Integer rank;
     }
 
-} 
+}

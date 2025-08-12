@@ -1,4 +1,5 @@
 package com.sage.bif.common.exception;
+
 import lombok.Getter;
 
 @Getter
@@ -20,6 +21,12 @@ public class BaseException extends RuntimeException {
 
     public BaseException(ErrorCode errorCode, Throwable cause) {
         super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+        this.details = cause != null ? cause.getMessage() : null;
+    }
+
+    public BaseException(ErrorCode errorCode, String customMessage, Throwable cause) {
+        super(customMessage, cause);
         this.errorCode = errorCode;
         this.details = cause != null ? cause.getMessage() : null;
     }

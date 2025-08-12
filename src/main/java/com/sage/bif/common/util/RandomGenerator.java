@@ -74,4 +74,5 @@ public class RandomGenerator {
     public interface ConnectionCodeChecker {
         boolean isConnectionCodeExists(String connectionCode);
     }
+
 }

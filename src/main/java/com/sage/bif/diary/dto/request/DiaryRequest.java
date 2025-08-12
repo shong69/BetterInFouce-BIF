@@ -18,13 +18,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DiaryRequest {
-    
+
     @NotNull(message = "감정은 필수입니다.")
     private Emotion emotion;
 
     @NotBlank(message = "내용은 필수입니다.")
     private String content;
-    
+
     @NotNull(message = "날짜는 필수입니다.")
     private LocalDateTime date;
 

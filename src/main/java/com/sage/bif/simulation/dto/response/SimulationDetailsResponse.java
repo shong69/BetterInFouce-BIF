@@ -11,14 +11,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimulationDetailsResponse {
-    
+
     private Long simulationId;
     private String simulationTitle;
     private String description;
     private String category;
     private int totalSteps;
     private List<SimulationStepResponse> steps;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -28,7 +28,7 @@ public class SimulationDetailsResponse {
         private String scenarioText;
         private List<SimulationChoiceOptionResponse> choices;
     }
-    
+
     @Data
     @Builder
     @NoArgsConstructor

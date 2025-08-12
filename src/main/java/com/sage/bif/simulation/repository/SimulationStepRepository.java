@@ -9,11 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface SimulationStepRepository extends JpaRepository<SimulationStep, Long> {
-    
+
     List<SimulationStep> findBySimulationIdOrderByStepOrder(Long simulationId);
-    
+
     Optional<SimulationStep> findBySimulationIdAndStepOrder(Long simulationId, Integer stepOrder);
-    
+
     List<SimulationStep> findBySimulationId(Long simulationId);
 
 }
