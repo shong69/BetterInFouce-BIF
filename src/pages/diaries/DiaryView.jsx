@@ -20,6 +20,7 @@ export default function DiaryView() {
   const [diary, setDiary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { fetchDiary, deleteDiary } = useDiaryStore();
@@ -32,7 +33,6 @@ export default function DiaryView() {
           const diaryData = await fetchDiary(id);
           if (diaryData) {
             setDiary(diaryData);
-            setError(null);
           }
         } catch (error) {
           if (error.response && error.response.data) {
@@ -59,23 +59,26 @@ export default function DiaryView() {
     [id, fetchDiary, showError],
   );
 
-  useEffect(() => {
+  useEffect(function () {
     window.history.replaceState(null, "", window.location.href);
   }, []);
 
-  useEffect(() => {
-    function handleDiaryViewPopState(_event) {
-      if (window.location.pathname.match(/^\/diaries\/\d+$/)) {
-        navigate("/diaries");
+  useEffect(
+    function () {
+      function handleDiaryViewPopState(_event) {
+        if (window.location.pathname.match(/^\/diaries\/\d+$/)) {
+          navigate("/diaries");
+        }
       }
-    }
 
-    window.addEventListener("popstate", handleDiaryViewPopState);
+      window.addEventListener("popstate", handleDiaryViewPopState);
 
-    return function () {
-      window.removeEventListener("popstate", handleDiaryViewPopState);
-    };
-  }, [navigate]);
+      return function () {
+        window.removeEventListener("popstate", handleDiaryViewPopState);
+      };
+    },
+    [navigate],
+  );
 
   function handleEdit() {
     navigate(`/diaries/edit/${id}`);
@@ -129,7 +132,7 @@ export default function DiaryView() {
 
     let warningText = "⚠️ 다음 내용이 감지되었습니다:\n\n";
 
-    categories.forEach((category) => {
+    categories.forEach(function (category) {
       const trimmedCategory = category.trim();
       const warning =
         warningMap[trimmedCategory] || `${trimmedCategory} 관련 부적절한 내용`;
@@ -214,14 +217,12 @@ export default function DiaryView() {
   if (error) {
     return (
       <>
-        <Header />
         <ErrorPageManager
-          errorCode={error.response.status.toString()}
+          errorCode={error.errorCode}
           message={error.message}
           details={error.details}
-          buttonType={error.errorCode === "403" ? "back" : "home"}
+          buttonType="back"
         />
-        <TabBar />
       </>
     );
   }

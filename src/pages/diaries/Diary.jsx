@@ -28,8 +28,9 @@ export default function Diary() {
       }
       setMonthlyData(monthlyDataMap);
     } catch (error) {
-      console.error("월별 데이터 가져오기 실패:", error);
-      setMonthlyData({});
+      if (error.response && error.response.data) {
+        setMonthlyData({});
+      }
     }
   };
   function handleEmotionSelect(emotionId) {
@@ -140,7 +141,7 @@ export default function Diary() {
                 locale="ko"
                 height="auto"
                 fixedWeekCount={false}
-                datesSet={(dateInfo) => {
+                datesSet={function (dateInfo) {
                   const centerDate = new Date(
                     dateInfo.start.getTime() +
                       (dateInfo.end.getTime() - dateInfo.start.getTime()) / 2,
@@ -159,7 +160,9 @@ export default function Diary() {
                       {dailyInfo ? (
                         <button
                           className="flex h-full w-full cursor-pointer items-center justify-center border-none bg-transparent p-0"
-                          onClick={() => handleDiaryClick(dailyInfo)}
+                          onClick={function () {
+                            handleDiaryClick(dailyInfo);
+                          }}
                           aria-label={`View diary for ${dateStr}`}
                         >
                           <img
@@ -169,7 +172,7 @@ export default function Diary() {
                               })?.icon
                             }
                             alt="emotion"
-                            className="h-9 w-9 hover:drop-shadow-[0_3px_6px_rgba(0,0,0,0.3)] sm:h-12 sm:w-12"
+                            className="mt-1.5 h-9 w-9 hover:drop-shadow-[0_3px_6px_rgba(0,0,0,0.3)] sm:h-12 sm:w-12"
                           />
                         </button>
                       ) : (

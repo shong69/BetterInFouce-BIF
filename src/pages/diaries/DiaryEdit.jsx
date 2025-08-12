@@ -24,32 +24,38 @@ export default function DiaryEdit() {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  useEffect(() => {
-    const loadDiary = async () => {
-      try {
-        const diaryData = await fetchDiary(id);
-        if (diaryData) {
-          setDiary(diaryData);
-          setContent(diaryData.content);
-          setSelectedEmotion(diaryData.emotion);
+  useEffect(
+    function () {
+      const loadDiary = async function () {
+        try {
+          const diaryData = await fetchDiary(id);
+          if (diaryData) {
+            setDiary(diaryData);
+            setContent(diaryData.content);
+            setSelectedEmotion(diaryData.emotion);
+          }
+        } catch (error) {
+          if (error.response && error.response.data) {
+            showError("일기를 불러오는데 실패했습니다.");
+          }
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        if (error.response && error.response.data) {
-          showError("일기를 불러오는데 실패했습니다.");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    loadDiary();
-  }, [id, fetchDiary, showError]);
+      loadDiary();
+    },
+    [id, fetchDiary, showError],
+  );
 
-  useEffect(() => {
-    window.currentDiaryEditContent = content;
-    window.currentDiaryEditDiary = diary;
-    window.currentDiaryEditId = id;
-  }, [content, diary, id]);
+  useEffect(
+    function () {
+      window.currentDiaryEditContent = content;
+      window.currentDiaryEditDiary = diary;
+      window.currentDiaryEditId = id;
+    },
+    [content, diary, id],
+  );
 
   useEffect(
     function () {

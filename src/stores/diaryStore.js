@@ -48,7 +48,7 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    createDiary: async (diaryData) => {
+    createDiary: async function (diaryData) {
       set({ loading: true });
       try {
         const newDiary = await createDiaryService(diaryData);
@@ -71,7 +71,7 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    updateDiary: async (id, data) => {
+    updateDiary: async function (id, data) {
       set({ loading: true });
       try {
         const updatedDiary = await updateDiaryService(id, data);
@@ -86,7 +86,7 @@ export const useDiaryStore = create(function (set, _get) {
       }
     },
 
-    deleteDiary: async (id) => {
+    deleteDiary: async function (id) {
       set({ loading: true });
       try {
         await deleteDiaryService(id);
