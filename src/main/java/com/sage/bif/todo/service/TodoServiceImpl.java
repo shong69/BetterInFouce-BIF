@@ -21,6 +21,7 @@ import com.sage.bif.todo.exception.AiResponseParsingException;
 import com.sage.bif.todo.exception.TodoNotFoundException;
 import com.sage.bif.todo.exception.UnauthorizedTodoAccessException;
 import com.sage.bif.todo.exception.UserNotFoundException;
+import com.sage.bif.todo.repository.RoutineCompletionRepository;
 import com.sage.bif.todo.repository.SubTodoRepository;
 import com.sage.bif.todo.repository.TodoRepository;
 import com.sage.bif.user.entity.Bif;
@@ -44,6 +45,7 @@ public class TodoServiceImpl implements TodoService {
     private final BifRepository bifRepository;
     private final TodoRepository todoRepository;
     private final SubTodoRepository subTodoRepository;
+    private final RoutineCompletionRepository routineCompletionRepository;
 
     private final AiServiceClient aiServiceClient;
     private final ObjectMapper objectMapper;
@@ -83,7 +85,16 @@ public class TodoServiceImpl implements TodoService {
 
         List<Todo> todoList = todoRepository.findTodoWithSubTodosByBifIdAndDate(bifId, date);
 
-        return todoList.stream().map(TodoListResponse::from).toList();
+        return todoList.stream()
+                .map(todo -> {
+                    if (todo.getType() == TodoTypes.ROUTINE) {
+                        boolean isCompletedToday = isRoutineCompletedToday(todo, date);
+                        return TodoListResponse.from(todo, isCompletedToday);
+                    } else {
+                        return TodoListResponse.from(todo);
+                    }
+                })
+                .toList();
     }
 
     @Override
@@ -137,10 +148,17 @@ public class TodoServiceImpl implements TodoService {
 
         validateUserPermission(todo, bifId);
 
-        todo.setIsCompleted(true);
-        todo.setCompletedAt(LocalDateTime.now());
+        if (todo.getType() == TodoTypes.ROUTINE) {
+            LocalDate today = LocalDate.now();
+            routineCompletionRepository.insertIgnoreCompletion(todoId, today);
 
-        return TodoListResponse.from(todo);
+            return TodoListResponse.from(todo, true);
+        } else {
+            todo.setIsCompleted(true);
+            todo.setCompletedAt(LocalDateTime.now());
+
+            return TodoListResponse.from(todo, false);
+        }
     }
 
     @Override
@@ -151,10 +169,17 @@ public class TodoServiceImpl implements TodoService {
 
         validateUserPermission(todo, bifId);
 
-        todo.setIsCompleted(false);
-        todo.setCompletedAt(null);
+        if (todo.getType() == TodoTypes.ROUTINE) {
+            LocalDate today = LocalDate.now();
+            routineCompletionRepository.deleteCompletion(todoId, today);
 
-        return TodoListResponse.from(todo);
+            return TodoListResponse.from(todo, false);
+        } else {
+            todo.setIsCompleted(false);
+            todo.setCompletedAt(null);
+
+            return TodoListResponse.from(todo, false);
+        }
     }
 
     @Override
@@ -354,6 +379,16 @@ public class TodoServiceImpl implements TodoService {
         }
 
         return subTodos;
+    }
+
+    private boolean isRoutineCompletedToday(Todo todo, LocalDate date) {
+        if (todo.getType() != TodoTypes.ROUTINE) {
+            return false;
+        }
+
+        return routineCompletionRepository
+                .findByTodo_TodoIdAndCompletionDate(todo.getTodoId(), date)
+                .isPresent();
     }
 
 }
