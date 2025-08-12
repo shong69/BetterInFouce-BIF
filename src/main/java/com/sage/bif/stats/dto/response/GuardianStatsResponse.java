@@ -18,4 +18,4 @@ public class GuardianStatsResponse {
     private List<StatsResponse.EmotionRatio> emotionRatio;
     private List<StatsResponse.MonthlyChange> monthlyChange;
 
-} 
+}

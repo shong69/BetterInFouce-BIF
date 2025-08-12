@@ -20,4 +20,5 @@ public class SocialRegistrationRequest {
     private String email;
 
     private String connectionCode;
+
 }

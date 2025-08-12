@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface SimulationFeedbackRepository extends JpaRepository<SimulationFeedback, Long> {
-    
+
     List<SimulationFeedback> findBySimulationId(Long simulationId);
-    
+
     Optional<SimulationFeedback> findFirstBySimulationId(Long simulationId);
-    
+
     @Query("SELECT sf FROM SimulationFeedback sf WHERE sf.simulationId = :simulationId AND :score BETWEEN sf.minScore AND sf.maxScore")
     Optional<SimulationFeedback> findBySimulationIdAndScore(@Param("simulationId") Long simulationId, @Param("score") Integer score);
 

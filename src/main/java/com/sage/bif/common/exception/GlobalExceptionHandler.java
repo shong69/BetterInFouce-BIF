@@ -97,4 +97,5 @@ public class GlobalExceptionHandler {
                         .details(null)
                         .build());
     }
+
 }

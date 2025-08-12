@@ -26,4 +26,5 @@ public class BifResponse {
                 .createdAt(bif.getCreatedAt())
                 .build();
     }
+
 }

@@ -15,4 +15,5 @@ public record GoogleOAuth2UserInfo(Map<String, Object> attributes) implements OA
     public String getId() {
         return (String) attributes.get("sub");
     }
+
 }
