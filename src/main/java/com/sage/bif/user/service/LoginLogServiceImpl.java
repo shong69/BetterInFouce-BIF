@@ -81,4 +81,5 @@ public class LoginLogServiceImpl implements LoginLogService {
 
         log.info("=== 자동 로그 정리 완료 ===");
     }
+
 }

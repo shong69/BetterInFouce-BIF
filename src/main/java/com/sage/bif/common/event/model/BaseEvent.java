@@ -28,4 +28,5 @@ public abstract class BaseEvent extends ApplicationEvent {
     }
     
     public abstract String getEventType();
+
 } 

@@ -11,6 +11,7 @@ import java.util.Map;
 public class OAuth2UserInfoFactory {
 
     private OAuth2UserInfoFactory() {
+
     }
 
     public static OAuth2UserInfo get(String registrationId, Map<String, Object> attributes) {
@@ -22,4 +23,5 @@ public class OAuth2UserInfoFactory {
             default -> throw new BaseException(ErrorCode.COMMON_BAD_REQUEST, "지원하지 않는 OAuth 제공자입니다: " + registrationId);
         };
     }
+
 }

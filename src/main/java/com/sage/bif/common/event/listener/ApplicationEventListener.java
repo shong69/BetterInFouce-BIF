@@ -21,4 +21,5 @@ public class ApplicationEventListener {
     public void handleAsyncEvent(BaseEvent event) {
         log.info("Async event processing: {} - EventId: {}", event.getEventType(), event.getEventId());
     }
+
 } 
