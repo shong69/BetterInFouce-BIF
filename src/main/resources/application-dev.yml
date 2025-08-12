@@ -1,18 +1,22 @@
 spring:
   application:
     name: bif-dev
-  
-  # JPA 설정
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
         use_sql_comments: true
-  
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
   # H2 데이터베이스 설정 (개발용)
   datasource:
     url: jdbc:h2:mem:testdb
@@ -23,6 +27,8 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 30000
+
+  # Azure Mysql Flexible Database(배포용) 추가 필요
 
   h2:
     console:
@@ -44,6 +50,7 @@ spring:
       openai:
         endpoint: ${AZURE_OPENAI_ENDPOINT:https://your-resource.openai.azure.com}
         api-key: ${AZURE_OPENAI_API_KEY:your-api-key}
+        resource-name: ${AZURE_OPENAI_RESOURCE_NAME:your-resource}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
 
@@ -171,7 +178,6 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-# 애플리케이션 커스텀 설정
 app:
   name: "BIF Development"
   version: "1.0.0"
@@ -182,6 +188,6 @@ app:
 
   # JWT 설정
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:yourStrongAndLongSecretKeyForJWTAuthenticationWhichIsAtLeast32BytesLong}
   access-expiration: 10000  # 10초 (밀리초) / 900000 (15분)
   refresh-expiration: 30000  # 30초 (밀리초) / 604800000 (7일)

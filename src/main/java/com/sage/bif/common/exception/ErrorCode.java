@@ -40,13 +40,14 @@ public enum ErrorCode {
     COMMON_DATA_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DATA_SYNC_FAILED", "데이터 동기화에 실패했습니다."),
     COMMON_DATA_INCONSISTENCY(HttpStatus.CONFLICT, "DATA_INCONSISTENCY", "데이터 불일치가 감지되었습니다."),
     COMMON_DATA_VERSION_CONFLICT(HttpStatus.CONFLICT, "DATA_VERSION_CONFLICT", "데이터 버전 충돌이 발생했습니다."),
-    
+
     COMMON_AI_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI_SERVICE_UNAVAILABLE", "AI 서비스를 사용할 수 없습니다."),
     COMMON_AI_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_REQUEST_FAILED", "AI 서비스 요청에 실패했습니다."),
     COMMON_AI_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY, "AI_RESPONSE_INVALID", "AI 서비스 응답이 올바르지 않습니다."),
     COMMON_AI_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI_QUOTA_EXCEEDED", "AI 서비스 사용량이 초과되었습니다."),
     COMMON_AI_MODEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_MODEL_ERROR", "AI 모델 처리 중 오류가 발생했습니다."),
     COMMON_AI_CONTENT_FILTERED(HttpStatus.BAD_REQUEST, "AI_CONTENT_FILTERED", "AI 서비스에서 부적절한 콘텐츠로 판단되었습니다."),
+    COMMON_AI_CONTENT_VIOLATION(HttpStatus.BAD_REQUEST, "AI_CONTENT_VIOLATION", "부적절한 콘텐츠가 감지되었습니다."),
     COMMON_AI_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "AI_TIMEOUT", "AI 서비스 응답 시간이 초과되었습니다."),
     
     COMMON_CACHE_ACCESS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CACHE_ACCESS_FAILED", "캐시 접근에 실패했습니다."),
@@ -79,7 +80,7 @@ public enum ErrorCode {
     TODO_NOTIFICATION_SCHEDULE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TODO_NOTIFICATION_SCHEDULE_FAILED", "할 일 알림 스케줄링에 실패했습니다."),
     TODO_STATS_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TODO_STATS_UPDATE_FAILED", "할 일 통계 업데이트에 실패했습니다."),
 
-    DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
+    DIARY_NOT_FOUND(HttpStatus.FORBIDDEN, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
     DIARY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "DIARY_INVALID_INPUT", "일기 입력이 올바르지 않습니다."),
     DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY_ALREADY_EXISTS", "해당 날짜에 이미 일기가 존재합니다."),
     DIARY_AI_FEEDBACK_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DIARY_AI_FEEDBACK_FAILED", "일기 피드백 생성에 실패했습니다."),
@@ -89,7 +90,7 @@ public enum ErrorCode {
     DIARY_EMOTION_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DIARY_EMOTION_ANALYSIS_FAILED", "감정 분석 처리에 실패했습니다."),
     DIARY_FEEDBACK_REGENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DIARY_FEEDBACK_REGENERATION_FAILED", "일기 피드백 재생성에 실패했습니다."),
 
-    SIM_NOT_FOUND(HttpStatus.NOT_FOUND, "SIM_NOT_FOUND", "시뮬레이션을 찾을 수 없습니다."),
+
     SIM_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "SIM_SESSION_NOT_FOUND", "시뮬레이션 세션을 찾을 수 없습니다."),
     SIM_STEP_NOT_FOUND(HttpStatus.NOT_FOUND, "SIM_STEP_NOT_FOUND", "시뮬레이션 단계를 찾을 수 없습니다."),
     SIM_INVALID_CHOICE(HttpStatus.BAD_REQUEST, "SIM_INVALID_CHOICE", "유효하지 않은 선택입니다."),
@@ -100,6 +101,9 @@ public enum ErrorCode {
     SIM_AI_RESPONSE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SIM_AI_RESPONSE_GENERATION_FAILED", "시뮬레이션 AI 응답 생성에 실패했습니다."),
     SIM_PROGRESS_TRACKING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SIM_PROGRESS_TRACKING_FAILED", "시뮬레이션 진행 상황 추적에 실패했습니다."),
     SIM_FEEDBACK_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SIM_FEEDBACK_GENERATION_FAILED", "시뮬레이션 피드백 생성에 실패했습니다."),
+    SIM_NOT_FOUND(HttpStatus.NOT_FOUND,"SIM_NOT_FOUND", "시뮬레이션을 찾을 수 없습니다."),
+    SIM_SESSION_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"SIM_SESSION_CREATION_FAILED", "시뮬레이션 세션 생성에 실패했습니다."),
+    SIM_NOT_COMPLETED(HttpStatus.INTERNAL_SERVER_ERROR,"SIM_NOT_COMPLETED", "시뮬레이션이 아직 완료되지 않았습니다."),
 
     STATS_CALCULATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_CALCULATION_FAILED", "통계 계산에 실패했습니다."),
     STATS_EVENT_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_EVENT_PROCESSING_FAILED", "통계 이벤트 처리에 실패했습니다."),
@@ -108,7 +112,6 @@ public enum ErrorCode {
     STATS_REPORT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STATS_REPORT_GENERATION_FAILED", "통계 리포트 생성에 실패했습니다."),
     STATS_DATA_INCONSISTENCY(HttpStatus.CONFLICT, "STATS_DATA_INCONSISTENCY", "통계 데이터에 불일치가 발견되었습니다."),
 
-    // 추가된 누락된 상수들
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "잘못된 입력입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_ALREADY_EXISTS", "이미 존재하는 사용자입니다."),
@@ -125,4 +128,5 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
     }
+
 }

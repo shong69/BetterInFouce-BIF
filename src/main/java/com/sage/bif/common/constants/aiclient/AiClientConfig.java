@@ -21,6 +21,4 @@ public class AiClientConfig {
     public static class Deployment {
         private String name = "gpt-35-turbo";
     }
-    
-    // AI 클라이언트 설정
 } 
