@@ -13,10 +13,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@fullcalendar/core": "^6.1.18",
-    "@fullcalendar/daygrid": "^6.1.18",
-    "@fullcalendar/interaction": "^6.1.18",
-    "@fullcalendar/react": "^6.1.18",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
     "react": "^19.1.0",
@@ -52,7 +48,7 @@
   },
   "lint-staged": {
     "*.{js,jsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings 0",
       "prettier --write"
     ],
     "*.{json,css,md}": [
@@ -60,3 +56,4 @@
     ]
   }
 }
+  

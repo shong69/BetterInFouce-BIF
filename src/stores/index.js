@@ -1,4 +1,3 @@
-// 모든 스토어를 한번에 export
 export { useDiaryStore } from "./diaryStore";
 export { useUserStore } from "./userStore";
 export { useTodoStore } from "./todoStore";

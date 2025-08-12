@@ -5,7 +5,6 @@ import Logo from "@components/ui/Logo";
 
 export default function ErrorPageManager({
   errorCode = "ERROR",
-  title = "오류가 발생했습니다",
   message = "문제가 발생했습니다. 다시 시도해주세요.",
   details,
   buttonType = "both",
@@ -13,7 +12,7 @@ export default function ErrorPageManager({
   const navigate = useNavigate();
 
   const handleBackClick = () => navigate(-1);
-  const handleHomeClick = () => navigate("/diaries");
+  const handleHomeClick = () => navigate("/");
 
   const renderButton = () => {
     switch (buttonType) {
@@ -32,10 +31,18 @@ export default function ErrorPageManager({
       default:
         return (
           <>
-            <SecondaryButton onClick={handleBackClick} className="px-6 py-2">
+            <SecondaryButton
+              key="back"
+              onClick={handleBackClick}
+              className="px-6 py-2"
+            >
               이전 페이지로
             </SecondaryButton>
-            <PrimaryButton onClick={handleHomeClick} className="px-6 py-2">
+            <PrimaryButton
+              key="home"
+              onClick={handleHomeClick}
+              className="px-6 py-2"
+            >
               홈으로 돌아가기
             </PrimaryButton>
           </>
@@ -55,7 +62,6 @@ export default function ErrorPageManager({
         </div>
       </div>
 
-      <h1 className="mb-4 text-2xl font-bold text-gray-800">{title}</h1>
       <p className="mb-6 max-w-md leading-relaxed text-gray-600">{message}</p>
 
       {details && (

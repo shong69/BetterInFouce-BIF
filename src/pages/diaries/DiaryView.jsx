@@ -8,7 +8,7 @@ import DeleteButton from "@components/ui/DeleteButton";
 import DateBox from "@components/ui/DateBox";
 import Modal from "@components/ui/Modal";
 
-import ErrorPageManager from "@pages/errors/ErrorPageManager";
+import ErrorPageManager from "@pages/errors/ErrorPage";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { formatDate } from "@utils/dateUtils";
@@ -35,8 +35,6 @@ export default function DiaryView() {
             setError(null);
           }
         } catch (error) {
-          console.error("일기 로딩 실패:", error);
-
           if (error.response && error.response.data) {
             const { message, details } = error.response.data;
             setError({
@@ -93,8 +91,20 @@ export default function DiaryView() {
       showSuccess("일기가 성공적으로 삭제되었습니다.");
       navigate("/diaries");
     } catch (error) {
-      console.error("일기 삭제 실패:", error);
-      showError("일기 삭제에 실패했습니다.");
+      if (error.response && error.response.data) {
+        const { errorCode, message, details } = error.response.data;
+        setError({
+          errorCode: errorCode || error.response.status.toString(),
+          message: message || "일기 삭제에 실패했습니다.",
+          details: details || null,
+        });
+      } else {
+        setError({
+          errorCode: "500",
+          message: "일기 삭제에 실패했습니다.",
+          details: error.message || "네트워크 오류가 발생했습니다.",
+        });
+      }
     } finally {
       setShowDeleteModal(false);
     }
@@ -104,7 +114,6 @@ export default function DiaryView() {
     setShowDeleteModal(false);
   }
 
-  // 주의 메시지 생성 함수
   function generateWarningMessage(categories) {
     if (categories.length === 0) {
       return "부적절한 내용이 감지되었습니다.\n\n건강한 마음가짐을 위해 다른 관점에서 생각해보세요.";
