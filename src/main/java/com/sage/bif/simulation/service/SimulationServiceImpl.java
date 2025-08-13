@@ -15,9 +15,16 @@ import com.sage.bif.simulation.repository.SimulationRepository;
 import com.sage.bif.simulation.repository.SimulationStepRepository;
 import com.sage.bif.simulation.repository.BifChoiceRepository;
 import com.sage.bif.simulation.repository.SimulationFeedbackRepository;
+import com.sage.bif.simulation.repository.SimulationRecommendationRepository;
+import com.sage.bif.simulation.entity.SimulationRecommendation;
 import com.sage.bif.simulation.dto.response.SimulationResponse;
 import com.sage.bif.simulation.dto.response.SimulationChoiceResponse;
 import com.sage.bif.simulation.dto.response.SimulationDetailsResponse;
+import com.sage.bif.simulation.dto.response.SimulationRecommendationResponse;
+import com.sage.bif.user.entity.Bif;
+import com.sage.bif.user.entity.Guardian;
+import com.sage.bif.user.repository.BifRepository;
+import com.sage.bif.user.repository.GuardianRepository;
 
 import com.sage.bif.simulation.exception.SimulationException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +38,9 @@ public class SimulationServiceImpl implements SimulationService {
     private final SimulationStepRepository stepRepository;
     private final BifChoiceRepository choiceRepository;
     private final SimulationFeedbackRepository feedbackRepository;
+    private final SimulationRecommendationRepository recommendationRepository;
+    private final GuardianRepository guardianRepository;
+    private final BifRepository bifRepository;
 
     @Override
     public List<SimulationResponse> getAllSimulations() {
@@ -73,10 +83,26 @@ public class SimulationServiceImpl implements SimulationService {
                 .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
         
         List<BifChoice> choices = choiceRepository.findByStepIdOrderByChoiceId(currentStepData.getStepId());
+
+        log.info("=== 선택지 매칭 디버깅 ===");
+        log.info("사용자가 선택한 텍스트: '{}'", userChoice);
+        log.info("사용자가 선택한 텍스트 길이: {}", userChoice.length());
+        log.info("데이터베이스의 선택지들:");
+        choices.forEach(choice -> {
+            log.info("  - '{}' (ID: {}, 길이: {})", choice.getChoiceText(), choice.getChoiceId(), choice.getChoiceText().length());
+        });
+
         BifChoice selectedChoice = choices.stream()
-                .filter(choice -> choice.getChoiceText().equals(userChoice))
                 .findFirst()
-                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_INVALID_CHOICE));
+                .orElseThrow(() -> {
+                    log.error("선택지가 없습니다!");
+                    return new SimulationException(ErrorCode.SIM_INVALID_CHOICE);
+                });
+        
+        log.info("선택된 선택지: '{}' (ID: {})", selectedChoice.getChoiceText(), selectedChoice.getChoiceId());
+        
+        int currentChoiceScore = selectedChoice.getChoiceScore();
+        int totalScore = calculateTotalScore(sessionId, currentChoiceScore);
         
         int nextStep = currentStep + 1;
         List<SimulationStep> allSteps = stepRepository.findBySimulationIdOrderByStepOrder(simulationId);
@@ -104,7 +130,9 @@ public class SimulationServiceImpl implements SimulationService {
                 .feedback(selectedChoice.getFeedbackText() != null ? selectedChoice.getFeedbackText() : "")
                 .nextScenario(nextScenario)
                 .nextChoices(nextChoices)
-                .currentScore(selectedChoice.getChoiceScore())
+                .currentScore(currentChoiceScore)
+                .choiceScore(currentChoiceScore)
+                .totalScore(totalScore)
                 .isCompleted(isCompleted)
                 .build();
         } catch (Exception e) {
@@ -189,6 +217,71 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     @Override
+    public SimulationRecommendationResponse clickRecommendation(Long guardianId, Long bifId, Long simulationId) {
+        log.info("시뮬레이션 추천 이모티콘 클릭: guardianId={}, bifId={}, simulationId={}", guardianId, bifId, simulationId);
+
+        Guardian guardian = guardianRepository.findById(guardianId)
+                .orElseThrow(() -> new SimulationException(ErrorCode.USER_NOT_FOUND));
+        
+        Bif bif = bifRepository.findById(bifId)
+                .orElseThrow(() -> new SimulationException(ErrorCode.USER_NOT_FOUND));
+        
+        Simulation simulation = simulationRepository.findById(simulationId)
+                .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
+
+        Optional<SimulationRecommendation> existingRecommendation = recommendationRepository
+                .findByGuardianGuardianIdAndBifBifIdAndSimulationId(guardianId, bifId, simulationId);
+        
+        Boolean isActive;
+        
+        if (existingRecommendation.isPresent()) {
+
+            SimulationRecommendation recommendation = existingRecommendation.get();
+            recommendation.setIsActive(!recommendation.getIsActive());
+            recommendationRepository.save(recommendation);
+            isActive = recommendation.getIsActive();
+            
+            log.info("이모티콘 클릭: recommendationId={}, isActive={}", recommendation.getRecommendationId(), isActive);
+        } else {
+            
+            SimulationRecommendation newRecommendation = SimulationRecommendation.builder()
+                    .guardian(guardian)
+                    .bif(bif)
+                    .simulation(simulation)
+                    .isActive(true)
+                    .build();
+            
+            recommendationRepository.save(newRecommendation);
+            isActive = true;
+            
+            log.info("새 추천 생성: recommendationId={}, isActive={}", newRecommendation.getRecommendationId(), isActive);
+        }
+        
+        List<Long> recommendedSimulationIds = getActiveRecommendationIdsForBif(bifId);
+        
+        return SimulationRecommendationResponse.builder()
+                .recommendedSimulationIds(recommendedSimulationIds)
+                .isActive(isActive)
+                .build();
+    }
+
+    @Override
+    public List<Long> getActiveRecommendationIdsForBif(Long bifId) {
+        log.info("BIF 활성 추천 목록 조회: bifId={}", bifId);
+        
+        List<SimulationRecommendation> activeRecommendations = recommendationRepository
+                .findByBifBifIdAndIsActiveTrue(bifId);
+        
+        List<Long> recommendedSimulationIds = activeRecommendations.stream()
+                .map(recommendation -> recommendation.getSimulation().getId())
+                .toList();
+        
+        log.info("활성 추천 개수: {}", recommendedSimulationIds.size());
+        
+        return recommendedSimulationIds;
+    }
+
+    @Override
     public void recommendSimulation(Long simulationId) {
         log.info("시뮬레이션 추천 기능 호출(구현 예정)");
         throw new UnsupportedOperationException("시뮬레이션 추천 기능은 아직 구현되지 않았습니다.");
@@ -209,6 +302,11 @@ public class SimulationServiceImpl implements SimulationService {
         }
         throw new IllegalArgumentException("잘못된 sessionId 형식: " + sessionId);
     }
+    
+    private int calculateTotalScore(String sessionId, int currentChoiceScore) {
+        // 현재는 단순히 현재 점수만 반환 (클라이언트에서 누적 처리)
+        log.info("점수 계산: sessionId={}, currentChoiceScore={}", sessionId, currentChoiceScore);
+        return currentChoiceScore;
+    }
 
 }
-

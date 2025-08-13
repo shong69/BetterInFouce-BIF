@@ -96,7 +96,7 @@ spring:
       # password: ${REDIS_PASSWORD}
       # ssl:
       #   enabled: true
-      host: localhost
+      host: 172.28.249.75
       port: 6379
       timeout: 10000ms
       lettuce:
@@ -182,5 +182,5 @@ app:
   # JWT 설정
 jwt:
   secret: ${JWT_SECRET:yourStrongAndLongSecretKeyForJWTAuthenticationWhichIsAtLeast32BytesLong}
-  access-expiration: 10000  # 10초 (밀리초) / 900000 (15분)
-  refresh-expiration: 30000  # 30초 (밀리초) / 604800000 (7일)
+  access-expiration: 900000  # 15분 (밀리초)
+  refresh-expiration: 604800000  # 7일 (밀리초)

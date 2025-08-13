@@ -17,7 +17,7 @@ public class SimulationResponse {
     private String title;
     private String description;
     private String category;
-    private Boolean isRecommended;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -28,7 +28,6 @@ public class SimulationResponse {
                 .title(simulation.getTitle())
                 .description(simulation.getDescription())
                 .category(simulation.getCategory())
-                .isRecommended(simulation.getIsRecommended())
                 .createdAt(simulation.getCreatedAt())
                 .updatedAt(simulation.getUpdatedAt())
                 .build();

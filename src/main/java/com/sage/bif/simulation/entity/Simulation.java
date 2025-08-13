@@ -26,9 +26,6 @@ public class Simulation {
     @Column(name = "category", nullable = false, length = 10)
     private String category;
 
-    @Column(name = "is_recommended", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isRecommended;
-
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
