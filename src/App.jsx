@@ -1,25 +1,31 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useUserStore } from "@stores";
-import BifProfile from "@pages/BifProfile";
-import GuardianStats from "@pages/GuardianStats";
-import GuardianProfile from "@pages/GuardianProfile";
+
+import Todo from "@pages/Todo";
+import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
-import Profile from "@pages/Profile";
+
 import Diary from "@pages/diaries/Diary";
 import DiaryCreate from "@pages/diaries/DiaryCreate";
 import DiaryView from "@pages/diaries/DiaryView";
 import DiaryEdit from "@pages/diaries/DiaryEdit";
+
 import SimulationProgress from "@pages/simulation/SimulationProgress";
 import Simulation from "@pages/simulation/Simulation";
+
+import BifProfile from "@pages/profile/BifProfile";
+import GuardianProfile from "@pages/profile/GuardianProfile";
+import GuardianStats from "@pages/profile/GuardianStats";
 
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
 
 function App() {
-  const { registrationInfo, isLoading, initializeAuth } = useUserStore();
+  const { isAuthenticated, registrationInfo, isLoading, initializeAuth } =
+    useUserStore();
 
   useEffect(() => {
     initializeAuth();
@@ -33,9 +39,19 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/bif-profile" element={<BifProfile />} />
-          <Route path="/guardian-profile" element={<GuardianProfile />} />
-          <Route path="/stats" element={<GuardianStats />} />
+          <Route
+            path="/"
+            element={
+              registrationInfo ? (
+                <Navigate to="/login/select-role" replace />
+              ) : isAuthenticated() ? (
+                <Todo />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/login/select-role"
             element={
@@ -105,12 +121,27 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/bif-profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <BifProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-profile"
+            element={
+              <ProtectedRoute>
+                <GuardianProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-stats"
+            element={
+              <ProtectedRoute>
+                <GuardianStats />
               </ProtectedRoute>
             }
           />

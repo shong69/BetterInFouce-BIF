@@ -3,11 +3,10 @@ import { useUserStore } from "@stores/userStore";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
-  timeout: 10000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
 });
 api.interceptors.request.use((config) => {
   const { accessToken } = useUserStore.getState();

@@ -17,4 +17,6 @@
     "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", sans-serif;
   --font-display: "Pretendard Variable", "Pretendard", sans-serif;
+
+  --text-tiny: 0.6rem;
 }
