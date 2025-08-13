@@ -555,7 +555,7 @@ export default function EditTodo() {
               className={`flex items-center gap-1 rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
                 formData.subTodos.length >= MAX_SUBTODOS
                   ? "cursor-not-allowed bg-gray-100 text-gray-400"
-                  : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                  : "bg-toggle text-white hover:bg-blue-200"
               }`}
             >
               <HiPlus size={16} />
@@ -574,7 +574,7 @@ export default function EditTodo() {
                   key={subTodo.subTodoId}
                   className="flex items-center gap-4"
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                  <span className="bg-toggle flex h-6 w-6 items-center justify-center rounded-full border text-xs text-white">
                     {index + 1}
                   </span>
                   <input
@@ -582,7 +582,7 @@ export default function EditTodo() {
                     value={subTodo.title}
                     onChange={(e) => handleSubTodoChange(index, e.target.value)}
                     placeholder={`세부 할일 ${index + 1}`}
-                    className="flex-1 rounded-lg border border-gray-100 bg-gray-50 p-3 text-base focus:border-gray-200 focus:outline-none"
+                    className="flex-1 rounded-lg border border-gray-100 p-3 text-base focus:border-gray-200 focus:outline-none"
                   />
                   <button
                     onClick={() => handleRemoveSubTodo(index)}

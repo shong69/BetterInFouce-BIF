@@ -386,7 +386,7 @@ export default function TodoDetail() {
 
         {(completionStatus.isChecklistCompleted ||
           completionStatus.isSequenceCompleted) && (
-          <CompletionMessage type={typeFromUrl} color={colors.tag} />
+          <CompletionMessage type={typeFromUrl} />
         )}
       </div>
 

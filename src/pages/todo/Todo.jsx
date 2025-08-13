@@ -148,10 +148,10 @@ export default function Todo() {
     }
   }
 
-  const handleAddTodo = () => {
+  function handleAddTodo() {
     const returnTab = activeTab === "ROUTINE" ? "routine" : "task";
     navigate(`/todo/new?returnTab=${returnTab}`);
-  };
+  }
 
   return (
     <div className="min-h-screen pb-20">
