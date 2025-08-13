@@ -1,17 +1,18 @@
 import { useState, useRef } from "react";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
-import { getRandomColor } from "@utils/colorUtils";
+import { getRandomColorByTitle } from "@utils/colorUtils";
 import { HiChevronRight, HiChevronDown } from "react-icons/hi";
 
 export default function Card({
   id,
   title,
   category,
+  hasOrder,
   duration,
-  items = [],
+  subTodos = [],
   type = "todo",
-  isExpandable = false,
+  isCompleted = false,
   onEdit,
   onDelete,
   onClick,
@@ -22,7 +23,7 @@ export default function Card({
   const [currentX, setCurrentX] = useState(0);
   const cardRef = useRef(null);
 
-  const colors = getRandomColor(title);
+  const colors = getRandomColorByTitle(title, id);
 
   function handleTouchStart(e) {
     if (type !== "todo") {
@@ -141,12 +142,12 @@ export default function Card({
           </div>
           <div className="flex items-center gap-3">
             <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
-              {category}
+              {hasOrder ? "순서 있음" : "체크리스트"}
             </span>
-            {isExpandable && (
+            {subTodos.length > 0 && (
               <button
                 onClick={handleToggle}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${colors.button} hover:opacity-80`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
               >
                 <HiChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
@@ -158,13 +159,13 @@ export default function Card({
 
         {isExpanded && (
           <div className="mt-4">
-            {items.map((item) => (
+            {subTodos.map((item) => (
               <div
-                key={item.id}
+                key={item.subTodoId}
                 className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
               >
                 <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
-                <span>{typeof item === "string" ? item : item.text}</span>
+                <span>{item.title}</span>
               </div>
             ))}
           </div>
@@ -212,10 +213,10 @@ export default function Card({
 
       <div
         ref={cardRef}
-        className={`relative rounded-xl bg-white p-4 transition-transform duration-200 ease-out ${
+        className={`relative rounded-xl p-4 transition-transform duration-200 ease-out ${
           type === "todo"
-            ? "border-2 border-gray-200"
-            : "cursor-pointer border border-gray-300 hover:border-gray-400"
+            ? `border-2 ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
+            : "cursor-pointer border border-gray-300 bg-white hover:border-gray-400"
         }`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

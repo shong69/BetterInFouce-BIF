@@ -263,9 +263,9 @@ export default function BifProfile() {
 
       await fetchMonthlyStats(bifId, now.getFullYear(), now.getMonth() + 1);
     } catch (err) {
-      console.error("사용자 통계 데이터 로드 실패:", err);
+      throw ("사용자 통계 데이터 로드 실패:", err);
     }
-  }, []);
+  }, [fetchMonthlyStats]);
 
   useEffect(() => {
     localStorage.setItem("userType", "BIF");
