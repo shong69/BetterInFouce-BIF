@@ -70,7 +70,7 @@ export default function Bubble({
         {!isHidden && showNextButton && onNextStep && (
           <div className="flex justify-end">
             <button
-              className="bg-secondary rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"
+              className="bg-secondary w-13 rounded-full px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"
               onClick={onNextStep}
             >
               {isLastStep ? "완료" : "다음"}

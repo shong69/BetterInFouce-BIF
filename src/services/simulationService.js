@@ -11,8 +11,7 @@ export default function mapBackendToFrontend(backendData) {
     const description = simulation?.description || "설명 없음";
     const id = simulation?.simulation_id || simulation?.id || 0;
     const category = simulation?.category || getCategoryFromTitle(title);
-    const isRecommended =
-      simulation?.is_recommended || simulation?.isRecommended || false;
+    const isRecommended = simulation?.isActive || false;
 
     return {
       id: id,
@@ -165,13 +164,53 @@ export const simulationService = {
 
   completeSimulation: async function (sessionId, totalScore) {
     try {
+      const requestBody = { totalScore: totalScore };
+      if (sessionId) {
+        requestBody.sessionId = sessionId;
+      }
+
       const response = await axios.post(
         `${API_BASE_URL}/simulations/complete`,
-        { totalScore: totalScore },
+        requestBody,
       );
       return response.data;
     } catch {
       return { success: false, message: "시뮬레이션 완료 처리 실패" };
+    }
+  },
+
+  getRecommendations: async function () {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/simulations/recommendations`,
+      );
+      if (response.data && response.data.success && response.data.data) {
+        return mapBackendToFrontend(response.data.data);
+      } else {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+  },
+
+  recommendSimulation: async function (bifId, simulationId) {
+    const response = await axios.post(
+      `${API_BASE_URL}/simulations/recommendations`,
+      {
+        bifId: bifId,
+        simulationId: simulationId,
+      },
+    );
+    return response.data;
+  },
+
+  getLinkedBifInfo: async function () {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/auth/linked-bif`);
+      return response.data;
+    } catch {
+      return null;
     }
   },
 };

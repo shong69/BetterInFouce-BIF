@@ -5,6 +5,8 @@ import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
+import BackButton from "@components/ui/BackButton";
+import logo2 from "@assets/logo2.png";
 
 function ProgressBar({ progress = 0, label = "진행도" }) {
   return (
@@ -33,9 +35,10 @@ export default function SimulationProgress() {
   const [sessionId, setSessionId] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  // eslint-disable-next-line no-unused-vars
   const [score, setScore] = useState(0);
   const [conversationHistory, setConversationHistory] = useState([]);
+  const [showFinal, setShowFinal] = useState(false);
+  const [finalMessage, setFinalMessage] = useState("");
   const [shuffledChoices, setShuffledChoices] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
@@ -51,7 +54,7 @@ export default function SimulationProgress() {
 
       isInitializedRef.current = true;
 
-      const loadSimulationAndStartSession = async function () {
+      async function loadSimulationAndStartSession() {
         try {
           const sessionKey = `sim_${id}_session`;
           const existingSessionId = localStorage.getItem(sessionKey);
@@ -59,17 +62,17 @@ export default function SimulationProgress() {
           if (existingSessionId) {
             setSessionId(existingSessionId);
             sessionCreatedRef.current = true;
-
             const totalKey = `sim_${id}_total`;
-            const existingTotal = Number(localStorage.getItem(totalKey) || 0);
-            setScore(existingTotal);
+            localStorage.setItem(totalKey, "0");
+            setScore(0);
           } else {
+            clearAllSessions();
             try {
               const startRes = await simulationService.startSimulation(
                 parseInt(id),
               );
 
-              const startSessionId = startRes?.data?.sessionId;
+              const startSessionId = startRes?.data || startRes?.sessionId;
 
               if (startSessionId) {
                 setSessionId(startSessionId);
@@ -108,12 +111,13 @@ export default function SimulationProgress() {
         } catch (error) {
           throw ("시뮬레이션 로드 또는 세션 시작 오류:", error);
         }
-      };
+      }
 
       loadSimulationAndStartSession();
     },
     [id],
   );
+
   useEffect(
     function () {
       if (conversationRef.current) {
@@ -160,36 +164,18 @@ export default function SimulationProgress() {
         ? selectedChoice
         : selectedChoice.choiceText || "선택지"
       : "선택지 없음";
-    const choiceId =
-      selectedChoice && typeof selectedChoice === "object"
-        ? selectedChoice.id ||
-          selectedChoice.choiceId ||
-          selectedChoice.choice_id
-        : null;
 
-    if (sessionId) {
-      try {
-        const apiRes = await simulationService.submitChoice(
-          sessionId,
-          selectedOptionText,
-          choiceId,
-        );
+    let choiceScore = 0;
+    if (selectedChoice && typeof selectedChoice === "object") {
+      choiceScore =
+        selectedChoice.choice_score || selectedChoice.choiceScore || 0;
+      if (choiceScore > 0) {
+        const sessionKey = `sim_${id}_total`;
+        const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
+        const newTotal = existingTotal + choiceScore;
 
-        const payload = apiRes?.data ?? apiRes;
-        const serverScore =
-          payload?.currentScore ?? payload?.current_score ?? 0;
-
-        if (typeof serverScore === "number" && serverScore > 0) {
-          const sessionKey = `sim_${id}_total`;
-          const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
-          const newTotal = existingTotal + serverScore;
-
-          localStorage.setItem(sessionKey, newTotal.toString());
-
-          setScore(newTotal);
-        }
-      } catch (error) {
-        throw ("선택지 제출 실패:", error);
+        localStorage.setItem(sessionKey, newTotal.toString());
+        setScore(newTotal);
       }
     }
 
@@ -202,20 +188,6 @@ export default function SimulationProgress() {
     setConversationHistory(function (prev) {
       return [...prev, userResponse];
     });
-
-    let choiceScore = 0;
-    if (selectedChoice && typeof selectedChoice === "object") {
-      choiceScore = selectedChoice.choice_score || 0;
-      if (choiceScore > 0) {
-        const sessionKey = `sim_${id}_total`;
-        const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
-        const newTotal = existingTotal + choiceScore;
-
-        localStorage.setItem(sessionKey, newTotal.toString());
-
-        setScore(newTotal);
-      }
-    }
     setShowTyping(true);
 
     setTimeout(function () {
@@ -276,6 +248,46 @@ export default function SimulationProgress() {
       setConversationHistory(function (prev) {
         return [...prev, opponentMessage];
       });
+    } else {
+      const totalScore = localStorage.getItem(`sim_${id}_total`) || score;
+
+      if (sessionId) {
+        simulationService
+          .completeSimulation(sessionId, totalScore)
+          .then(function () {
+            (async function () {
+              try {
+                const feedbackResponse = await simulationService.getFeedback(
+                  parseInt(id),
+                  totalScore,
+                );
+                const feedbackData = feedbackResponse?.data ?? feedbackResponse;
+                const feedbackMessage =
+                  feedbackData?.feedbackText ||
+                  feedbackData?.feedback ||
+                  "시뮬레이션을 완료했습니다!";
+
+                localStorage.removeItem(`sim_${id}_total`);
+
+                setShowFinal(true);
+                setFinalMessage(feedbackMessage);
+              } catch {
+                localStorage.removeItem(`sim_${id}_total`);
+                setShowFinal(true);
+                setFinalMessage("시뮬레이션을 완료했습니다!");
+              }
+            })();
+          })
+          .catch(function () {
+            localStorage.removeItem(`sim_${id}_total`);
+            setShowFinal(true);
+            setFinalMessage("시뮬레이션을 완료했습니다!");
+          });
+      } else {
+        localStorage.removeItem(`sim_${id}_total`);
+        setShowFinal(true);
+        setFinalMessage("시뮬레이션을 완료했습니다!");
+      }
     }
   }
 
@@ -307,6 +319,18 @@ export default function SimulationProgress() {
     return `${month}월 ${date}일 ${day}요일`;
   }
 
+  function clearAllSessions() {
+    const keys = Object.keys(localStorage);
+    keys.forEach(function (key) {
+      if (key.startsWith("sim_") && key.endsWith("_session")) {
+        localStorage.removeItem(key);
+      }
+      if (key.startsWith("sim_") && key.endsWith("_total")) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
   if (!simulation) {
     return (
       <>
@@ -329,7 +353,7 @@ export default function SimulationProgress() {
         <div className="text-black-600 mb-3 text-[13px] font-medium">
           {getCurrentDate()}
         </div>
-        <BackButton />
+        <BackButton onClick={handleBackToMain} />
       </div>
 
       <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
@@ -480,57 +504,68 @@ export default function SimulationProgress() {
         )}
       </main>
 
-      <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-        <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-          <div className="mb-6 text-center">
-            <div className="relative mb-4 inline-block">
-              <div className="from-primary flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br to-[#0a7a06]">
-                <div className="text-2xl">🐢</div>
-              </div>
-              <div className="absolute -top-2 -right-2">
-                <span className="animate-pulse text-lg">✨</span>
-              </div>
-              <div className="absolute -bottom-2 -left-2">
-                <span
-                  className="animate-pulse text-lg"
-                  style={{ animationDelay: "0.5s" }}
-                >
-                  ✨
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="text-center">
-            <h3 className="mb-4 text-xl font-bold text-gray-800">
-              🎉 시뮬레이션 완료!
-            </h3>
-            <div className="space-y-4 text-left">
-              <div>
-                <h4 className="mb-2 font-semibold text-gray-800">🌟 잘한 점</h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div>• 대화 상황에 적절히 대응했습니다</div>
-                  <div>• 정중하고 예의 바른 태도를 보여주었습니다</div>
+      {showFinal && (
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+            <div className="text-center">
+              <div className="relative mb-4 inline-block">
+                <img
+                  src={logo2}
+                  alt="현북이"
+                  className="h-32 w-32 object-contain"
+                />
+                <div className="absolute -top-2 -right-2">
+                  <span className="animate-pulse text-lg">✨</span>
                 </div>
-              </div>
-              <div>
-                <h4 className="mb-2 font-semibold text-gray-800">
-                  💡 개선할 점
-                </h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div>• 더 구체적이고 명확한 표현을 연습해보세요</div>
-                  <div>• 상대방의 상황을 더 고려한 배려심을 기르세요</div>
+                <div className="absolute -bottom-2 -left-2">
+                  <span
+                    className="animate-pulse text-lg"
+                    style={{ animationDelay: "0.5s" }}
+                  >
+                    ✨
+                  </span>
                 </div>
               </div>
             </div>
+            <div className="text-center">
+              <div className="mb-6">
+                {(function () {
+                  const titleEndIndex = Math.min(
+                    finalMessage.indexOf("!") !== -1
+                      ? finalMessage.indexOf("!") + 1
+                      : finalMessage.length,
+                    finalMessage.indexOf(".") !== -1
+                      ? finalMessage.indexOf(".") + 1
+                      : finalMessage.length,
+                  );
+
+                  const title = finalMessage.substring(0, titleEndIndex);
+                  const content = finalMessage.substring(titleEndIndex).trim();
+
+                  return (
+                    <>
+                      <div className="mb-3 text-lg font-bold text-black">
+                        {title}
+                      </div>
+                      {content && (
+                        <div className="text-12 text-black">{content}</div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-center">
+              <button
+                className="bg-secondary text-sb w-20 rounded-full px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#7db800]"
+                onClick={handleBackToMain}
+              >
+                확인
+              </button>
+            </div>
           </div>
-          <button
-            className="bg-primary mt-6 w-full rounded-lg py-3 font-medium text-white transition-colors hover:bg-[#0a7a06]"
-            onClick={handleBackToMain}
-          >
-            확인
-          </button>
         </div>
-      </div>
+      )}
 
       <TabBar />
     </>

@@ -82,14 +82,13 @@ function App() {
             }
           />
           <Route
-            path="/simulations/:id"
+            path="/simulation/:id"
             element={
               <ProtectedRoute>
                 <SimulationProgress />
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/bif-profile"
             element={
