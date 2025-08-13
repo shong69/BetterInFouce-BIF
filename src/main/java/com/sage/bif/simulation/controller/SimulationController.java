@@ -35,11 +35,11 @@ import java.util.List;
 @Slf4j
 @CrossOrigin(origins = "*")
 public class SimulationController {
-    
+
     private static final String TOTAL_SCORE = "totalScore";
     private static final String SIMULATION_ID = "simulationId";
     private static final String FEEDBACK_TEXT = "feedbackText";
-    private static final String SESSION_ID = "sessionId"; 
+    private static final String SESSION_ID = "sessionId";
 
     private final SimulationService simulationService;
     private final GuardianRepository guardianRepository;
@@ -49,15 +49,15 @@ public class SimulationController {
         List<SimulationResponse> simulations = simulationService.getAllSimulations();
         return ResponseEntity.ok(ApiResponse.success(simulations, "시뮬레이션 목록 조회 성공"));
     }
-    
+
     @PostMapping("/{simulationId}/start")
     public ResponseEntity<ApiResponse<String>> startSimulation(@PathVariable Long simulationId) {
 
         String sessionId = simulationService.startSimulation(simulationId);
         return ResponseEntity.ok(ApiResponse.success(sessionId, "시뮬레이션 시작 성공"));
-        
+
     }
-    
+
     @PostMapping("/choice")
     public ResponseEntity<ApiResponse<SimulationChoiceResponse>> submitChoice(
             @RequestBody Map<String, Object> request) {
@@ -75,7 +75,7 @@ public class SimulationController {
             throw e;
         }
     }
-    
+
     @GetMapping("/{simulationId}/feedback")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFeedback(
             @PathVariable Long simulationId,
@@ -93,7 +93,7 @@ public class SimulationController {
         SimulationDetailsResponse details = simulationService.getSimulationDetails(simulationId);
         return ResponseEntity.ok(ApiResponse.success(details, "시뮬레이션 정보 조회 성공"));
     }
-    
+
     @PostMapping("/result")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSimulationResult(
             @RequestBody Map<String, Object> request) {
@@ -104,7 +104,7 @@ public class SimulationController {
 
             Long simulationId = extractSimulationIdFromSessionId(sessionId);
             int totalScore;
-            
+
             if (totalScoreObj instanceof Integer integer) {
                 totalScore = integer;
             } else if (totalScoreObj instanceof Number number) {
@@ -119,29 +119,31 @@ public class SimulationController {
             log.info("최종 총점: {}", totalScore);
 
             String feedbackText = simulationService.getFeedbackText(simulationId, totalScore);
-            
+
+
             log.info("반환할 피드백: {}", feedbackText);
-            
+
             Map<String, Object> result = Map.of(
                     SIMULATION_ID, simulationId,
                     TOTAL_SCORE, totalScore,
                     FEEDBACK_TEXT, feedbackText
             );
-            
+
             return ResponseEntity.ok(ApiResponse.success(result, "시뮬레이션 결과 조회 성공"));
         } catch (Exception e) {
             log.error("시뮬레이션 결과 조회 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
     }
-    
+
+
     @PostMapping("/complete")
     public ResponseEntity<ApiResponse<Map<String, Object>>> completeSimulation(
             @RequestBody Map<String, Object> request) {
         try {
             log.info("=== 시뮬레이션 완료 요청 ===");
             log.info("요청 데이터: {}", request);
-            
+
             String sessionId = (String) request.get(SESSION_ID);
             Object totalScoreObj = request.get(TOTAL_SCORE);
 
@@ -150,7 +152,7 @@ public class SimulationController {
 
             Long simulationId = extractSimulationIdFromSessionId(sessionId);
             int totalScore;
-            
+
             if (totalScoreObj instanceof Integer integer) {
                 totalScore = integer;
             } else if (totalScoreObj instanceof Number number) {
@@ -167,34 +169,34 @@ public class SimulationController {
             log.info("최종 총점: {}", totalScore);
 
             String feedbackText = simulationService.getFeedbackText(simulationId, totalScore);
-            
+
             log.info("반환할 피드백: {}", feedbackText);
-            
+
             Map<String, Object> result = Map.of(
                     SIMULATION_ID, simulationId,
                     TOTAL_SCORE, totalScore,
                     FEEDBACK_TEXT, feedbackText,
                     "success", true
             );
-            
+
             return ResponseEntity.ok(ApiResponse.success(result, "시뮬레이션 완료 성공"));
         } catch (Exception e) {
             log.error("시뮬레이션 완료 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
     }
-    
+
     @PostMapping("/recommendations")
     public ResponseEntity<ApiResponse<Object>> handleRecommendations(
             @RequestBody(required = false) Map<String, Object> request,
             Authentication authentication) {
-        
+
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("인증되지 않은 사용자입니다."));
             }
-            
+
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
             if (userDetails.getRole() == JwtTokenProvider.UserRole.BIF) {
@@ -214,33 +216,33 @@ public class SimulationController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(ApiResponse.error("추천할 시뮬레이션 정보가 필요합니다."));
                 }
-                
+
                 log.info("Guardian 시뮬레이션 추천 요청: {}", request);
-                
+
                 Guardian guardian = guardianRepository.findBySocialLogin_SocialId(userDetails.getSocialId())
                         .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
-                
+
                 Long bifId = Long.valueOf(request.get("bifId").toString());
                 Long simulationId = Long.valueOf(request.get(SIMULATION_ID).toString());
-                
+
                 if (!guardian.getBif().getBifId().equals(bifId)) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                             .body(ApiResponse.error("연동된 BIF에게만 추천할 수 있습니다."));
                 }
-                
+
                 SimulationRecommendationResponse response = simulationService.clickRecommendation(
                         guardian.getGuardianId(),
                         bifId,
                         simulationId
                 );
-                
+
                 log.info("시뮬레이션 추천 완료: isActive={}", response.getIsActive());
                 return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, "추천 처리 완료"));
             }
-            
+
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("지원하지 않는 사용자 역할입니다."));
-            
+
         } catch (Exception e) {
             log.error("추천 처리 실패: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

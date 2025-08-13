@@ -4,6 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+data/
 
 ### STS ###
 .apt_generated
@@ -87,3 +88,6 @@ set-env.sh
 # Logs
 *.log
 logs/
+
+# api key
+src/main/resources/application-secret.yml

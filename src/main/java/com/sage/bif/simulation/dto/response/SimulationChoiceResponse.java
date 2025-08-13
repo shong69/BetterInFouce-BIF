@@ -1,17 +1,16 @@
 package com.sage.bif.simulation.dto.response;
 
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimulationChoiceResponse {
-    
+
     private String sessionId;
     private String selectedChoice;
     private String feedback;

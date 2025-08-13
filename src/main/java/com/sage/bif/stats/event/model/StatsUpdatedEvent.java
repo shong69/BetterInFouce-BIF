@@ -6,30 +6,31 @@ import lombok.Getter;
 
 @Getter
 public class StatsUpdatedEvent extends BaseEvent {
-    
-    private final Stats stats;
+
+    private final transient Stats stats;
     private final Long userId;
     private final String updateType;
     private final String updateReason;
-    
-    public StatsUpdatedEvent(Object source, Stats stats, Long userId, String updateType, String updateReason) {
+
+    public StatsUpdatedEvent(final Object source, final Stats stats, final Long userId, final String updateType, final String updateReason) {
         super(source);
         this.stats = stats;
         this.userId = userId;
         this.updateType = updateType;
         this.updateReason = updateReason;
     }
-    
-    public StatsUpdatedEvent(Object source, Stats stats, Long userId, String updateType, String updateReason, String correlationId) {
+
+    public StatsUpdatedEvent(final Object source, final Stats stats, final Long userId, final String updateType, final String updateReason, final String correlationId) {
         super(source, correlationId);
         this.stats = stats;
         this.userId = userId;
         this.updateType = updateType;
         this.updateReason = updateReason;
     }
-    
+
     @Override
     public String getEventType() {
         return "STATS_UPDATED";
     }
-} 
+
+}

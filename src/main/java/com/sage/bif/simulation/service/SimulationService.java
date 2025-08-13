@@ -8,21 +8,22 @@ import com.sage.bif.simulation.dto.response.SimulationRecommendationResponse;
 import java.util.List;
 
 public interface SimulationService {
-    
+
     List<SimulationResponse> getAllSimulations();
-    
+
     String startSimulation(Long simulationId);
-    
+
     SimulationChoiceResponse submitChoice(String sessionId, String choice);
-    
+
     SimulationDetailsResponse getSimulationDetails(Long simulationId);
 
+
     SimulationRecommendationResponse clickRecommendation(Long guardianId, Long bifId, Long simulationId);
-    
+
     List<Long> getActiveRecommendationIdsForBif(Long bifId);
-    
+
     void recommendSimulation(Long simulationId);
-    
+
     String getFeedbackText(Long simulationId, int score);
 
 }

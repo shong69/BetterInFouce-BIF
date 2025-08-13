@@ -5,13 +5,16 @@ import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.common.jwt.JwtTokenProvider;
+import com.sage.bif.user.dto.request.NicknameChangeRequest;
 import com.sage.bif.user.dto.request.SocialRegistrationRequest;
 import com.sage.bif.user.dto.response.BifResponse;
 import com.sage.bif.user.dto.response.GuardianResponse;
+import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +47,7 @@ public class UserController {
     private static final String ROLE = "userRole";
     private static final String BIF_ID = "bifId";
     private static final String NICKNAME = "nickname";
+    private static final String SERVER_ERROR = "SERVER_ERROR";
 
     private final BifService bifService;
     private final GuardianService guardianService;
@@ -242,7 +247,7 @@ public class UserController {
         } catch (Exception e) {
             log.error("Access Token 갱신 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("서버 오류가 발생했습니다.", "SERVER_ERROR"));
+                    .body(ApiResponse.error("서버 오류가 발생했습니다.", SERVER_ERROR));
         }
     }
 
@@ -287,7 +292,7 @@ public class UserController {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                 .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.","EXISTING_USER_LOGOUT_REQUIRED"));
                     } else {
-                        String email = oauth2Token.getPrincipal().getAttribute("email");
+                        String email = socialLoginOpt.map(SocialLogin::getEmail).orElse(null);
                         String provider = oauth2Token.getAuthorizedClientRegistrationId();
 
                         Map<String, Object> registrationInfo = new HashMap<>();
@@ -312,7 +317,7 @@ public class UserController {
 
     @DeleteMapping("/withdraw")
     public ResponseEntity<ApiResponse<String>> withdrawUser(
-            Authentication authentication, HttpServletResponse response) {
+            Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
 
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
@@ -323,6 +328,8 @@ public class UserController {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Long socialId = userDetails.getSocialId();
             JwtTokenProvider.UserRole userRole = userDetails.getRole();
+
+            loginLogService.recordLogout(socialId);
 
             if (userRole == JwtTokenProvider.UserRole.BIF) {
                 bifService.deleteBySocialId(socialId);
@@ -335,6 +342,11 @@ public class UserController {
             socialLoginService.deleteRefreshTokenFromRedis(socialId);
 
             clearRefreshTokenCookie(response);
+            HttpSession session = request.getSession(false);
+            if(session != null) {
+                session.invalidate();
+            }
+            SecurityContextHolder.clearContext();
 
             LocalDateTime withdrawalDate = LocalDateTime.now();
             loginLogService.scheduleLogsForDeletion(socialId, withdrawalDate);
@@ -344,7 +356,68 @@ public class UserController {
         } catch (Exception e) {
             log.error("회원탈퇴 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("회원탈퇴 중 오류가 발생했습니다.", "SERVER_ERROR"));
+                    .body(ApiResponse.error("회원탈퇴 중 오류가 발생했습니다.", SERVER_ERROR));
+        }
+    }
+
+    @PostMapping("/changenickname")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> changeNickname(
+            @Valid @RequestBody NicknameChangeRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+
+        try {
+            Long socialId = userDetails.getSocialId();
+            JwtTokenProvider.UserRole userRole = userDetails.getRole();
+            String newNickname = request.getNickname();
+
+            if (userRole == JwtTokenProvider.UserRole.BIF) {
+                bifService.updateNickname(socialId, newNickname);
+            } else if (userRole == JwtTokenProvider.UserRole.GUARDIAN) {
+                guardianService.updateNickname(socialId, newNickname);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("유효하지 않은 사용자 역할입니다.", "INVALID_USER_ROLE"));
+            }
+
+            var socialLoginOpt = socialLoginService.findBySocialId(socialId);
+            if (socialLoginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponse.error("사용자 정보를 찾을 수 없습니다."));
+            }
+
+            var socialLogin = socialLoginOpt.get();
+            Long bifId = userDetails.getBifId();
+
+            String newAccessToken = jwtTokenProvider.generateAccessToken(
+                    userRole, bifId, newNickname,
+                    socialLogin.getProvider().name(),
+                    socialLogin.getProviderUniqueId(),
+                    socialId
+            );
+
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                session.setAttribute(ACCESS_TOKEN, newAccessToken);
+                session.setAttribute(NICKNAME, newNickname);
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put(ACCESS_TOKEN, newAccessToken);
+            responseData.put(NICKNAME, newNickname);
+            responseData.put("message", "닉네임이 성공적으로 변경되었습니다.");
+
+            return ResponseEntity.ok(ApiResponse.success(responseData, "닉네임 변경 성공"));
+
+        } catch (BaseException e) {
+            log.error("닉네임 변경 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage(), e.getErrorCode().name()));
+        } catch (Exception e) {
+            log.error("닉네임 변경 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("서버 오류가 발생했습니다.", SERVER_ERROR));
         }
     }
 
@@ -435,4 +508,5 @@ public class UserController {
         refreshTokenCookie.setMaxAge(0);
         response.addCookie(refreshTokenCookie);
     }
+
 }

@@ -16,4 +16,5 @@ public record KakaoOAuth2UserInfo(Map<String, Object> attributes) implements OAu
     public String getId() {
         return attributes.get("id").toString();
     }
+
 }

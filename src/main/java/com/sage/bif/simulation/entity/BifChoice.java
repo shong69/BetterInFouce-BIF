@@ -12,24 +12,24 @@ import lombok.*;
 @Setter
 @EntityListeners(AuditingEntityListener.class)
 public class BifChoice {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "choice_id")
     private Long choiceId;
-    
+
     @Column(name = "step_id", nullable = false)
     private Long stepId;
-    
+
     @Column(name = "simulation_id", nullable = false)
     private Long simulationId;
-    
+
     @Column(name = "choice_text", nullable = false, columnDefinition = "TEXT")
     private String choiceText;
-    
+
     @Column(name = "choice_score", nullable = false, columnDefinition = "INT DEFAULT 10")
     private Integer choiceScore;
-    
+
     @Column(name = "feedback_text", columnDefinition = "TEXT")
     private String feedbackText;
 

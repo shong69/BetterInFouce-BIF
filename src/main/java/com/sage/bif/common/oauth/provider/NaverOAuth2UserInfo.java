@@ -17,4 +17,5 @@ public record NaverOAuth2UserInfo(Map<String, Object> attributes) implements OAu
         Map<String, Object> response = (Map<String, Object>) attributes.get("response");
         return response != null ? (String) response.get("id") : null;
     }
+
 }

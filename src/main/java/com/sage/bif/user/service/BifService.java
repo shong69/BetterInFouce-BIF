@@ -8,6 +8,7 @@ public interface BifService {
 
     Bif registerBySocialId(Long socialId, String email);
     Optional<Bif> findBySocialId(Long socialId);
+    void updateNickname(Long socialId, String newNickname);
     void deleteBySocialId(Long socialId);
 
 }
