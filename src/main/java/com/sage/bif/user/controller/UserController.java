@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -362,17 +363,11 @@ public class UserController {
     @PostMapping("/changenickname")
     public ResponseEntity<ApiResponse<Map<String, Object>>> changeNickname(
             @Valid @RequestBody NicknameChangeRequest request,
-            Authentication authentication,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("인증되지 않은 사용자입니다.", "UNAUTHORIZED"));
-            }
-
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Long socialId = userDetails.getSocialId();
             JwtTokenProvider.UserRole userRole = userDetails.getRole();
             String newNickname = request.getNickname();
