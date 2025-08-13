@@ -6,7 +6,6 @@ import Todo from "@pages/Todo";
 import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
-import Profile from "@pages/Profile";
 
 import Diary from "@pages/diaries/Diary";
 import DiaryCreate from "@pages/diaries/DiaryCreate";
@@ -15,6 +14,10 @@ import DiaryEdit from "@pages/diaries/DiaryEdit";
 
 import SimulationProgress from "@pages/simulation/SimulationProgress";
 import Simulation from "@pages/simulation/Simulation";
+
+import BifProfile from "@pages/profile/BifProfile";
+import GuardianProfile from "@pages/profile/GuardianProfile";
+import GuardianStats from "@pages/profile/GuardianStats";
 
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
@@ -118,12 +121,27 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/bif-profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <BifProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-profile"
+            element={
+              <ProtectedRoute>
+                <GuardianProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-stats"
+            element={
+              <ProtectedRoute>
+                <GuardianStats />
               </ProtectedRoute>
             }
           />
