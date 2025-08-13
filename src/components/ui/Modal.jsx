@@ -32,7 +32,7 @@ export default function Modal({
   const hasButtons = primaryButtonText || secondaryButtonText;
 
   return (
-    <button
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
       onClick={handleBackgroundClick}
     >
@@ -61,6 +61,6 @@ export default function Modal({
           </div>
         )}
       </div>
-    </button>
+    </div>
   );
 }
