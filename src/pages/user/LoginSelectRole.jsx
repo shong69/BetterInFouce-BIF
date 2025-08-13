@@ -23,7 +23,6 @@ export default function LoginSelectRole() {
       navigate("/login");
       return;
     }
-
     try {
       const result = await registerBif(
         registrationInfo.socialId,
@@ -50,29 +49,6 @@ export default function LoginSelectRole() {
 
   return (
     <>
-<<<<<<< HEAD
-      <div className="flex min-h-screen flex-col bg-white">
-        <div className="flex justify-center pt-60 pb-1">
-          <Logo />
-        </div>
-        <div className="-mt-40 flex flex-1 flex-col items-center justify-center px-6">
-          <div className="w-full max-w-sm">
-            <div className="space-y-6">
-              <PrimaryButton
-                onClick={handleBifSelect}
-                title="보호자가 아닙니다."
-              />
-              <SecondaryButton
-                onClick={handleGuardianSelect}
-                title="보호자 입니다."
-                className="text-shadow-lg/30"
-              />
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-=======
       <div className="flex justify-center pt-60 pb-20">
         <Logo />
       </div>
@@ -92,7 +68,6 @@ export default function LoginSelectRole() {
         </div>
       </div>
       <Footer />
->>>>>>> e898ae6 (style: CSS 수정 및 기타 코드 수정)
     </>
   );
 }

@@ -109,54 +109,8 @@ export default function LoginInviteCode() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-white">
-        <div className="flex justify-center pt-60 pb-1">
-          <Logo />
-        </div>
-        <div className="-mt-50 flex flex-1 flex-col items-center justify-center px-6">
-          <div className="w-full max-w-sm">
-            <div className="mb-15 text-center">
-              <h1 className="text-md mb-2 font-semibold text-gray-900">
-                인증번호를 입력해주세요
-              </h1>
-            </div>
-
-            <div className="mb-6 flex justify-center gap-2">
-              {inviteCode.map((digit, index) => (
-                <input
-                  // 인증 코드 입력은 고정된 길이이므로 index 사용 허용
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={index}
-                  id={`code-${index}`}
-                  type="text"
-                  value={digit}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={handlePaste}
-                  maxLength={1}
-                  className="h-12 w-12 rounded-lg border-2 border-gray-300 text-center text-xl font-semibold transition-colors focus:outline-none"
-                />
-              ))}
-            </div>
-
-            <p className="mb-6 text-center text-sm">
-              {error ? (
-                <span className="text-red-500">{error}</span>
-              ) : (
-                <span className="text-gray-500">
-                  인증번호 6자를 입력해 주세요.
-                </span>
-              )}
-            </p>
-
-            <PrimaryButton
-              onClick={handleSubmit}
-              title={loading ? "확인 중..." : "확인"}
-              disabled={loading || !isCodeComplete}
-            />
-          </div>
-        </div>
-        <Footer />
+      <div className="flex justify-center pt-60 pb-15">
+        <Logo />
       </div>
       <div className="mb-15 text-center">
         <h1 className="mb-2 text-sm font-bold text-gray-900">
