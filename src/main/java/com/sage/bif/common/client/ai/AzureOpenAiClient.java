@@ -9,6 +9,7 @@ import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.common.client.ai.dto.AiResponse;
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-
+@Slf4j
 @Component
 public class AzureOpenAiClient implements AiServiceClient {
 
@@ -102,12 +103,16 @@ public class AzureOpenAiClient implements AiServiceClient {
             throw new BaseException(ErrorCode.COMMON_AI_RESPONSE_INVALID,
                     "응답 형식이 올바르지 않습니다. 응답 본문: " + body);
         } catch (HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new BaseException(ErrorCode.COMMON_AI_SERVICE_UNAVAILABLE,
                         "API 키 인증 실패: " + e.getMessage());
             } else if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
                 throw new BaseException(ErrorCode.COMMON_AI_QUOTA_EXCEEDED,
                         "API 호출 한도 초과: " + e.getMessage());
+            } else if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                throw new BaseException(ErrorCode.COMMON_AI_REQUEST_FAILED,
+                        "Azure OpenAI 콘텐츠 정책 위반: " + responseBody);
             } else {
                 throw new BaseException(ErrorCode.COMMON_AI_REQUEST_FAILED,
                         "HTTP 클라이언트 오류: " + e.getMessage());

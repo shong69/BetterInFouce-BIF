@@ -9,12 +9,12 @@ public interface DiaryService {
 
     MonthlySummaryResponse getMonthlySummary(Long bifId, MonthlySummaryRequest request);
 
-    DiaryResponse getDiary(Long bifId, Long diaryId);
+    DiaryResponse getDiary(Long bifId, String diaryId);
 
     DiaryResponse createDiary(Long bifId, DiaryRequest request);
 
-    DiaryResponse updateDiaryContent(Long bifId, Long diaryId, String content);
+    DiaryResponse updateDiaryContent(Long bifId, String diaryId, String content);
 
-    void deleteDiary(Long bifId, Long diaryId);
+    void deleteDiary(Long bifId, String diaryId);
 
 }

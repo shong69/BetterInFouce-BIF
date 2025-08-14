@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 
 import com.sage.bif.diary.model.Emotion;
 
@@ -28,6 +29,6 @@ public class MonthlySummaryResponse {
     @ToString
     public static class DailyInfo {
         private Emotion emotion;
-        private Long diaryId;
+        private UUID diaryId;
     }
 }

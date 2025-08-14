@@ -1,7 +1,5 @@
 package com.sage.bif.diary.dto.request;
 
-import java.time.LocalDateTime;
-
 import com.sage.bif.diary.model.Emotion;
 
 import jakarta.validation.constraints.NotBlank;
@@ -24,8 +22,4 @@ public class DiaryRequest {
 
     @NotBlank(message = "내용은 필수입니다.")
     private String content;
-
-    @NotNull(message = "날짜는 필수입니다.")
-    private LocalDateTime date;
-
 }

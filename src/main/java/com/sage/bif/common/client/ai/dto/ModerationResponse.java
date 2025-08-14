@@ -1,14 +1,14 @@
 package com.sage.bif.common.client.ai.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
+import lombok.NoArgsConstructor;
 
+import java.util.List;
+@NoArgsConstructor
 public class ModerationResponse {
     
     @JsonProperty("categoriesAnalysis")
     private List<CategoryAnalysis> categoriesAnalysis;
-    
-    public ModerationResponse() {}
     
     public static class CategoryAnalysis {
         @JsonProperty("category")

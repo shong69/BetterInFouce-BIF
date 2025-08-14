@@ -12,6 +12,8 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
+import com.sage.bif.user.event.model.UserWithdrawalEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,6 +51,7 @@ public class UserController {
     private final SocialLoginService socialLoginService;
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginLogService loginLogService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostMapping("/register/bif")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerBifBySocial(
@@ -325,6 +328,22 @@ public class UserController {
             Long socialId = userDetails.getSocialId();
             JwtTokenProvider.UserRole userRole = userDetails.getRole();
 
+            Long bifId = null;
+            if (userRole == JwtTokenProvider.UserRole.BIF) {
+                var bif = bifService.findBySocialId(socialId);
+                if (bif.isPresent()) {
+                    bifId = bif.get().getBifId();
+                }
+            }
+
+            // 사용자 탈퇴 이벤트 발행 (데이터 삭제 전에)
+            LocalDateTime withdrawalDate = LocalDateTime.now();
+            UserWithdrawalEvent withdrawalEvent = new UserWithdrawalEvent(
+                this, socialId, bifId, userRole, withdrawalDate
+            );
+            eventPublisher.publishEvent(withdrawalEvent);
+
+            // 이벤트 발행 후 사용자 데이터 삭제
             if (userRole == JwtTokenProvider.UserRole.BIF) {
                 bifService.deleteBySocialId(socialId);
             } else if (userRole == JwtTokenProvider.UserRole.GUARDIAN) {
@@ -337,7 +356,6 @@ public class UserController {
 
             clearRefreshTokenCookie(response);
 
-            LocalDateTime withdrawalDate = LocalDateTime.now();
             loginLogService.scheduleLogsForDeletion(socialId, withdrawalDate);
 
             return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다."));

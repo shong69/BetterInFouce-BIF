@@ -13,9 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,7 +47,7 @@ public class DiaryController {
     @Operation(summary = "일기 조회", description = "지정한 일기를 조회합니다.")
     public ResponseEntity<DiaryResponse> getDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long diaryId) {
+            @PathVariable String diaryId) {
         DiaryResponse response = diaryService.getDiary(userDetails.getBifId(), diaryId);
         return ResponseEntity.ok(response);
     }
@@ -69,7 +66,7 @@ public class DiaryController {
     @Operation(summary = "일기 내용 수정", description = "기존 일기의 내용을 수정합니다.")
     public ResponseEntity<DiaryResponse> updateDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long diaryId, @RequestBody DiaryUpdateRequest request) {
+            @PathVariable String diaryId, @RequestBody DiaryUpdateRequest request) {
         DiaryResponse response = diaryService.updateDiaryContent(userDetails.getBifId(), diaryId, request.getContent());
         return ResponseEntity.ok(response);
     }
@@ -78,7 +75,7 @@ public class DiaryController {
     @Operation(summary="일기 삭제", description = "지정한 일기를 삭제합니다.")
     public ResponseEntity<Void> deleteDiary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long diaryId) {
+            @PathVariable String diaryId) {
         diaryService.deleteDiary(userDetails.getBifId(), diaryId);
         return ResponseEntity.noContent().build();
     }

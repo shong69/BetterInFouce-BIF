@@ -2,6 +2,7 @@ package com.sage.bif.common.client.ai;
 
 import com.sage.bif.common.client.ai.dto.ModerationRequest;
 import com.sage.bif.common.client.ai.dto.ModerationResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,15 +14,16 @@ import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Collections;
 
+@Slf4j
 @Component
 public class AzureContentSafetyClient {
     
     private static final Logger logger = LoggerFactory.getLogger(AzureContentSafetyClient.class);
-    
-    @Value("${azure.content-safety.endpoint:}")
+
+    @Value("${spring.ai.azure.content-safety.endpoint:}")
     private String endpoint;
     
-    @Value("${azure.content-safety.api-key:}")
+    @Value("${spring.ai.azure.content-safety.api-key:}")
     private String apiKey;
     
     private final RestTemplate restTemplate;
@@ -41,9 +43,9 @@ public class AzureContentSafetyClient {
             
             HttpHeaders headers = createHeaders();
             HttpEntity<ModerationRequest> entity = new HttpEntity<>(request, headers);
-            
-            String url = endpoint + "/contentsafety/text:analyze?api-version=2023-10-01";
-            
+
+            String url = endpoint + "/contentsafety/text:analyze?api-version=2024-09-01";
+
             logger.info("Azure Content Safety API 호출 시작: {}", url);
             
             ResponseEntity<ModerationResponse> response = restTemplate.exchange(
@@ -88,8 +90,8 @@ public class AzureContentSafetyClient {
 
     private ModerationResponse createDefaultResponse() {
         ModerationResponse response = new ModerationResponse();
+        response.setCategoriesAnalysis(null);
         return response;
     }
-
+    
 }
-
