@@ -6,107 +6,108 @@ import {
   updateDiary as updateDiaryService,
   deleteDiary as deleteDiaryService,
 } from "@services/diaryService";
+import { useLoadingStore } from "./loadingStore";
 
-export const useDiaryStore = create(function (set, _get) {
+export const useDiaryStore = create((set, get) => {
   return {
     diaries: [],
     currentDiary: null,
-    loading: false,
     selectedEmotion: localStorage.getItem("selectedEmotion") || null,
+    diaryCache: new Map(),
 
-    setSelectedEmotion: function (emotion) {
+    setSelectedEmotion: (emotion) => {
       localStorage.setItem("selectedEmotion", emotion);
       set({ selectedEmotion: emotion });
     },
 
-    clearSelectedEmotion: function () {
+    clearSelectedEmotion: () => {
       localStorage.removeItem("selectedEmotion");
       set({ selectedEmotion: null });
     },
 
-    fetchMonthlyDiaries: async function (year, month) {
-      set({ loading: true });
-      try {
-        const diaries = await fetchMonthlyDiariesService(year, month);
-        set({ diaries, loading: false });
-        return diaries;
-      } catch (error) {
-        set({ loading: false });
-        throw error;
-      }
+    fetchMonthlyDiaries: async (year, month) => {
+      const diaries = await fetchMonthlyDiariesService(year, month);
+      set({ diaries });
+      return diaries;
     },
 
-    fetchDiary: async function (id) {
-      set({ loading: true });
+    fetchDiary: async (id) => {
+      const cached = get().diaryCache.get(id);
+      if (cached) {
+        set({ currentDiary: cached });
+        return cached;
+      }
+
+      useLoadingStore.getState().showLoading("일기를 불러오는 중...");
       try {
         const diary = await fetchDiaryService(id);
-        set({ currentDiary: diary, loading: false });
+        get().diaryCache.set(id, diary);
+        set({ currentDiary: diary });
+        useLoadingStore.getState().hideLoading();
         return diary;
       } catch (error) {
-        set({ loading: false });
+        useLoadingStore.getState().hideLoading();
         throw error;
       }
     },
 
-    createDiary: async function (diaryData) {
-      set({ loading: true });
+    createDiary: async (diaryData) => {
+      useLoadingStore.getState().showLoading("일기를 생성하는 중...");
       try {
         const newDiary = await createDiaryService(diaryData);
-
-        set(function (state) {
+        set((state) => {
           const currentDiaries = Array.isArray(state.diaries)
             ? state.diaries
             : [];
 
           return {
             diaries: [...currentDiaries, newDiary],
-            loading: false,
           };
         });
-
+        useLoadingStore.getState().hideLoading();
         return newDiary;
       } catch (error) {
-        set({ loading: false });
+        useLoadingStore.getState().hideLoading();
         throw error;
       }
     },
 
-    updateDiary: async function (id, data) {
-      set({ loading: true });
+    updateDiary: async (id, data) => {
+      useLoadingStore.getState().showLoading("일기 수정 중...");
       try {
         const updatedDiary = await updateDiaryService(id, data);
+
+        get().diaryCache.set(id, updatedDiary);
+
         set({
           currentDiary: updatedDiary,
-          loading: false,
         });
+
+        useLoadingStore.getState().hideLoading();
         return updatedDiary;
       } catch (error) {
-        set({ loading: false });
+        useLoadingStore.getState().hideLoading();
         throw error;
       }
     },
 
-    deleteDiary: async function (id) {
-      set({ loading: true });
-      try {
-        await deleteDiaryService(id);
-        set(function (state) {
-          const currentDiaries = Array.isArray(state.diaries)
-            ? state.diaries
-            : [];
+    deleteDiary: async (id) => {
+      await deleteDiaryService(id);
 
-          return {
-            diaries: currentDiaries.filter(function (d) {
-              return d.id !== parseInt(id);
-            }),
-            currentDiary: null,
-            loading: false,
-          };
-        });
-      } catch (error) {
-        set({ loading: false });
-        throw error;
-      }
+      get().diaryCache.delete(id);
+
+      set((state) => {
+        const currentDiaries = Array.isArray(state.diaries)
+          ? state.diaries
+          : [];
+
+        return {
+          diaries: currentDiaries.filter((d) => {
+            return d.id !== parseInt(id);
+          }),
+          currentDiary: null,
+        };
+      });
     },
   };
 });

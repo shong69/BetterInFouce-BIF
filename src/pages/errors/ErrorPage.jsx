@@ -6,7 +6,7 @@ export default function ErrorPageManager({
   errorCode = "ERROR",
   message = "문제가 발생했습니다. 다시 시도해주세요.",
   details,
-  buttonType = "back",
+  buttonType = "home",
 }) {
   const navigate = useNavigate();
 
@@ -19,19 +19,19 @@ export default function ErrorPageManager({
 
   const renderButton = function () {
     switch (buttonType) {
-      case "back":
+      case "home":
         return (
           <PrimaryButton
-            title="이전 페이지로 돌아가기"
-            onClick={handleBackClick}
+            title="홈으로 돌아가기"
+            onClick={handleHomeClick}
             className="px-6 py-2"
           />
         );
       default:
         return (
           <PrimaryButton
-            title="홈으로 돌아가기"
-            onClick={handleHomeClick}
+            title="이전 페이지로 돌아가기"
+            onClick={handleBackClick}
             className="px-6 py-2"
           />
         );
@@ -55,7 +55,10 @@ export default function ErrorPageManager({
       </p>
 
       {details && (
-        <div className="mb-8 max-w-md text-sm leading-relaxed text-gray-600">
+        <div
+          className="mb-8 max-w-md text-sm leading-relaxed text-gray-600"
+          style={{ whiteSpace: "pre-line" }}
+        >
           {details}
         </div>
       )}
