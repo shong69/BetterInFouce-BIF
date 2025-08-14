@@ -169,7 +169,7 @@ export const useUserStore = create((set, get) => ({
           }
         }
       } catch (refreshError) {
-        console.log("Refresh failed:", refreshError);
+        throw ("Refresh failed:", refreshError);
       }
     }
     set({
@@ -205,7 +205,6 @@ export const useUserStore = create((set, get) => ({
         credentials: "include",
         body: JSON.stringify({ socialId, email }),
       });
-
       if (response.ok) {
         const result = await response.json();
         if (result.data?.accessToken) {

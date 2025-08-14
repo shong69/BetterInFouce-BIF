@@ -39,9 +39,11 @@ api.interceptors.response.use(
           );
 
           const { accessToken } = response.data.data;
+
           useUserStore.getState().setAccessToken(accessToken);
 
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
           return axios(originalRequest);
         } catch (refreshError) {
           useUserStore.getState().logout();

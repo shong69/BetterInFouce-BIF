@@ -13,35 +13,34 @@ export default function TabBar() {
       path: "/diaries",
       icon: PiBookOpenText,
       title: "감정 일기",
+      isActive: function (path) {
+        return path === "/diaries" || path.startsWith("/diaries");
+      },
     },
     {
       path: "/",
       icon: GoTasklist,
       title: "할 일",
+      isActive: function (path) {
+        return path === "/" || path.startsWith("/todos");
+      },
     },
     {
       path: "/simulations",
       icon: VscSettings,
       title: "시뮬레이션",
+      isActive: function (path) {
+        return path === "/simulations" || path.startsWith("/simulation");
+      },
     },
   ];
 
   return (
     <div className="fixed right-0 bottom-0 left-0 border-t border-gray-100 bg-white shadow-lg">
       <div className="flex justify-around">
-        {tabs.map((tab) => {
-          const isActive = (() => {
-            switch (tab.path) {
-              case "/":
-                return currentPath === "/" || currentPath.startsWith("/todo");
-              case "/diaries":
-                return currentPath.startsWith("/diaries");
-              case "/simulations":
-                return currentPath.startsWith("/simulations");
-              default:
-                return currentPath === tab.path;
-            }
-          })();
+        {tabs.map(function (tab) {
+          const isActive = tab.isActive(currentPath);
+
           const IconComponent = tab.icon;
 
           return (

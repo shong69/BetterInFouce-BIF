@@ -3,8 +3,8 @@ export default function TabButton({
   setActiveTab,
   leftTitle,
   rightTitle,
-  leftValue = "routine",
-  rightValue = "todo",
+  leftValue = "ROUTINE",
+  rightValue = "TASK",
 }) {
   return (
     <div className="flex w-full overflow-hidden rounded-lg bg-white shadow-sm">

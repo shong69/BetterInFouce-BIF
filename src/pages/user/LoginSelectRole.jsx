@@ -23,7 +23,6 @@ export default function LoginSelectRole() {
       navigate("/login");
       return;
     }
-
     try {
       const result = await registerBif(
         registrationInfo.socialId,
