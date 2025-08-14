@@ -2,17 +2,21 @@ package com.sage.bif.user.service;
 
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
+import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.common.util.RandomGenerator;
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
 import com.sage.bif.user.entity.SocialLogin;
+import com.sage.bif.user.event.model.UserWithdrawalEvent;
 import com.sage.bif.user.repository.BifRepository;
 import com.sage.bif.user.repository.GuardianRepository;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -22,6 +26,7 @@ public class GuardianServiceImpl implements GuardianService {
     private final GuardianRepository guardianRepository;
     private final SocialLoginRepository socialLoginRepository;
     private final BifRepository bifRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -58,12 +63,45 @@ public class GuardianServiceImpl implements GuardianService {
         return guardianRepository.findByNickname(nickname).isPresent();
     }
 
+    @Override
     @Transactional
-    public void deleteBySocialId(Long socialId) {
-        var bifOpt = bifRepository.findBySocialLogin_SocialId(socialId);
-        if (bifOpt.isPresent()) {
-            bifRepository.delete(bifOpt.get());
+    public void updateNickname(Long socialId, String newNickname) {
+        Guardian guardian = guardianRepository.findBySocialLogin_SocialId(socialId)
+                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        if (guardian.getNickname().equals(newNickname)) {
+            return;
         }
+
+        if (guardianRepository.findByNickname(newNickname).isPresent()) {
+            throw new BaseException(ErrorCode.AUTH_NICKNAME_DUPLICATE);
+        }
+
+        if (bifRepository.findByNickname(newNickname).isPresent()) {
+            throw new BaseException(ErrorCode.AUTH_NICKNAME_DUPLICATE);
+        }
+
+        guardian.setNickname(newNickname);
+        guardianRepository.save(guardian);
     }
 
+    @Transactional
+    public void deleteBySocialId(Long socialId) {
+        var guardianOpt = guardianRepository.findBySocialLogin_SocialId(socialId);
+        if (guardianOpt.isPresent()) {
+            Guardian guardian = guardianOpt.get();
+            Long bifId = guardian.getBif().getBifId();
+
+            guardianRepository.delete(guardian);
+
+            UserWithdrawalEvent event = new UserWithdrawalEvent(
+                    this,
+                    socialId,
+                    bifId,
+                    JwtTokenProvider.UserRole.GUARDIAN,
+                    LocalDateTime.now()
+            );
+            eventPublisher.publishEvent(event);
+        }
+    }
 }
