@@ -42,7 +42,10 @@ public class StatsController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
     })
     public ResponseEntity<ApiResponse<StatsResponse>> getMonthlyStats(
-            @AuthenticationPrincipal final UserDetails userDetails) {
+            @AuthenticationPrincipal final UserDetails userDetails,
+            @RequestParam(required = false) final Long bifId,
+            @RequestParam(required = false) final Integer year,
+            @RequestParam(required = false) final Integer month) {
 
         if (!(userDetails instanceof CustomUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -57,7 +60,8 @@ public class StatsController {
         }
 
         try {
-            final StatsResponse statsResponse = statsService.getMonthlyStats(customUserDetails.getBifId());
+            final Long targetBifId = bifId != null ? bifId : customUserDetails.getBifId();
+            final StatsResponse statsResponse = statsService.getMonthlyStats(targetBifId);
             return ResponseEntity.ok(ApiResponse.success(statsResponse));
         } catch (Exception e) {
             log.error("월별 통계 조회 중 오류 발생: {}", e.getMessage(), e);
@@ -92,7 +96,6 @@ public class StatsController {
         }
 
         try {
-            // 가디언이 해당 BIF와 연결되어 있는지 검증
             Guardian guardian = guardianRepository.findBySocialLogin_SocialId(customUserDetails.getSocialId())
                     .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, "가디언 정보를 찾을 수 없습니다."));
 
