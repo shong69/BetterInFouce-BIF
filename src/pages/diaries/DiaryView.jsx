@@ -107,7 +107,8 @@ export default function DiaryView() {
         "괴롭힘 관련 내용이 감지되었습니다.\n• 심리 상담센터 상담: 1577-0199\n• 사이버 상담센터: 117\n• 법적 도움도 가능합니다",
       jailbreak:
         "시스템 우회 시도가 감지되었습니다.\n• 정상적인 방법으로 서비스를 이용해주세요\n• 문제가 있다면 고객센터에 문의해주세요",
-      unknown: "콘텐츠 검토중...",
+      unknown:
+        "현명한 거북이가 신중하게 답장을 준비 중이에요...\n조금만 기다려 주세요",
     };
 
     const detectedCategories = categories
