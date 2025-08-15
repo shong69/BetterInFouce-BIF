@@ -96,13 +96,14 @@ export default function DiaryCreate() {
     }
 
     try {
-      await createDiary({
+      const response = await createDiary({
         emotion: selectedEmotion,
         content,
       });
       showSuccess("일기가 성공적으로 저장되었습니다!");
       clearSelectedEmotion();
-      navigate("/diaries");
+      const id = response.id;
+      navigate(`/diaries/${id}`);
     } catch (error) {
       if (error.response && error.response.data) {
         showError("일기를 불러오는데 실패했습니다.");

@@ -46,43 +46,6 @@ export default function DiaryEdit() {
   }, [id, location.state, fetchDiary, showError, navigate]);
 
   useEffect(() => {
-    window.currentDiaryEditContent = content;
-    window.currentDiaryEditOriginalContent = originalContent;
-    window.currentDiaryEditId = id;
-  }, [content, originalContent, id]);
-
-  useEffect(() => {
-    if (!window.handleDiaryEditPopState) {
-      window.handleDiaryEditPopState = function (_event) {
-        const currentContent = window.currentDiaryEditContent || "";
-        const originalContent = window.currentDiaryEditOriginalContent || "";
-
-        if (currentContent.trim() && currentContent !== originalContent) {
-          const confirm = window.confirm(
-            "수정 중인 일기가 있습니다. 나가시겠습니까?",
-          );
-          if (!confirm) {
-            window.history.replaceState(null, "", window.location.href);
-          } else {
-            const currentId = window.currentDiaryEditId;
-            window.history.pushState(null, "", `/diaries/${currentId}`);
-            navigate(`/diaries/${currentId}`);
-          }
-        }
-      };
-    }
-
-    window.history.replaceState(null, "", window.location.href);
-
-    if (!window.diaryEditPopStateListenerAdded) {
-      window.addEventListener("popstate", window.handleDiaryEditPopState);
-      window.diaryEditPopStateListenerAdded = true;
-    }
-
-    return () => {};
-  }, [navigate]);
-
-  useEffect(() => {
     function handleBeforeUnload(event) {
       if (content.trim() && content !== originalContent) {
         event.preventDefault();
@@ -164,7 +127,7 @@ export default function DiaryEdit() {
   const diaryData = location.state?.diaryData || {
     content,
     createdAt: new Date(),
-    emotion: "happy",
+    emotion: "NEUTRAL",
   };
 
   return (
