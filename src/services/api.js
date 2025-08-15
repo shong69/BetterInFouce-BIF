@@ -8,6 +8,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 api.interceptors.request.use((config) => {
   const { accessToken } = useUserStore.getState();
   if (accessToken) {
@@ -38,9 +39,11 @@ api.interceptors.response.use(
           );
 
           const { accessToken } = response.data.data;
+
           useUserStore.getState().setAccessToken(accessToken);
 
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
           return axios(originalRequest);
         } catch (refreshError) {
           useUserStore.getState().logout();

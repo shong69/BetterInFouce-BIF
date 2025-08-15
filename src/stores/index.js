@@ -4,4 +4,4 @@ export { useTodoStore } from "./todoStore";
 export { useSimulationStore } from "./simulationStore";
 export { useLoadingStore } from "./loadingStore";
 export { useToastStore } from "./toastStore";
-export { useStatsStore } from "./stats";
+export { useStatsStore } from "./statsStore";

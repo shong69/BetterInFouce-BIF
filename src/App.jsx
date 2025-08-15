@@ -2,11 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useUserStore } from "@stores";
 
-import Todo from "@pages/Todo";
 import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
-import Profile from "@pages/Profile";
+
+import Todo from "@pages/todo/Todo";
+import EditTodo from "@pages/todo/EditTodo";
+import TodoDetail from "@pages/todo/TodoDetail";
+import CreateTodo from "@pages/todo/CreateTodo";
 
 import Diary from "@pages/diaries/Diary";
 import DiaryCreate from "@pages/diaries/DiaryCreate";
@@ -15,6 +18,10 @@ import DiaryEdit from "@pages/diaries/DiaryEdit";
 
 import SimulationProgress from "@pages/simulation/SimulationProgress";
 import Simulation from "@pages/simulation/Simulation";
+
+import BifProfile from "@pages/profile/BifProfile";
+import GuardianProfile from "@pages/profile/GuardianProfile";
+import GuardianStats from "@pages/profile/GuardianStats";
 
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
@@ -71,6 +78,30 @@ function App() {
             }
           />
           <Route
+            path="/todo/:id"
+            element={
+              <ProtectedRoute>
+                <TodoDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/new"
+            element={
+              <ProtectedRoute>
+                <CreateTodo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditTodo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/diaries"
             element={
               <ProtectedRoute>
@@ -118,12 +149,27 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/bif-profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <BifProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-profile"
+            element={
+              <ProtectedRoute>
+                <GuardianProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guardian-stats"
+            element={
+              <ProtectedRoute>
+                <GuardianStats />
               </ProtectedRoute>
             }
           />
