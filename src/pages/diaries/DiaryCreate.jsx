@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
@@ -20,56 +20,6 @@ export default function DiaryCreate() {
   const [showExitModal, setShowExitModal] = useState(false);
 
   const todayFormatted = formatDate(new Date().toISOString());
-
-  useEffect(() => {
-    if (!window.handleDiaryCreatePopState) {
-      window.handleDiaryCreatePopState = function (_event) {
-        const currentContent = window.currentDiaryCreateContent || "";
-
-        if (currentContent.trim()) {
-          const confirm = window.confirm(
-            "작성 중인 일기가 있습니다. 나가시겠습니까?",
-          );
-          if (!confirm) {
-            window.history.replaceState(null, "", window.location.href);
-          } else {
-            clearSelectedEmotion();
-            window.history.pushState(null, "", "/diaries");
-            navigate("/diaries");
-          }
-        }
-      };
-    }
-
-    window.history.replaceState(null, "", window.location.href);
-
-    if (!window.diaryCreatePopStateListenerAdded) {
-      window.addEventListener("popstate", window.handleDiaryCreatePopState);
-      window.diaryCreatePopStateListenerAdded = true;
-    }
-
-    return () => {};
-  }, [clearSelectedEmotion, navigate]);
-
-  useEffect(() => {
-    window.currentDiaryCreateContent = content;
-  }, [content]);
-
-  useEffect(() => {
-    function handleBeforeUnload(event) {
-      if (content.trim()) {
-        event.preventDefault();
-        event.returnValue =
-          "작성 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
-        return event.returnValue;
-      }
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [content]);
 
   const handleBack = () => {
     if (content.trim()) {
