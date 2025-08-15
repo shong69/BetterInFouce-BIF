@@ -12,8 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-import java.net.URI;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -58,8 +57,7 @@ public class DiaryController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody DiaryRequest request) {
         DiaryResponse response = diaryService.createDiary(userDetails.getBifId(), request);
-        URI location = URI.create("/api/diaries/" + response.getId());
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{diaryId}")

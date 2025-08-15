@@ -17,8 +17,6 @@ import java.util.Collections;
 @Slf4j
 @Component
 public class AzureContentSafetyClient {
-    
-    private static final Logger logger = LoggerFactory.getLogger(AzureContentSafetyClient.class);
 
     @Value("${spring.ai.azure.content-safety.endpoint:}")
     private String endpoint;
@@ -34,7 +32,7 @@ public class AzureContentSafetyClient {
 
     public ModerationResponse moderateText(String text) {
         if (!isConfigured()) {
-            logger.warn("Azure Content Safety API가 설정되지 않았습니다.");
+            log.warn("Azure Content Safety API가 설정되지 않았습니다.");
             return createDefaultResponse();
         }
         
@@ -46,7 +44,7 @@ public class AzureContentSafetyClient {
 
             String url = endpoint + "/contentsafety/text:analyze?api-version=2024-09-01";
 
-            logger.info("Azure Content Safety API 호출 시작: {}", url);
+            log.info("Azure Content Safety API 호출 시작: {}", url);
             
             ResponseEntity<ModerationResponse> response = restTemplate.exchange(
                 url,
@@ -56,21 +54,21 @@ public class AzureContentSafetyClient {
             );
             
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                logger.info("Azure Content Safety API 호출 성공");
+                log.info("Azure Content Safety API 호출 성공");
                 return response.getBody();
             } else {
-                logger.error("Azure Content Safety API 응답이 비어있거나 실패: {}", response.getStatusCode());
+                log.error("Azure Content Safety API 응답이 비어있거나 실패: {}", response.getStatusCode());
                 return createDefaultResponse();
             }
             
         } catch (HttpClientErrorException e) {
-            logger.error("Azure Content Safety API HTTP 오류: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("Azure Content Safety API HTTP 오류: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             return createDefaultResponse();
         } catch (ResourceAccessException e) {
-            logger.error("Azure Content Safety API 연결 오류: {}", e.getMessage());
+            log.error("Azure Content Safety API 연결 오류: {}", e.getMessage());
             return createDefaultResponse();
         } catch (Exception e) {
-            logger.error("Azure Content Safety API 예상치 못한 오류: {}", e.getMessage(), e);
+            log.error("Azure Content Safety API 예상치 못한 오류: {}", e.getMessage(), e);
             return createDefaultResponse();
         }
     }

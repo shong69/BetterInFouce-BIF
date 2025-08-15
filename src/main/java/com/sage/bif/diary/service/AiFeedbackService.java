@@ -55,7 +55,7 @@ public class AiFeedbackService {
         String aiFeedbackContent = generateAiFeedback(diary.getContent(), diary.getEmotion(), feedback);
 
         feedback.setContent(aiFeedbackContent);
-
+        aiFeedbackRepository.save(feedback);
         log.info("AI 피드백 생성 완료 - 일기 ID: {}", diary.getId());
     }
 

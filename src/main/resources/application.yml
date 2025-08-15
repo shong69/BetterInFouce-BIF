@@ -1,8 +1,6 @@
 spring:
   profiles:
     active: dev
-    include:
-    - application-secret.yml
   application:
     name: bif
 

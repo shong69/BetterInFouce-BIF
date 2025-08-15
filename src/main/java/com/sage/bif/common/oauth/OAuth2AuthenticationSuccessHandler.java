@@ -57,21 +57,16 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "사용자 정보를 가져올 수 없습니다.");
             return;
         }
-        System.out.println("userInfo에서"+userInfo.getEmail());
 
         String email = userInfo.getEmail();
         String providerUniqueId = userInfo.getId();
 
-        System.out.println("email로 잘 들어감"+email);
 
         Optional<SocialLogin> existingSocialLogin = socialLoginService.findByProviderUniqueId(providerUniqueId);
 
         if (existingSocialLogin.isPresent()) {
-            System.out.println("handleExistingUser request 들어감"+request);
-            System.out.println("handleExistingUser response 들어감"+response);
             handleExistingUser(existingSocialLogin.get(), providerUniqueId, registrationId, request, response);
         } else {
-            System.out.println("handleNewUser로 들어감"+email);
             handleNewUser(email, providerUniqueId, registrationId, request, response);
         }
     }
@@ -81,7 +76,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                                     HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         Optional<com.sage.bif.user.entity.Bif> bif = bifService.findBySocialId(socialLogin.getSocialId());
-        System.out.println("여기여기");
         if (bif.isPresent()) {
             loginLogService.recordLogin(socialLogin.getSocialId());
             processBifLogin(bif.get().getBifId(), bif.get().getNickname(),
@@ -96,7 +90,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                         providerUniqueId, registrationId,
                         socialLogin.getSocialId(), request, response);
             } else {
-                System.out.println("이제 여기 간다, handleIncompleteRegistration");
                 handleIncompleteRegistration(socialLogin, providerUniqueId, registrationId, request, response);
             }
         }
@@ -151,7 +144,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        System.out.println("여기서 메일이?"+socialLogin.getEmail());
 
         response.sendRedirect(frontendUrl + "/login/select-role");
     }
@@ -169,7 +161,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
 
-        System.out.println("여기여기"+email);
         response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
