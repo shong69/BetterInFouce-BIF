@@ -17,12 +17,12 @@ public class SimulationResponse {
     private String title;
     private String description;
     private String category;
+    private Boolean isActive;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static SimulationResponse from(Simulation simulation) {
-
+    public static SimulationResponse from(Simulation simulation, Boolean isActive) {
         return SimulationResponse.builder()
                 .id(simulation.getId())
                 .title(simulation.getTitle())
@@ -30,7 +30,12 @@ public class SimulationResponse {
                 .category(simulation.getCategory())
                 .createdAt(simulation.getCreatedAt())
                 .updatedAt(simulation.getUpdatedAt())
+                .isActive(isActive)
                 .build();
+    }
+
+    public static SimulationResponse from(Simulation simulation) {
+        return from(simulation, false);
     }
 
 }

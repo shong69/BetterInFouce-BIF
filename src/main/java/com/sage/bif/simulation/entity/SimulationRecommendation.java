@@ -3,6 +3,7 @@ package com.sage.bif.simulation.entity;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
@@ -13,10 +14,9 @@ import lombok.*;
 @Entity
 @Table(name = "simulation_recommendation")
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class SimulationRecommendation {
 
     @Id
@@ -36,7 +36,8 @@ public class SimulationRecommendation {
     @JoinColumn(name = "simulation_id", nullable = false)
     private Simulation simulation;
 
-    @Column(name = "is_active", nullable = false)
+
+    @Column(name = "is_active", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isActive;
 
     @CreatedDate

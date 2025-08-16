@@ -6,10 +6,11 @@ import com.sage.bif.simulation.dto.response.SimulationDetailsResponse;
 import com.sage.bif.simulation.dto.response.SimulationRecommendationResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SimulationService {
 
-    List<SimulationResponse> getAllSimulations();
+    List<SimulationResponse> getAllSimulations(Long guardianId, Long bifId);
 
     String startSimulation(Long simulationId);
 
@@ -17,13 +18,10 @@ public interface SimulationService {
 
     SimulationDetailsResponse getSimulationDetails(Long simulationId);
 
-
     SimulationRecommendationResponse clickRecommendation(Long guardianId, Long bifId, Long simulationId);
 
-    List<Long> getActiveRecommendationIdsForBif(Long bifId);
-
-    void recommendSimulation(Long simulationId);
-
     String getFeedbackText(Long simulationId, int score);
+
+    Map<String, Object> convertTextToSpeech(String text, String voiceName) throws Exception;
 
 }

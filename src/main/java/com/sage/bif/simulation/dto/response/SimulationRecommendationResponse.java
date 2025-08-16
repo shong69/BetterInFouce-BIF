@@ -18,4 +18,3 @@ public class SimulationRecommendationResponse {
     private Boolean isActive;
 
 }
-

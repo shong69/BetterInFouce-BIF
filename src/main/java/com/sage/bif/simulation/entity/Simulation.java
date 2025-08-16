@@ -17,7 +17,7 @@ public class Simulation {
     @Column(name = "simulation_id")
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", nullable = false, length = 50)
     private String title;
 
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
