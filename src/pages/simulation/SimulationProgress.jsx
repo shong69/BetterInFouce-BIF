@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { simulationService } from "@services/simulationService";
+import { useUserStore } from "@stores/userStore";
 
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
+import GuardianTabBar from "@components/common/GuardianTabBar";
 import Bubble from "@components/common/Bubble";
 import BackButton from "@components/ui/BackButton";
 import logo2 from "@assets/logo2.png";
@@ -30,6 +32,7 @@ function ProgressBar({ progress = 0, label = "진행도" }) {
 export default function SimulationProgress() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useUserStore();
 
   const [simulation, setSimulation] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -46,6 +49,9 @@ export default function SimulationProgress() {
   const sessionCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
+
+  const userRole = user?.userRole;
+  const isGuardian = userRole === "GUARDIAN";
 
   useEffect(
     function () {
@@ -332,7 +338,7 @@ export default function SimulationProgress() {
     return (
       <>
         <Header />
-        <TabBar />
+        {isGuardian ? <GuardianTabBar /> : <TabBar />}
       </>
     );
   }
@@ -580,7 +586,7 @@ export default function SimulationProgress() {
         </div>
       )}
 
-      <TabBar />
+      {isGuardian ? <GuardianTabBar /> : <TabBar />}
     </>
   );
 }

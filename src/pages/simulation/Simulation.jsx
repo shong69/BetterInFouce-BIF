@@ -4,6 +4,7 @@ import { simulationService } from "@services/simulationService";
 import { useUserStore } from "@stores/userStore";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
+import GuardianTabBar from "@components/common/GuardianTabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import SimulationCard from "@pages/simulation/components/SimulationCard";
 
@@ -104,7 +105,7 @@ export default function Simulation() {
       <>
         <LoadingSpinner />
         <Header />
-        <TabBar />
+        {isGuardian ? <GuardianTabBar /> : <TabBar />}
       </>
     );
   }
@@ -119,7 +120,7 @@ export default function Simulation() {
             <div className="text-gray-600">{error}</div>
           </div>
         </div>
-        <TabBar />
+        {isGuardian ? <GuardianTabBar /> : <TabBar />}
       </>
     );
   }
@@ -133,17 +134,6 @@ export default function Simulation() {
         <div className="text-black-600 text-[13px] font-medium">
           {getCurrentDate()}
         </div>
-        {isGuardian && (
-          <button
-            onClick={function () {
-              navigate("/guardian/simulation");
-            }}
-            className="text-xs text-gray-500 transition-colors hover:text-gray-700"
-            title="시뮬레이션 관리"
-          >
-            관리
-          </button>
-        )}
       </div>
 
       <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
@@ -276,7 +266,7 @@ export default function Simulation() {
           </div>
         )}
       </main>
-      <TabBar />
+      {isGuardian ? <GuardianTabBar /> : <TabBar />}
     </>
   );
 }
