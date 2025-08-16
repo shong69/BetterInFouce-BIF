@@ -35,7 +35,7 @@ export default function SimulationProgress() {
   const { user } = useUserStore();
 
   const [simulation, setSimulation] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
+  const [simrunId, setsimrunId] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
@@ -46,7 +46,7 @@ export default function SimulationProgress() {
   const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
   const conversationRef = useRef(null);
-  const sessionCreatedRef = useRef(false);
+  const simrunCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
 
@@ -61,37 +61,37 @@ export default function SimulationProgress() {
 
       isInitializedRef.current = true;
 
-      async function loadSimulationAndStartSession() {
+      async function loadSimulationAndStartsimrun() {
         try {
-          const sessionKey = `sim_${id}_session`;
-          const existingSessionId = localStorage.getItem(sessionKey);
+          const simrunKey = `sim_${id}_simrun`;
+          const existingsimrunId = localStorage.getItem(simrunKey);
 
-          if (existingSessionId) {
-            setSessionId(existingSessionId);
-            sessionCreatedRef.current = true;
+          if (existingsimrunId) {
+            setsimrunId(existingsimrunId);
+            simrunCreatedRef.current = true;
             const totalKey = `sim_${id}_total`;
             localStorage.setItem(totalKey, "0");
             setScore(0);
           } else {
-            clearAllSessions();
+            clearAllsimruns();
             try {
               const startRes = await simulationService.startSimulation(
                 parseInt(id),
               );
 
-              const startSessionId = startRes?.data || startRes?.sessionId;
+              const startsimrunId = startRes?.data || startRes?.simrunId;
 
-              if (startSessionId) {
-                setSessionId(startSessionId);
-                localStorage.setItem(sessionKey, startSessionId);
-                sessionCreatedRef.current = true;
+              if (startsimrunId) {
+                setsimrunId(startsimrunId);
+                localStorage.setItem(simrunKey, startsimrunId);
+                simrunCreatedRef.current = true;
 
                 const totalKey = `sim_${id}_total`;
                 localStorage.setItem(totalKey, "0");
                 setScore(0);
               }
-            } catch (sessionError) {
-              throw ("세션 생성 실패:", sessionError);
+            } catch (simrunError) {
+              throw ("세션 생성 실패:", simrunError);
             }
           }
           try {
@@ -120,7 +120,7 @@ export default function SimulationProgress() {
         }
       }
 
-      loadSimulationAndStartSession();
+      loadSimulationAndStartsimrun();
     },
     [id],
   );
@@ -176,11 +176,11 @@ export default function SimulationProgress() {
       choiceScore =
         selectedChoice.choice_score || selectedChoice.choiceScore || 0;
       if (choiceScore > 0) {
-        const sessionKey = `sim_${id}_total`;
-        const existingTotal = Number(localStorage.getItem(sessionKey) || 0);
+        const simrunKey = `sim_${id}_total`;
+        const existingTotal = Number(localStorage.getItem(simrunKey) || 0);
         const newTotal = existingTotal + choiceScore;
 
-        localStorage.setItem(sessionKey, newTotal.toString());
+        localStorage.setItem(simrunKey, newTotal.toString());
         setScore(newTotal);
       }
     }
@@ -257,9 +257,9 @@ export default function SimulationProgress() {
     } else {
       const totalScore = localStorage.getItem(`sim_${id}_total`) || score;
 
-      if (sessionId) {
+      if (simrunId) {
         simulationService
-          .completeSimulation(sessionId, totalScore)
+          .completeSimulation(simrunId, totalScore)
           .then(function () {
             (async function () {
               try {
@@ -298,8 +298,8 @@ export default function SimulationProgress() {
   }
 
   function handleBackToMain() {
-    const sessionKey = `sim_${id}_session`;
-    localStorage.removeItem(sessionKey);
+    const simrunKey = `sim_${id}_simrun`;
+    localStorage.removeItem(simrunKey);
     navigate("/simulations");
   }
 
@@ -322,10 +322,10 @@ export default function SimulationProgress() {
     return `${month}월 ${date}일 ${day}요일`;
   }
 
-  function clearAllSessions() {
+  function clearAllsimruns() {
     const keys = Object.keys(localStorage);
     keys.forEach(function (key) {
-      if (key.startsWith("sim_") && key.endsWith("_session")) {
+      if (key.startsWith("sim_") && key.endsWith("_simrun")) {
         localStorage.removeItem(key);
       }
       if (key.startsWith("sim_") && key.endsWith("_total")) {
