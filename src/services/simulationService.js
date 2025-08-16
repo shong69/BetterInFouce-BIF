@@ -1,6 +1,91 @@
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
+
+const ttsState = {
+  isPlaying: false,
+  currentAudio: null,
+};
+const ttsListeners = new Set();
+
+const ttsManager = {
+  isPlaying() {
+    return ttsState.isPlaying;
+  },
+
+  addListener(callback) {
+    ttsListeners.add(callback);
+  },
+
+  removeListener(callback) {
+    ttsListeners.delete(callback);
+  },
+
+  notifyListeners() {
+    ttsListeners.forEach((callback) => callback(ttsState.isPlaying));
+  },
+
+  stopCurrent() {
+    if (ttsState.currentAudio) {
+      ttsState.currentAudio.pause();
+      ttsState.currentAudio.currentTime = 0;
+      ttsState.currentAudio = null;
+    }
+  },
+
+  async playTTS(audioContent) {
+    if (ttsState.isPlaying) {
+      return false;
+    }
+
+    this.stopCurrent();
+
+    ttsState.isPlaying = true;
+    this.notifyListeners();
+
+    try {
+      await this.playAudio(audioContent);
+      return true;
+    } finally {
+      ttsState.isPlaying = false;
+      ttsState.currentAudio = null;
+      this.notifyListeners();
+    }
+  },
+
+  playAudio(base64Audio) {
+    return new Promise((resolve, reject) => {
+      try {
+        const binaryString = atob(base64Audio);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const blob = new Blob([bytes], { type: "audio/mp3" });
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+
+        ttsState.currentAudio = audio;
+
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          resolve();
+        };
+
+        audio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          reject(new Error("오디오 재생 실패"));
+        };
+
+        audio.play().catch(reject);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+};
+
 export default function mapBackendToFrontend(backendData) {
   if (!Array.isArray(backendData)) {
     return [];
@@ -11,7 +96,7 @@ export default function mapBackendToFrontend(backendData) {
     const description = simulation?.description || "설명 없음";
     const id = simulation?.simulation_id || simulation?.id || 0;
     const category = simulation?.category || getCategoryFromTitle(title);
-    const isRecommended = simulation?.isActive || false;
+    const isActive = simulation?.isActive || false;
 
     return {
       id: id,
@@ -20,7 +105,7 @@ export default function mapBackendToFrontend(backendData) {
       category: category,
       duration: getDurationByCategory(category),
       difficulty: getDifficultyByCategory(category),
-      isRecommended: isRecommended,
+      isActive: isActive,
       createdAt: simulation?.created_at || new Date().toISOString(),
       updatedAt: simulation?.updated_at || new Date().toISOString(),
     };
@@ -75,7 +160,17 @@ function getDifficultyByCategory(category) {
 export const simulationService = {
   getSimulations: async function () {
     try {
-      const response = await axios.get(`${API_BASE_URL}/simulations`);
+      const accessToken = sessionStorage.getItem("accessToken");
+
+      const headers = {};
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/simulations`, {
+        headers,
+      });
+
       if (response.data && response.data.success && response.data.data) {
         const backendData = response.data.data;
         return mapBackendToFrontend(backendData);
@@ -130,7 +225,7 @@ export const simulationService = {
 
       return simulation;
     } else {
-      throw new Error("시뮬레이션 상세 정보를 가져올 수 없습니다.");
+      throw Error("시뮬레이션 상세 정보를 가져올 수 없습니다.");
     }
   },
 
@@ -146,18 +241,6 @@ export const simulationService = {
     const response = await axios.get(
       `${API_BASE_URL}/simulations/${simulationId}/feedback`,
       { params: { score } },
-    );
-    return response.data;
-  },
-  submitChoice: async function (sessionId, choice, choiceId = null) {
-    const requestBody = { sessionId: sessionId, choice: choice };
-    if (choiceId) {
-      requestBody.choiceId = choiceId;
-    }
-
-    const response = await axios.post(
-      `${API_BASE_URL}/simulations/choice`,
-      requestBody,
     );
     return response.data;
   },
@@ -179,38 +262,212 @@ export const simulationService = {
     }
   },
 
-  getRecommendations: async function () {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/simulations/recommendations`,
-      );
-      if (response.data && response.data.success && response.data.data) {
-        return mapBackendToFrontend(response.data.data);
-      } else {
-        return [];
-      }
-    } catch {
-      return [];
+  recommendSimulation: async function (simulationId) {
+    const accessToken = sessionStorage.getItem("accessToken");
+    if (!accessToken) {
+      throw Error("인증 토큰이 없습니다. 로그인이 필요합니다.");
     }
-  },
 
-  recommendSimulation: async function (bifId, simulationId) {
+    const payload = JSON.parse(atob(accessToken.split(".")[1]));
+    const guardianId = payload.sub || payload.guardianId || payload.userId;
+    const bifId = payload.bifId || payload.connectedBifId;
+
+    if (!guardianId || !bifId) {
+      throw Error("토큰에서 사용자 정보를 찾을 수 없습니다.");
+    }
+
+    const requestBody = {
+      guardianId: guardianId,
+      bifId: Number(bifId),
+      simulationId: Number(simulationId),
+    };
+
     const response = await axios.post(
       `${API_BASE_URL}/simulations/recommendations`,
+      requestBody,
       {
-        bifId: bifId,
-        simulationId: simulationId,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       },
     );
+
     return response.data;
   },
 
-  getLinkedBifInfo: async function () {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/auth/linked-bif`);
-      return response.data;
-    } catch {
-      return null;
+  textToSpeech: async function (text, voiceName = null) {
+    if (!text || text.trim() === "") {
+      throw Error("텍스트가 필요합니다.");
     }
+
+    const requestBody = { text: text };
+
+    if (voiceName) {
+      requestBody.voiceName = voiceName;
+    }
+
+    const response = await axios.post(
+      `${API_BASE_URL}/simulations/tts`,
+      requestBody,
+    );
+
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data.audioContent;
+    } else {
+      throw Error("TTS 응답 형식 오류");
+    }
+  },
+
+  playTTS: async function (text, voiceName = null) {
+    if (!text || text.trim() === "" || ttsManager.isPlaying()) {
+      return false;
+    }
+
+    try {
+      const audioContent = await this.textToSpeech(text, voiceName);
+      return await ttsManager.playTTS(audioContent);
+    } catch {
+      return false;
+    }
+  },
+
+  tts: ttsManager,
+
+  getAvailableVoices: function () {
+    return [
+      {
+        id: "ko-KR-Chirp3-HD-Achernar",
+        name: "Achernar (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Achird",
+        name: "Achird (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Algenib",
+        name: "Algenib (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Algieba",
+        name: "Algieba (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Alnilam",
+        name: "Alnilam (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Aoede",
+        name: "Aoede (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Autonoe",
+        name: "Autonoe (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Callirrhoe",
+        name: "Callirrhoe (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Charon",
+        name: "Charon (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Despina",
+        name: "Despina (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Enceladus",
+        name: "Enceladus (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Erinome",
+        name: "Erinome (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Fenrir",
+        name: "Fenrir (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Kore",
+        name: "Kore (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Leda",
+        name: "Leda (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Lysithea",
+        name: "Lysithea (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Mimas",
+        name: "Mimas (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Oberon",
+        name: "Oberon (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Rhea",
+        name: "Rhea (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Tethys",
+        name: "Tethys (HD)",
+        gender: "female",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Titan",
+        name: "Titan (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+      {
+        id: "ko-KR-Chirp3-HD-Triton",
+        name: "Triton (HD)",
+        gender: "male",
+        type: "Chirp3-HD",
+      },
+    ];
   },
 };

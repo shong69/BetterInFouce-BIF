@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
 import { simulationService } from "@services/simulationService";
+
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
@@ -45,6 +45,7 @@ export default function SimulationProgress() {
   const conversationRef = useRef(null);
   const sessionCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
+  const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
 
   useEffect(
     function () {
@@ -139,19 +140,18 @@ export default function SimulationProgress() {
     [currentStep, simulation],
   );
 
-  function speakText(text) {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ko-KR";
-      utterance.rate = 1.0;
-      utterance.pitch = 2.5;
-      speechSynthesis.speak(utterance);
-    }
-  }
+  useEffect(function () {
+    const handleTTSStateChange = (isPlaying) => {
+      setIsPlayingGlobal(isPlaying);
+    };
 
-  function handleSpeakerClick(text) {
-    speakText(text);
-  }
+    simulationService.tts.addListener(handleTTSStateChange);
+    setIsPlayingGlobal(simulationService.tts.isPlaying());
+
+    return () => {
+      simulationService.tts.removeListener(handleTTSStateChange);
+    };
+  }, []);
 
   async function handleOptionSelect(optionIndex) {
     if (selectedOption !== null) return;
@@ -292,9 +292,6 @@ export default function SimulationProgress() {
   }
 
   function handleBackToMain() {
-    if ("speechSynthesis" in window) {
-      speechSynthesis.cancel();
-    }
     const sessionKey = `sim_${id}_session`;
     localStorage.removeItem(sessionKey);
     navigate("/simulations");
@@ -401,18 +398,34 @@ export default function SimulationProgress() {
                       </span>
                     </div>
                     <button
-                      className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
+                      className={`cursor-pointer transition-colors ${
+                        isPlayingGlobal
+                          ? "cursor-not-allowed text-blue-500"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
                       onClick={function () {
-                        handleSpeakerClick(item.message);
-                      }}
-                      onKeyDown={function (event) {
-                        if (event.key === "Enter" || event.key === " ") {
-                          handleSpeakerClick(item.message);
+                        if (!isPlayingGlobal) {
+                          simulationService.playTTS(
+                            item.message,
+                            "ko-KR-Chirp3-HD-Aoede",
+                          );
                         }
                       }}
-                      title="음성 재생"
+                      onKeyDown={function (event) {
+                        if (
+                          (event.key === "Enter" || event.key === " ") &&
+                          !isPlayingGlobal
+                        ) {
+                          simulationService.playTTS(
+                            item.message,
+                            "ko-KR-Chirp3-HD-Aoede",
+                          );
+                        }
+                      }}
+                      title={isPlayingGlobal ? "재생 중입니다..." : "음성 재생"}
+                      disabled={isPlayingGlobal}
                     >
-                      🔊
+                      {isPlayingGlobal ? "🔈" : "🔊"}
                     </button>
                   </div>
                 )}
@@ -511,7 +524,7 @@ export default function SimulationProgress() {
               <div className="relative mb-4 inline-block">
                 <img
                   src={logo2}
-                  alt="현북이"
+                  alt="현명한거북이"
                   className="h-32 w-32 object-contain"
                 />
                 <div className="absolute -top-2 -right-2">

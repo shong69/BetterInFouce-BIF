@@ -4,9 +4,6 @@ export default function SimulationCard({
   category = "일상",
   duration = "10분",
   onClick,
-  showRecommendButton = false,
-  onRecommend = null,
-  isRecommended = false,
   showThumbsUpButton = false,
   onThumbsUp = null,
   isThumbsUp = false,
@@ -47,15 +44,9 @@ export default function SimulationCard({
     }
   }
 
-  function handleRecommendClick(event) {
-    event.stopPropagation();
-    if (onRecommend) {
-      onRecommend(id);
-    }
-  }
-
   function handleThumbsUpClick(event) {
     event.stopPropagation();
+    console.log("현재 isThumbsUp 값:", isThumbsUp);
     if (onThumbsUp) {
       onThumbsUp(id);
     }
@@ -63,10 +54,12 @@ export default function SimulationCard({
 
   return (
     <div className="relative">
-      <button
+      <div
         className="w-full cursor-pointer rounded-xl bg-white p-3 pt-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -81,10 +74,10 @@ export default function SimulationCard({
             {showThumbsUpButton && (
               <button
                 onClick={handleThumbsUpClick}
-                className={`rounded-full p-1 transition-colors ${
+                className={`h-4 w-4 ${
                   isThumbsUp ? "text-primary" : "text-gray-400"
                 }`}
-                title={isThumbsUp ? "좋아요 취소" : "좋아요"}
+                title={isThumbsUp ? "추천 취소" : "추천"}
               >
                 <svg
                   className="h-4 w-4"
@@ -105,21 +98,7 @@ export default function SimulationCard({
             </div>
           </div>
         </div>
-      </button>
-
-      {showRecommendButton && (
-        <button
-          onClick={handleRecommendClick}
-          className={`absolute -top-2 -right-2 rounded-full px-2 py-1 text-xs font-medium transition-colors ${
-            isRecommended
-              ? "bg-primary text-white"
-              : "hover:bg-primary bg-gray-200 text-gray-700 hover:text-white"
-          }`}
-          title={isRecommended ? "추천됨" : "추천하기"}
-        >
-          {isRecommended ? "✓" : "추천"}
-        </button>
-      )}
+      </div>
     </div>
   );
 }

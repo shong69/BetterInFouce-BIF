@@ -1,3 +1,6 @@
+import { useState, useEffect } from "react";
+import { simulationService } from "@services/simulationService";
+
 export default function Bubble({
   message,
   onNextStep = null,
@@ -6,52 +9,46 @@ export default function Bubble({
   showSpeaker = true,
   speakerIcon = "🔊",
   showNextButton = true,
+  allowVoiceSelection = false,
 }) {
-  function speakText(text) {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ko-KR";
+  const [selectedVoice, setSelectedVoice] = useState("ko-KR-Chirp3-HD-Alnilam");
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false);
+  const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
 
-      utterance.rate = 1.1;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.9;
+  useEffect(() => {
+    const handleTTSStateChange = (isPlaying) => {
+      setIsPlayingGlobal(isPlaying);
+    };
 
-      const voices = speechSynthesis.getVoices();
+    simulationService.tts.addListener(handleTTSStateChange);
+    setIsPlayingGlobal(simulationService.tts.isPlaying());
 
-      const preferredVoiceName = "Google 한국의";
-
-      let selectedVoice = voices.find(
-        (voice) => voice.name === preferredVoiceName,
-      );
-
-      if (!selectedVoice) {
-        selectedVoice =
-          voices.find(
-            (voice) =>
-              voice.lang.includes("ko") &&
-              voice.name.toLowerCase().includes("female"),
-          ) || voices.find((voice) => voice.lang.includes("ko"));
-      }
-
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-
-      speechSynthesis.speak(utterance);
-    }
-  }
+    return () => {
+      simulationService.tts.removeListener(handleTTSStateChange);
+    };
+  }, []);
 
   function handleSpeakerClick() {
-    if (message) {
-      speakText(message);
+    if (message && !isPlayingGlobal) {
+      simulationService.playTTS(message, selectedVoice);
     }
   }
 
   function handleSpeakerKeyDown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      handleSpeakerClick();
+    if ((event.key === "Enter" || event.key === " ") && !isPlayingGlobal) {
+      simulationService.playTTS(message, selectedVoice);
     }
   }
+
+  function handleVoiceChange(voiceId) {
+    if (isPlayingGlobal) return;
+
+    setSelectedVoice(voiceId);
+    setShowVoiceMenu(false);
+    simulationService.playTTS("안녕하세요! 새로운 목소리입니다.", voiceId);
+  }
+
+  const availableVoices = simulationService.getAvailableVoices();
 
   return (
     <div className="flex max-w-[85%] items-start gap-2">
@@ -65,6 +62,48 @@ export default function Bubble({
           <span className="text-[13px] font-semibold text-gray-800">
             현명한 거북이
           </span>
+          {allowVoiceSelection && (
+            <div className="relative">
+              <button
+                onClick={() =>
+                  !isPlayingGlobal && setShowVoiceMenu(!showVoiceMenu)
+                }
+                className={`text-xs hover:text-gray-700 ${
+                  isPlayingGlobal
+                    ? "cursor-not-allowed text-gray-300"
+                    : "text-gray-500"
+                }`}
+                title={
+                  isPlayingGlobal
+                    ? "재생 중에는 음성 변경이 불가능합니다"
+                    : "음성 변경"
+                }
+                disabled={isPlayingGlobal}
+              >
+                🎵
+              </button>
+              {showVoiceMenu && !isPlayingGlobal && (
+                <div className="absolute top-full left-0 z-10 mt-1 min-w-[200px] rounded-lg border bg-white shadow-lg">
+                  <div className="border-b p-2 text-xs text-gray-600">
+                    음성 선택
+                  </div>
+                  {availableVoices.map((voice) => (
+                    <button
+                      key={voice.id}
+                      onClick={() => handleVoiceChange(voice.id)}
+                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 ${
+                        selectedVoice === voice.id
+                          ? "bg-blue-50 text-blue-600"
+                          : ""
+                      }`}
+                    >
+                      {voice.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <span className="mb-3 block text-sm text-gray-800">{message}</span>
         {!isHidden && showNextButton && onNextStep && (
@@ -79,14 +118,21 @@ export default function Bubble({
         )}
       </div>
       {showSpeaker && message && (
-        <button
-          className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
-          onClick={handleSpeakerClick}
-          onKeyDown={handleSpeakerKeyDown}
-          title="음성 재생"
-        >
-          {speakerIcon}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            className={`cursor-pointer transition-colors ${
+              isPlayingGlobal
+                ? "cursor-not-allowed text-blue-500"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+            onClick={handleSpeakerClick}
+            onKeyDown={handleSpeakerKeyDown}
+            title={isPlayingGlobal ? "재생 중입니다..." : "음성 재생"}
+            disabled={isPlayingGlobal}
+          >
+            {isPlayingGlobal ? "🔈" : speakerIcon}
+          </button>
+        </div>
       )}
     </div>
   );

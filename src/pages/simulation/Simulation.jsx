@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { simulationService } from "@services/simulationService";
 import { useUserStore } from "@stores/userStore";
-import { useToastStore } from "@stores/toastStore";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
@@ -10,14 +9,10 @@ import SimulationCard from "@pages/simulation/components/SimulationCard";
 
 export default function Simulation() {
   const [simulations, setSimulations] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [linkedBifInfo, setLinkedBifInfo] = useState(null);
   const navigate = useNavigate();
-
   const { user } = useUserStore();
-  const { showSuccess, showError } = useToastStore();
 
   const userRole = user?.userRole;
   const isBif = userRole === "BIF";
@@ -31,35 +26,22 @@ export default function Simulation() {
           setError(null);
 
           const simulationsData = await simulationService.getSimulations();
-          setSimulations(simulationsData);
-
-          if (isBif) {
-            try {
-              const recommendationsData =
-                await simulationService.getRecommendations();
-              setRecommendations(recommendationsData);
-            } catch (recError) {
-              throw ("추천 목록 조회 실패:", recError);
-            }
-          } else if (isGuardian) {
-            try {
-              const bifInfo = await simulationService.getLinkedBifInfo();
-              setLinkedBifInfo(bifInfo);
-            } catch (bifError) {
-              throw ("연동된 BIF 정보 조회 실패:", bifError);
-            }
-          }
-        } catch (error) {
+          const processedSimulations = simulationsData.map((sim) => ({
+            ...sim,
+            isActive: sim.isActive === null ? false : sim.isActive,
+          }));
+          setSimulations(processedSimulations);
+        } catch (err) {
           if (
-            error.message?.includes("Network Error") ||
-            error.code === "ERR_NETWORK"
+            err.message?.includes("Network Error") ||
+            err.code === "ERR_NETWORK"
           ) {
             setError(
               "서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.",
             );
-          } else if (error.response?.status === 403) {
+          } else if (err.response?.status === 403) {
             setError("접근 권한이 없습니다.");
-          } else if (error.response?.status === 401) {
+          } else if (err.response?.status === 401) {
             setError("로그인이 필요합니다.");
           } else {
             setError("시뮬레이션을 불러오는데 실패했습니다.");
@@ -71,7 +53,7 @@ export default function Simulation() {
 
       fetchData();
     },
-    [isBif, isGuardian],
+    [user],
   );
 
   function handleStartSimulation(simulationId) {
@@ -79,32 +61,20 @@ export default function Simulation() {
   }
 
   async function handleRecommendSimulation(simulationId) {
-    if (!isGuardian || !linkedBifInfo?.bifId) {
-      showError("연동된 BIF 정보가 없습니다.");
+    const responseData =
+      await simulationService.recommendSimulation(simulationId);
+
+    const newIsActive = responseData?.data?.isActive;
+
+    if (newIsActive === undefined) {
       return;
     }
 
-    try {
-      await simulationService.recommendSimulation(
-        linkedBifInfo.bifId,
-        simulationId,
-      );
-      showSuccess("시뮬레이션을 추천했습니다.");
-
-      const updatedSimulations = simulations.map((sim) =>
-        sim.id === simulationId ? { ...sim, isRecommended: true } : sim,
-      );
-      setSimulations(updatedSimulations);
-    } catch {
-      showError("추천에 실패했습니다. 다시 시도해주세요.");
-    }
-  }
-
-  async function handleThumbsUpSimulation(simulationId) {
-    const updatedSimulations = simulations.map((sim) =>
-      sim.id === simulationId ? { ...sim, isThumbsUp: !sim.isThumbsUp } : sim,
+    setSimulations((prevSimulations) =>
+      prevSimulations.map((sim) =>
+        sim.id === simulationId ? { ...sim, isActive: newIsActive } : sim,
+      ),
     );
-    setSimulations(updatedSimulations);
   }
 
   function getCurrentDate() {
@@ -115,12 +85,19 @@ export default function Simulation() {
     return `${month}월 ${date}일 ${day}요일`;
   }
 
-  const bifRecommendedSimulations = isBif ? recommendations : [];
+  const bifRecommendedSimulations = isBif
+    ? simulations.filter((sim) => sim.isActive)
+    : [];
   const bifOtherSimulations = isBif
-    ? simulations.filter((sim) => !sim.isRecommended)
+    ? simulations.filter((sim) => !sim.isActive)
     : [];
 
-  const guardianSimulations = isGuardian ? simulations : [];
+  const guardianRecommendedSimulations = isGuardian
+    ? simulations.filter((sim) => sim.isActive)
+    : [];
+  const guardianOtherSimulations = isGuardian
+    ? simulations.filter((sim) => !sim.isActive)
+    : [];
 
   if (loading) {
     return (
@@ -186,9 +163,9 @@ export default function Simulation() {
                       category={simulation.category}
                       duration={simulation.duration}
                       onClick={handleStartSimulation}
-                      showThumbsUpButton={true}
-                      onThumbsUp={handleThumbsUpSimulation}
-                      isThumbsUp={simulation.isThumbsUp}
+                      showThumbsUpButton={false}
+                      onThumbsUp={handleRecommendSimulation}
+                      isThumbsUp={simulation.isActive}
                     />
                   ))}
                 </div>
@@ -209,9 +186,9 @@ export default function Simulation() {
                       category={simulation.category}
                       duration={simulation.duration}
                       onClick={handleStartSimulation}
-                      showThumbsUpButton={true}
-                      onThumbsUp={handleThumbsUpSimulation}
-                      isThumbsUp={simulation.isThumbsUp}
+                      showThumbsUpButton={false}
+                      onThumbsUp={handleRecommendSimulation}
+                      isThumbsUp={simulation.isActive}
                     />
                   ))}
                 </div>
@@ -222,21 +199,13 @@ export default function Simulation() {
 
         {isGuardian && (
           <>
-            {linkedBifInfo && (
-              <div className="mb-4 rounded-lg bg-blue-50 p-3">
-                <p className="text-sm text-blue-800">
-                  연동된 BIF: {linkedBifInfo.nickname || linkedBifInfo.bifId}
-                </p>
-              </div>
-            )}
-
-            {guardianSimulations.length > 0 && (
+            {guardianRecommendedSimulations.length > 0 && (
               <section className="mb-8 w-full">
                 <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                  시뮬레이션 목록
+                  추천
                 </h2>
                 <div className="w-full space-y-3">
-                  {guardianSimulations.map((simulation) => (
+                  {guardianRecommendedSimulations.map((simulation) => (
                     <SimulationCard
                       key={simulation.id}
                       id={simulation.id}
@@ -244,12 +213,31 @@ export default function Simulation() {
                       category={simulation.category}
                       duration={simulation.duration}
                       onClick={handleStartSimulation}
-                      showRecommendButton={true}
-                      onRecommend={handleRecommendSimulation}
-                      isRecommended={simulation.isRecommended}
                       showThumbsUpButton={true}
-                      onThumbsUp={handleThumbsUpSimulation}
-                      isThumbsUp={simulation.isThumbsUp}
+                      onThumbsUp={handleRecommendSimulation}
+                      isThumbsUp={simulation.isActive}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+            {guardianOtherSimulations.length > 0 && (
+              <section className="mb-8 w-full">
+                <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
+                  주제
+                </h2>
+                <div className="w-full space-y-3">
+                  {guardianOtherSimulations.map((simulation) => (
+                    <SimulationCard
+                      key={simulation.id}
+                      id={simulation.id}
+                      title={simulation.title}
+                      category={simulation.category}
+                      duration={simulation.duration}
+                      onClick={handleStartSimulation}
+                      showThumbsUpButton={true}
+                      onThumbsUp={handleRecommendSimulation}
+                      isThumbsUp={simulation.isActive}
                     />
                   ))}
                 </div>
