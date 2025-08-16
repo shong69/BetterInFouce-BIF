@@ -2,14 +2,13 @@ import { useState, useRef } from "react";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
 import { getRandomColorByTitle } from "@utils/colorUtils";
-import { HiChevronRight, HiChevronDown } from "react-icons/hi";
+import { HiChevronDown } from "react-icons/hi";
+import { useUserStore } from "@stores";
 
 export default function Card({
   id,
   title,
-  category,
   hasOrder,
-  duration,
   subTodos = [],
   type = "todo",
   isCompleted = false,
@@ -17,6 +16,7 @@ export default function Card({
   onDelete,
   onClick,
 }) {
+  const { user } = useUserStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -111,69 +111,6 @@ export default function Card({
     setIsExpanded(!isExpanded);
   }
 
-  function renderContent() {
-    if (type === "simulation") {
-      return (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className={`text-lg font-medium ${colors.title} flex-1`}>
-              {title}
-            </h3>
-            <span
-              className={`rounded-full px-3 py-1 text-sm ${colors.tag} ml-3`}
-            >
-              {category}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">약 {duration}분</p>
-            <HiChevronRight className="h-5 w-5 text-green-600" />
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className={`text-lg font-medium ${colors.title}`}>{title}</h3>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
-              {hasOrder ? "순서 있음" : "체크리스트"}
-            </span>
-            {subTodos.length > 0 && (
-              <button
-                onClick={handleToggle}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
-              >
-                <HiChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {isExpanded && (
-          <div className="mt-4">
-            {subTodos.map((item) => (
-              <div
-                key={item.subTodoId}
-                className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
-              >
-                <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
-                <span>{item.title}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div
       className={`relative ${type === "todo" ? "overflow-hidden" : ""} rounded-xl`}
@@ -194,20 +131,22 @@ export default function Card({
           >
             <EditButton />
           </div>
-          <div
-            onClick={handleDelete}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                handleDelete(e);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
-            aria-label="할 일 삭제"
-          >
-            <DeleteButton />
-          </div>
+          {user?.userRole === "BIF" && (
+            <div
+              onClick={handleDelete}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleDelete(e);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
+              aria-label="할 일 삭제"
+            >
+              <DeleteButton />
+            </div>
+          )}
         </div>
       )}
 
@@ -232,7 +171,42 @@ export default function Card({
         tabIndex={0}
         aria-label={`${title} 카드`}
       >
-        {renderContent()}
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className={`text-lg font-medium ${colors.title}`}>{title}</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
+                {hasOrder ? "순서 있음" : "체크리스트"}
+              </span>
+              {subTodos.length > 0 && (
+                <button
+                  onClick={handleToggle}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
+                >
+                  <HiChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {isExpanded && (
+            <div className="mt-4">
+              {subTodos.map((item) => (
+                <div
+                  key={item.subTodoId}
+                  className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
+                >
+                  <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
+                  <span>{item.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

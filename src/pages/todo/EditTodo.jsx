@@ -148,8 +148,6 @@ export default function EditTodo() {
 
   useEffect(() => {
     async function fetchTodoDetail() {
-      showLoading("할 일 정보를 불러오는 중...");
-
       try {
         const data = await getTodoDetail(id);
 
@@ -176,13 +174,12 @@ export default function EditTodo() {
         showError("할 일을 불러오는데 실패했습니다.");
         navigate("/");
       } finally {
-        hideLoading();
         setIsLoading(false);
       }
     }
 
     fetchTodoDetail();
-  }, [id, navigate, showError, showLoading, hideLoading]);
+  }, [id, navigate, showError]);
 
   function validateTitle(title) {
     const trimmed = title.trim();
@@ -241,7 +238,6 @@ export default function EditTodo() {
       today.setHours(0, 0, 0, 0);
       selectedDate.setHours(0, 0, 0, 0);
 
-      // 오늘 날짜일 때만 시간 검증
       if (selectedDate.getTime() === today.getTime()) {
         const currentTime = new Date();
 
