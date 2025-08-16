@@ -1,9 +1,7 @@
 import { useToastStore } from "@stores/toastStore";
 import { useEffect } from "react";
 
-function ToastItem({ toast }) {
-  const { removeToast } = useToastStore();
-
+function ToastItem({ toast, removeToast, typeStyles, icons, positionStyles }) {
   useEffect(() => {
     if (toast.duration > 0) {
       const timer = setTimeout(() => {
@@ -14,6 +12,43 @@ function ToastItem({ toast }) {
     }
   }, [toast.id, toast.duration, removeToast]);
 
+  return (
+    <div
+      className={`fixed z-[9999] animate-bounce ${positionStyles[toast.position]} transition-all duration-300 ease-in-out`}
+    >
+      <div
+        className={`flex items-center space-x-3 rounded-lg px-4 py-3 shadow-lg ${typeStyles[toast.type]} min-w-[300px] cursor-pointer`}
+        onClick={toast.onClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toast.onClick?.();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`${toast.type} notification: ${toast.message}`}
+      >
+        <span className="text-lg font-bold">{icons[toast.type]}</span>
+        <span className="flex-1 text-sm font-medium">{toast.message}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removeToast(toast.id);
+          }}
+          className="text-lg font-bold opacity-70 transition-opacity hover:opacity-100"
+          aria-label="Close notification"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function ToastNotification() {
+  const { toasts, removeToast } = useToastStore();
+
   const typeStyles = {
     success: "bg-primary text-white",
     error: "bg-warning text-white",
@@ -23,7 +58,7 @@ function ToastItem({ toast }) {
 
   const icons = {
     success: "✓",
-    error: "✕",
+    error: "!",
     warning: "⚠",
     info: "ℹ",
   };
@@ -38,32 +73,16 @@ function ToastItem({ toast }) {
   };
 
   return (
-    <div
-      className={`fixed z-[9999] animate-bounce ${positionStyles[toast.position]} transition-all duration-300 ease-in-out`}
-    >
-      <div
-        className={`flex items-center space-x-3 rounded-lg px-4 py-3 shadow-lg ${typeStyles[toast.type]} min-w-[300px]`}
-      >
-        <span className="text-lg font-bold">{icons[toast.type]}</span>
-        <span className="flex-1 text-sm font-medium">{toast.message}</span>
-        <button
-          onClick={() => removeToast(toast.id)}
-          className="text-lg font-bold opacity-70 transition-opacity hover:opacity-100"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export default function ToastNotification() {
-  const { toasts } = useToastStore();
-
-  return (
     <>
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} />
+        <ToastItem
+          key={toast.id}
+          toast={toast}
+          removeToast={removeToast}
+          typeStyles={typeStyles}
+          icons={icons}
+          positionStyles={positionStyles}
+        />
       ))}
     </>
   );

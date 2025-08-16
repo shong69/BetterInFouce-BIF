@@ -11,7 +11,8 @@ export const useToastStore = create((set, get) => ({
       message,
       type,
       position: options.position || "top-center",
-      duration: options.duration || 3000,
+      duration: options.duration !== undefined ? options.duration : 3000,
+      onClick: options.onClick,
     };
 
     set((state) => ({
