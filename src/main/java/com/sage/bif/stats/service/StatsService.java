@@ -1,20 +1,19 @@
 package com.sage.bif.stats.service;
 
-import com.sage.bif.stats.dto.response.GuardianStatsResponse;
 import com.sage.bif.stats.dto.response.StatsResponse;
+import com.sage.bif.stats.dto.response.GuardianStatsResponse;
 
 import java.time.LocalDateTime;
 
 public interface StatsService {
 
-    StatsResponse getMonthlyStats(final Long bifId);
+    StatsResponse getMonthlyStats(Long bifId);
 
-    GuardianStatsResponse getGuardianStats(final Long bifId);
+    GuardianStatsResponse getGuardianStats(Long bifId);
 
-    void generateMonthlyStats(final Long bifId, final LocalDateTime yearMonth);
-    
-    void generateMonthlyEmotionStatistics(final Long bifId, final LocalDateTime yearMonth);
+    void generateMonthlyStats(Long bifId, LocalDateTime yearMonth);
 
-    void updateRealTimeStats(final Long bifId);
+    void updateStatsWithKeywords(Long bifId, String diaryContent);
 
+    void updateRealTimeStats(Long bifId);
 }

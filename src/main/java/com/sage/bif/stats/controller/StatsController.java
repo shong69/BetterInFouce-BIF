@@ -43,16 +43,12 @@ public class StatsController {
     })
     public ResponseEntity<ApiResponse<StatsResponse>> getMonthlyStats(
             @AuthenticationPrincipal final UserDetails userDetails,
-            @RequestParam(required = false) final Long bifId,
-            @RequestParam(required = false) final Integer year,
-            @RequestParam(required = false) final Integer month) {
+            @RequestParam(required = false) final Long bifId) {
 
-        if (!(userDetails instanceof CustomUserDetails)) {
+        if (!(userDetails instanceof CustomUserDetails customUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.BIF) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -83,12 +79,10 @@ public class StatsController {
             @AuthenticationPrincipal final UserDetails userDetails,
             @RequestParam final Long bifId) {
 
-        if (!(userDetails instanceof CustomUserDetails)) {
+        if (!(userDetails instanceof CustomUserDetails customUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.GUARDIAN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

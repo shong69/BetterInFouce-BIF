@@ -19,9 +19,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sage.bif.diary.repository.DiaryRepository;
 import com.sage.bif.diary.model.Emotion;
 import com.sage.bif.stats.util.EmotionMapper;
@@ -137,6 +137,12 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    public void updateStatsWithKeywords(final Long bifId, final String diaryContent) {
+        // 키워드 업데이트 로직은 나중에 구현
+        log.info("BIF ID {}의 키워드 기반 통계 업데이트 시작", bifId);
+    }
+
+    @Override
     @Transactional
     public void updateRealTimeStats(final Long bifId) {
         log.info("BIF ID {}의 실시간 통계 갱신 시작", bifId);
@@ -154,7 +160,6 @@ public class StatsServiceImpl implements StatsService {
         }
     }
 
-    @Override
     public void generateMonthlyEmotionStatistics(final Long bifId, final LocalDateTime yearMonth) {
         final Optional<Stats> existingStats = statsRepository.findByBifIdAndYearMonth(bifId, yearMonth);
 
@@ -189,12 +194,40 @@ public class StatsServiceImpl implements StatsService {
     }
 
     private StatsResponse createEmptyStatsResponse(final Long bifId, final LocalDateTime yearMonth) {
-        return StatsResponse.builder()
-                .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
-                .emotionRatio(Collections.emptyList())
-                .topKeywords(Collections.emptyList())
-                .monthlyChange(Collections.emptyList())
-                .build();
+        try {
+            var bifOpt = bifRepository.findById(bifId);
+            String nickname = bifOpt.map(Bif::getNickname).orElse("BIF");
+            String joinDate = bifOpt.map(bif -> bif.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))).orElse("");
+            String connectionCode = bifOpt.map(Bif::getConnectionCode).orElse("");
+            
+            int totalDiaryCount = calculateTotalDiaryCount(bifId);
+
+            return StatsResponse.builder()
+                    .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
+                    .guardianAdviceText("BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.")
+                    .emotionRatio(Collections.emptyList())
+                    .topKeywords(Collections.emptyList())
+                    .monthlyChange(Collections.emptyList())
+                    .bifId(bifId)
+                    .nickname(nickname)
+                    .joinDate(joinDate)
+                    .totalDiaryCount(totalDiaryCount)
+                    .connectionCode(connectionCode)
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to create empty stats response for BIF ID: {}. Error: {}", bifId, e.getMessage());
+            return StatsResponse.builder()
+                    .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
+                    .guardianAdviceText("BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.")
+                    .emotionRatio(Collections.emptyList())
+                    .topKeywords(Collections.emptyList())
+                    .monthlyChange(Collections.emptyList())
+                    .bifId(bifId)
+                    .nickname("BIF")
+                    .joinDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    .totalDiaryCount(0)
+                    .build();
+        }
     }
 
     private Map<EmotionType, Integer> calculateEmotionCounts(final Long bifId, final LocalDateTime yearMonth) {
@@ -303,7 +336,7 @@ public class StatsServiceImpl implements StatsService {
         return counts;
     }
 
-    private Map<EmotionType, Integer> parseEmotionCountsJson(final String json) throws JsonProcessingException {
+    private Map<EmotionType, Integer> parseEmotionCountsJson(final String json) {
         if (json == null || json.trim().isEmpty()) {
             log.debug("Empty or null emotion counts JSON, returning empty map");
             return new EnumMap<>(EmotionType.class);
@@ -312,27 +345,51 @@ public class StatsServiceImpl implements StatsService {
         try {
             final String cleanedJson = unwrapIfQuoted(json.trim());
             log.debug("Parsing emotion counts JSON: {}", cleanedJson);
+            
             Map<String, Integer> rawCounts = objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
-
+            
             Map<EmotionType, Integer> emotionCounts = new EnumMap<>(EmotionType.class);
+            for (EmotionType emotion : EmotionType.values()) {
+                emotionCounts.put(emotion, 0);
+            }
+            
             for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
                 try {
-                    EmotionType emotionType = EmotionType.valueOf(entry.getKey().toUpperCase());
+                    EmotionType emotionType = mapDbeaverEmotionToStatsEmotion(entry.getKey());
                     emotionCounts.put(emotionType, entry.getValue());
+                    log.debug("Mapped {} -> {} with count {}", entry.getKey(), emotionType, entry.getValue());
                 } catch (IllegalArgumentException e) {
                     log.warn("Unknown emotion type found in JSON: {}", entry.getKey());
                 }
             }
-
+            
             return emotionCounts;
         } catch (Exception e) {
             log.error("Failed to parse emotion counts JSON: '{}'. Error: {}", json, e.getMessage());
-            throw new RuntimeException("Failed to parse emotion counts JSON", e);
+            return new EnumMap<>(EmotionType.class);
+        }
+    }
+
+    private EmotionType mapDbeaverEmotionToStatsEmotion(String dbeaverEmotion) {
+        switch (dbeaverEmotion.toUpperCase()) {
+            case "JOY":
+                return EmotionType.GOOD;
+            case "SAD":
+                return EmotionType.DOWN;
+            case "ANGER":
+                return EmotionType.ANGRY;
+            case "NEUTRAL":
+                return EmotionType.OKAY;
+            case "EXCELLENT":
+                return EmotionType.GREAT;
+            default:
+                log.warn("Unknown emotion type: {}, defaulting to OKAY", dbeaverEmotion);
+                return EmotionType.OKAY;
         }
     }
 
 
-    private List<Map<String, Object>> parseTopKeywordsJson(final String json) throws JsonProcessingException {
+    private List<Map<String, Object>> parseTopKeywordsJson(final String json) {
         if (json == null || json.trim().isEmpty()) {
             log.debug("Empty or null top keywords JSON, returning empty list");
             return new ArrayList<>();
@@ -340,13 +397,74 @@ public class StatsServiceImpl implements StatsService {
         try {
             final String cleanedJson = unwrapIfQuoted(json.trim());
             log.debug("Parsing top keywords JSON: {}", cleanedJson);
-            return objectMapper.readValue(cleanedJson, new TypeReference<List<Map<String, Object>>>() {});
+
+            if (cleanedJson.startsWith("{") && cleanedJson.endsWith("}")) {
+                Map<String, Integer> keywordMap = objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
+                List<Map<String, Object>> result = new ArrayList<>();
+                
+                List<Map.Entry<String, Integer>> sortedEntries = keywordMap.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .collect(Collectors.toList());
+                
+                for (int i = 0; i < Math.min(5, sortedEntries.size()); i++) {
+                    Map.Entry<String, Integer> entry = sortedEntries.get(i);
+                    Map<String, Object> keywordData = new HashMap<>();
+                    keywordData.put("keyword", entry.getKey());
+                    keywordData.put("count", entry.getValue());
+                    keywordData.put("rank", i + 1);
+                    result.add(keywordData);
+                }
+                
+                return result;
+            } else if (cleanedJson.startsWith("[") && cleanedJson.endsWith("]")) {
+                List<Map<String, Object>> keywords = objectMapper.readValue(cleanedJson, new TypeReference<List<Map<String, Object>>>() {});
+                List<Map<String, Object>> result = new ArrayList<>();
+
+                for (int i = 0; i < keywords.size(); i++) {
+                    Map<String, Object> keywordData = keywords.get(i);
+                    if (keywordData.containsKey("keyword") && keywordData.containsKey("count")) {
+                        keywordData.put("rank", i + 1);
+                        result.add(keywordData);
+                    }
+                }
+
+                return result;
+            } else {
+                return objectMapper.readValue(cleanedJson, new TypeReference<List<Map<String, Object>>>() {});
+            }
         } catch (Exception e) {
             log.error("Failed to parse top keywords JSON: '{}'. Error: {}", json, e.getMessage());
-            throw new RuntimeException("Failed to parse top keywords JSON", e);
+            return createDefaultTopKeywords();
         }
     }
 
+    private List<Map<String, Object>> createDefaultTopKeywords() {
+        List<Map<String, Object>> defaultKeywords = new ArrayList<>();
+        String[] defaultWords = {"가족", "직장", "친구", "휴식", "건강"};
+
+        for (int i = 0; i < defaultWords.length; i++) {
+            Map<String, Object> keywordData = new HashMap<>();
+            keywordData.put("keyword", defaultWords[i]);
+            keywordData.put("count", 0);
+            keywordData.put("rank", i + 1);
+            defaultKeywords.add(keywordData);
+        }
+
+        return defaultKeywords;
+    }
+
+    private int calculateTotalDiaryCount(final Long bifId) {
+        try {
+            LocalDateTime startOfYear = LocalDateTime.now().withMonth(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime endOfYear = LocalDateTime.now().withMonth(12).withDayOfMonth(31).withHour(23).withMinute(59).withSecond(59);
+            
+            List<Diary> yearlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfYear, endOfYear);
+            return yearlyDiaries.size();
+        } catch (Exception e) {
+            log.error("Failed to calculate total diary count for BIF ID: {}. Error: {}", bifId, e.getMessage());
+            return 0;
+        }
+    }
 
     private String generateStatisticsTextFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
         final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
@@ -532,18 +650,62 @@ public class StatsServiceImpl implements StatsService {
         }
     }
 
-    private Map<EmotionType, Integer> parseEmotionCountsFromStats(final Optional<Stats> statsOpt) throws JsonProcessingException {
+    private Map<EmotionType, Integer> parseEmotionCountsFromStats(final Optional<Stats> statsOpt) {
         if (statsOpt.isPresent() && statsOpt.get().getEmotionCounts() != null && !statsOpt.get().getEmotionCounts().trim().isEmpty()) {
             try {
                 final String countsJson = unwrapIfQuoted(statsOpt.get().getEmotionCounts());
                 log.debug("Parsing emotion counts from stats: {}", countsJson);
-                return objectMapper.readValue(countsJson, new TypeReference<Map<EmotionType, Integer>>() {});
+                
+                // String -> Integer 맵으로 파싱
+                Map<String, Integer> rawCounts = objectMapper.readValue(countsJson, new TypeReference<Map<String, Integer>>() {});
+                
+                // DBeaver 감정 타입을 Stats EmotionType으로 매핑
+                return processEmotionCounts(rawCounts);
             } catch (Exception e) {
                 log.error("Failed to parse emotion counts from stats: {}. Error: {}", statsOpt.get().getEmotionCounts(), e.getMessage());
                 return new EnumMap<>(EmotionType.class);
             }
         }
         return new EnumMap<>(EmotionType.class);
+    }
+
+    private Map<EmotionType, Integer> processEmotionCounts(Map<String, Integer> rawCounts) {
+        Map<EmotionType, Integer> emotionCounts = new EnumMap<>(EmotionType.class);
+        
+        for (EmotionType emotion : EmotionType.values()) {
+            emotionCounts.put(emotion, 0);
+        }
+        
+        for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
+            try {
+                EmotionType emotionType = mapDbeaverEmotionToStatsEmotion(entry.getKey());
+                emotionCounts.put(emotionType, entry.getValue());
+                log.debug("Mapped {} -> {} with count {}", entry.getKey(), emotionType, entry.getValue());
+            } catch (IllegalArgumentException e) {
+                log.warn("Unknown emotion type found in JSON: {}", entry.getKey());
+            }
+        }
+        
+        return emotionCounts;
+    }
+
+    private List<StatsResponse.EmotionRatio> calculateEmotionRatioFromStats(final Stats statsData) {
+        try {
+            if (statsData.getEmotionCounts() != null && !statsData.getEmotionCounts().trim().isEmpty()) {
+                final String countsJson = unwrapIfQuoted(statsData.getEmotionCounts());
+                log.debug("Calculating emotion ratio from stats: {}", countsJson);
+                
+                Map<String, Integer> rawCounts = objectMapper.readValue(countsJson, new TypeReference<Map<String, Integer>>() {});
+                
+                Map<EmotionType, Integer> emotionCounts = processEmotionCounts(rawCounts);
+                
+                return calculateEmotionRatio(emotionCounts);
+            }
+        } catch (Exception e) {
+            log.error("Failed to calculate emotion ratio from stats: {}. Error: {}", statsData.getEmotionCounts(), e.getMessage());
+        }
+        
+        return calculateEmotionRatio(initializeEmotionCounts());
     }
 
     private void addDefaultMonthlyChangeItems(final List<StatsResponse.MonthlyChange> monthlyChange) {
@@ -599,9 +761,9 @@ public class StatsServiceImpl implements StatsService {
                 .toList();
     }
 
-    private String generateFallbackGuardianAdvice(final Map<String, Double> ratios) {
-        final double positiveRatio = ratios.getOrDefault("GOOD", 0.0) + ratios.getOrDefault("GREAT", 0.0);
-        final double negativeRatio = ratios.getOrDefault("ANGRY", 0.0) + ratios.getOrDefault("DOWN", 0.0);
+    private String generateFallbackGuardianAdvice(final Map<EmotionType, Double> ratios) {
+        final double positiveRatio = ratios.getOrDefault(EmotionType.GOOD, 0.0) + ratios.getOrDefault(EmotionType.GREAT, 0.0);
+        final double negativeRatio = ratios.getOrDefault(EmotionType.ANGRY, 0.0) + ratios.getOrDefault(EmotionType.DOWN, 0.0);
 
         if (positiveRatio > 60.0) {
             return "BIF가 매우 긍정적인 감정을 많이 느끼고 있습니다. 이런 좋은 기분을 유지할 수 있도록 지지해주세요.";
@@ -643,18 +805,32 @@ public class StatsServiceImpl implements StatsService {
 
     private StatsResponse buildStatsResponseWithRealTimeData(final Stats statsData, final Long bifId, final LocalDateTime yearMonth, final Map<EmotionType, Integer> realTimeEmotionCounts) {
         try {
-            List<StatsResponse.EmotionRatio> emotionRatio = calculateEmotionRatio(realTimeEmotionCounts);
-
+            
+            List<StatsResponse.EmotionRatio> emotionRatio = calculateEmotionRatioFromStats(statsData);
+            
             List<StatsResponse.KeywordData> topKeywords = createKeywordDataList(
                     parseTopKeywordsJson(statsData.getTopKeywords()));
 
             List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, yearMonth);
 
+            var bifOpt = bifRepository.findById(bifId);
+            String nickname = bifOpt.map(Bif::getNickname).orElse("BIF");
+            String joinDate = bifOpt.map(bif -> bif.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))).orElse("");
+            String connectionCode = bifOpt.map(Bif::getConnectionCode).orElse("");
+            
+            int totalDiaryCount = calculateTotalDiaryCount(bifId);
+
             return StatsResponse.builder()
                     .statisticsText(statsData.getEmotionStatisticsText())
+                    .guardianAdviceText(statsData.getGuardianAdviceText())
                     .emotionRatio(emotionRatio)
                     .topKeywords(topKeywords)
                     .monthlyChange(monthlyChange)
+                    .bifId(bifId)
+                    .nickname(nickname)
+                    .joinDate(joinDate)
+                    .totalDiaryCount(totalDiaryCount)
+                    .connectionCode(connectionCode)
                     .build();
 
         } catch (Exception e) {
@@ -703,17 +879,17 @@ public class StatsServiceImpl implements StatsService {
             return "BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
         }
 
-        final Map<String, Double> ratios = emotionCounts.entrySet().stream()
+        final Map<EmotionType, Double> ratios = emotionCounts.entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> entry.getKey().name(),
+                        Map.Entry::getKey,
                         entry -> (double) entry.getValue() / total * 100
                 ));
 
-        final String okayRange = getRangeForPercentage(ratios.getOrDefault("OKAY", 0.0));
-        final String goodRange = getRangeForPercentage(ratios.getOrDefault("GOOD", 0.0));
-        final String angryRange = getRangeForPercentage(ratios.getOrDefault("ANGRY", 0.0));
-        final String downRange = getRangeForPercentage(ratios.getOrDefault("DOWN", 0.0));
-        final String greatRange = getRangeForPercentage(ratios.getOrDefault("GREAT", 0.0));
+        final String okayRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.OKAY, 0.0));
+        final String goodRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GOOD, 0.0));
+        final String angryRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.ANGRY, 0.0));
+        final String downRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.DOWN, 0.0));
+        final String greatRange = getRangeForPercentage(ratios.getOrDefault(EmotionType.GREAT, 0.0));
 
         final Optional<GuardianAdviceTemplate> adviceTemplate = guardianAdviceTemplateRepository.findByEmotionRanges(
                 okayRange, goodRange, angryRange, downRange, greatRange);

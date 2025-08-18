@@ -3,13 +3,17 @@ package com.sage.bif.stats.util;
 import com.sage.bif.diary.model.Emotion;
 import com.sage.bif.stats.entity.EmotionType;
 import lombok.extern.slf4j.Slf4j;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 @Slf4j
 public class EmotionMapper {
 
-    private static final Map<Emotion, EmotionType> DIARY_TO_STATS_MAP = new HashMap<>();
+    private EmotionMapper() {
+        // 유틸리티 클래스이므로 인스턴스화를 방지
+    }
+
+    private static final Map<Emotion, EmotionType> DIARY_TO_STATS_MAP = new EnumMap<>(Emotion.class);
 
     static {
         DIARY_TO_STATS_MAP.put(Emotion.EXCELLENT, EmotionType.GREAT);

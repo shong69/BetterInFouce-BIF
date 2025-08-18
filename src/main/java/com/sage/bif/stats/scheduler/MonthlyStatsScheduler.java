@@ -27,24 +27,35 @@ public class MonthlyStatsScheduler {
 
         try {
             List<Bif> activeBifs = bifRepository.findAll();
-
-            LocalDateTime lastMonth = LocalDateTime.now().minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime lastMonth = getLastMonthDateTime();
 
             for (Bif bif : activeBifs) {
-                try {
-                    statsService.generateMonthlyStats(bif.getBifId(), lastMonth);
-                    log.debug("BIF ID {}의 {}년 {}월 통계 생성 완료",
-                            bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue());
-                } catch (Exception e) {
-                    log.error("BIF ID {}의 {}년 {}월 통계 생성 실패: {}",
-                            bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue(), e.getMessage());
-                }
+                generateStatsForBif(bif, lastMonth);
             }
 
             log.info("모든 BIF 월별 통계 생성 완료 - 총 {}개", activeBifs.size());
 
         } catch (Exception e) {
             log.error("월별 통계 생성 스케줄러 실행 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+
+    private LocalDateTime getLastMonthDateTime() {
+        return LocalDateTime.now().minusMonths(1)
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0);
+    }
+
+    private void generateStatsForBif(Bif bif, LocalDateTime lastMonth) {
+        try {
+            statsService.generateMonthlyStats(bif.getBifId(), lastMonth);
+            log.debug("BIF ID {}의 {}년 {}월 통계 생성 완료",
+                    bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue());
+        } catch (Exception e) {
+            log.error("BIF ID {}의 {}년 {}월 통계 생성 실패: {}",
+                    bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue(), e.getMessage());
         }
     }
 
