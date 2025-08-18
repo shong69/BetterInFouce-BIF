@@ -253,10 +253,8 @@ export default function GuardianStats() {
                 </div>
               )}
 
-              {/* 현명한 거북이 메시지 섹션 */}
               <div className="rounded-lg bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  {/* 크리스탈 볼 + 거북이 이미지 */}
                   <div className="relative flex justify-center sm:flex-row sm:justify-start">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-200 to-purple-200">
                       <img
@@ -271,7 +269,6 @@ export default function GuardianStats() {
                     <IoSparkles className="absolute right-0 -bottom-2 h-2 w-2 text-yellow-400" />
                   </div>
 
-                  {/* 메시지 말풍선 */}
                   <div className="flex-1 rounded-lg border-l-4 border-blue-300 bg-gradient-to-b from-blue-100 to-blue-200 p-4">
                     <h3 className="mb-2 text-lg font-semibold text-gray-800">
                       현명한 거북이

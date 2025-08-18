@@ -9,7 +9,6 @@ export const useStatsStore = create((set) => ({
   fetchMonthlyStats: async (bifId, year, month) => {
     set({ loading: true, error: null });
     try {
-      // 백엔드의 실제 API 엔드포인트 사용
       const response = await api.get(`/api/stats/stats`, {
         params: { bifId, year, month },
       });
