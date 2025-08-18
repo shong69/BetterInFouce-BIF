@@ -1,28 +1,40 @@
 import { GoTasklist } from "react-icons/go";
 import { VscSettings } from "react-icons/vsc";
 import { PiBookOpenText } from "react-icons/pi";
+import { IoBook } from "react-icons/io5";
 import IconBox from "@components/ui/IconBox";
 import { useLocation } from "react-router-dom";
+import { useUserStore } from "@stores";
 
 export default function TabBar() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user } = useUserStore();
 
   const tabs = [
-    {
-      path: "/diaries",
-      icon: PiBookOpenText,
-      title: "감정 일기",
-      isActive: function (path) {
-        return path === "/diaries" || path.startsWith("/diaries");
-      },
-    },
+    user?.userRole === "GUARDIAN"
+      ? {
+          path: "/guardian-stats",
+          icon: IoBook,
+          title: "통계 보기",
+          isActive: function (path) {
+            return path === "/guardian-stats";
+          },
+        }
+      : {
+          path: "/diaries",
+          icon: PiBookOpenText,
+          title: "감정 일기",
+          isActive: function (path) {
+            return path === "/diaries" || path.startsWith("/diaries");
+          },
+        },
     {
       path: "/",
       icon: GoTasklist,
       title: "할 일",
       isActive: function (path) {
-        return path === "/" || path.startsWith("/todos");
+        return path === "/" || path.startsWith("/todo");
       },
     },
     {

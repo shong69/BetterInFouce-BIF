@@ -4,7 +4,6 @@ import { simulationService } from "@services/simulationService";
 import { useUserStore } from "@stores/userStore";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import GuardianTabBar from "@components/common/GuardianTabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import SimulationCard from "@pages/simulation/components/SimulationCard";
 
@@ -103,9 +102,9 @@ export default function Simulation() {
   if (loading) {
     return (
       <>
-        <LoadingSpinner />
         <Header />
-        {isGuardian ? <GuardianTabBar /> : <TabBar />}
+        <LoadingSpinner />
+        <TabBar />
       </>
     );
   }
@@ -120,14 +119,13 @@ export default function Simulation() {
             <div className="text-gray-600">{error}</div>
           </div>
         </div>
-        {isGuardian ? <GuardianTabBar /> : <TabBar />}
+        <TabBar />
       </>
     );
   }
 
   return (
     <>
-      <LoadingSpinner />
       <Header />
 
       <div className="flex items-center justify-between bg-white px-5 py-5">
@@ -266,7 +264,7 @@ export default function Simulation() {
           </div>
         )}
       </main>
-      {isGuardian ? <GuardianTabBar /> : <TabBar />}
+      <TabBar />
     </>
   );
 }

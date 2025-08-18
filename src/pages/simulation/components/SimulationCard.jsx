@@ -70,7 +70,7 @@ export default function SimulationCard({
             </h3>
             <p className="text-lg text-[9px] text-[#515151]">약 {duration}분</p>
           </div>
-          <div className="flex items-start gap-1">
+          <div className="flex items-start gap-2">
             {showThumbsUpButton && (
               <button
                 onClick={handleThumbsUpClick}
