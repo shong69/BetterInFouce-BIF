@@ -1,23 +1,49 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { useUserStore } from "@stores/userStore";
 import { useToastStore } from "@stores/toastStore";
+import { useStatsStore } from "@stores/statsStore";
 
 import Header from "@components/common/Header";
 import BaseButton from "@components/ui/BaseButton";
-import GuardianTabBar from "@components/common/GuardianTabBar";
+import TabBar from "@components/common/TabBar";
 
 import { IoPerson, IoLogOut } from "react-icons/io5";
 
 export default function GuardianProfile() {
-  const navigate = useNavigate();
-  const { user, logout, withdraw } = useUserStore();
+  const { user, logout, changeNickname, withdraw } = useUserStore();
   const { addToast } = useToastStore();
+  const { stats, fetchMonthlyStats } = useStatsStore();
 
   const [newNickname, setNewNickname] = useState("");
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+
+  const handleLoadUserStats = useCallback(async () => {
+    try {
+      if (user?.bifId) {
+        const now = new Date();
+        await fetchMonthlyStats(
+          user.bifId,
+          now.getFullYear(),
+          now.getMonth() + 1,
+        );
+      }
+    } catch {
+      addToast({
+        type: "error",
+        message: " 통계 데이터를 불러오는데 실패했습니다.",
+        duration: 3000,
+        position: "top-center",
+      });
+    }
+  }, [fetchMonthlyStats, user?.bifId, addToast]);
+
+  useEffect(() => {
+    if (user?.bifId) {
+      handleLoadUserStats();
+    }
+  }, [handleLoadUserStats, user?.bifId]);
 
   async function handleNicknameChange() {
     if (!newNickname.trim()) {
@@ -25,21 +51,23 @@ export default function GuardianProfile() {
       return;
     }
 
-    // TODO: 백엔드 API 연동 - 중복 확인
-    if (newNickname.trim() === "test") {
-      setNicknameError("이미 존재하는 닉네임입니다.");
-      return;
+    try {
+      const result = await changeNickname(newNickname.trim());
+      if (result.success) {
+        addToast({
+          type: "success",
+          message: result.message,
+          duration: 3000,
+          position: "top-center",
+        });
+
+        window.location.reload();
+      } else {
+        setNicknameError(result.message || "닉네임 변경에 실패했습니다.");
+      }
+    } catch {
+      setNicknameError("닉네임 변경 중 오류가 발생했습니다.");
     }
-
-    addToast({
-      type: "success",
-      message: "닉네임이 성공적으로 변경되었습니다.",
-      duration: 3000,
-      position: "top-center",
-    });
-
-    setNewNickname("");
-    setNicknameError("");
   }
 
   async function handleWithdraw() {
@@ -57,29 +85,15 @@ export default function GuardianProfile() {
       const result = await withdraw();
 
       if (result.success) {
-        addToast({
-          type: "success",
-          message: result.message,
-          duration: 3000,
-          position: "top-center",
-        });
-
-        navigate("/login");
+        await logout();
+        window.location.href = "/login";
       } else {
-        addToast({
-          type: "error",
-          message: result.message,
-          duration: 3000,
-          position: "top-center",
-        });
+        setWithdrawError(result.message || "회원탈퇴에 실패했습니다.");
       }
     } catch {
-      addToast({
-        type: "error",
-        message: "회원 탈퇴 중 오류가 발생했습니다.",
-        duration: 3000,
-        position: "top-center",
-      });
+      setWithdrawError(
+        "회원 탈퇴 중 오류가 발생했습니다. 백엔드를 확인해주세요.",
+      );
     }
   }
 
@@ -91,7 +105,7 @@ export default function GuardianProfile() {
       duration: 3000,
       position: "top-center",
     });
-    navigate("/login");
+    window.location.href = "/login";
   }
 
   if (!user) {
@@ -110,35 +124,44 @@ export default function GuardianProfile() {
       <Header />
 
       <div className="min-h-screen bg-gray-50 px-4 pb-20">
-        {/* 마이페이지 섹션 */}
         <div className="space-y-6">
-          {/* 마이페이지 헤더 */}
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-800">마이페이지</h2>
           </div>
 
-          {/* 사용자 정보 카드 */}
           <div className="rounded-lg bg-white p-4 shadow-sm">
             <div className="flex items-center space-x-4">
-              {/* 사용자 프로필 이미지 */}
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
                 <IoPerson className="h-8 w-8 text-gray-600" />
               </div>
 
-              {/* 사용자 정보 텍스트 영역 */}
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {user.nickname} 님
+                  {stats?.nickname || user?.nickname || "보호자"} 님
                 </h3>
                 <p className="text-sm text-gray-600">
-                  가입일 : {user.joinDate || "2023년 12월 12일"}
+                  가입일:{" "}
+                  {(() => {
+                    if (!stats?.joinDate) return "가입일을 불러올 수 없습니다";
+                    try {
+                      const date = new Date(stats.joinDate);
+                      if (isNaN(date.getTime()))
+                        return "가입일을 불러올 수 없습니다";
+                      return date.toLocaleDateString("ko-KR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      });
+                    } catch {
+                      return "가입일을 불러올 수 없습니다";
+                    }
+                  })()}
                 </p>
                 <p className="text-sm text-gray-600">
-                  인증 관계 : {user.connectedBif || "연결된 BIF 없음"}
+                  인증 관계: {stats?.connectionCode || "연결된 BIF 없음"}
                 </p>
               </div>
 
-              {/* 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
@@ -149,13 +172,11 @@ export default function GuardianProfile() {
             </div>
           </div>
 
-          {/* 회원정보 수정 섹션 */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-800">
               회원정보 수정
             </h3>
 
-            {/* 닉네임 변경 섹션 */}
             <div className="rounded-lg bg-white p-4 shadow-sm">
               <h4 className="text-md mb-4 font-semibold text-gray-800">
                 닉네임 변경
@@ -184,7 +205,6 @@ export default function GuardianProfile() {
               </div>
             </div>
 
-            {/* 회원 탈퇴 섹션 */}
             <div className="rounded-lg bg-white p-4 shadow-sm">
               <h4 className="text-md mb-4 font-semibold text-gray-800">
                 회원 탈퇴
@@ -219,7 +239,7 @@ export default function GuardianProfile() {
         </div>
       </div>
 
-      <GuardianTabBar />
+      <TabBar />
     </>
   );
 }

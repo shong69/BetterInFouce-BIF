@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { useStatsStore } from "@stores/statsStore";
 import { useUserStore } from "@stores/userStore";
 import { useToastStore } from "@stores/toastStore";
@@ -72,9 +71,8 @@ const _MONTH_NAMES = [
 ];
 
 export default function BifProfile() {
-  const navigate = useNavigate();
   const { user, logout, changeNickname, withdraw } = useUserStore();
-  const { stats, loading, error, fetchMonthlyStats } = useStatsStore();
+  const { stats, loading, fetchMonthlyStats } = useStatsStore();
   const { addToast } = useToastStore();
 
   const donutChartRef = useRef(null);
@@ -289,6 +287,8 @@ export default function BifProfile() {
           position: "top-center",
         });
         handleCloseUserInfoModal();
+
+        window.location.reload();
       } else {
         setNicknameError(result.message || "닉네임 변경에 실패했습니다.");
       }
@@ -298,13 +298,6 @@ export default function BifProfile() {
   }
 
   function handleAuthConfirm() {
-    addToast({
-      type: "success",
-      message: "인증번호가 확인되었습니다.",
-      duration: 3000,
-      position: "top-center",
-    });
-
     handleCloseUserInfoModal();
   }
 
@@ -323,40 +316,24 @@ export default function BifProfile() {
       const result = await withdraw();
 
       if (result.success) {
-        addToast({
-          type: "success",
-          message: result.message,
-          duration: 3000,
-          position: "top-center",
-        });
-
         handleCloseUserInfoModal();
         await logout();
         window.location.href = "/login";
       } else {
-        addToast({
-          type: "error",
-          message: result.message,
-          duration: 3000,
-          position: "top-center",
-        });
+        setWithdrawError(result.message || "회원탈퇴에 실패했습니다.");
       }
     } catch {
-      addToast({
-        type: "error",
-        message: "회원 탈퇴 중 오류가 발생했습니다.",
-        duration: 3000,
-        position: "top-center",
-      });
+      setWithdrawError(
+        "회원 탈퇴 중 오류가 발생했습니다. 백엔드를 확인해주세요.",
+      );
     }
   }
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    window.location.href = "/login";
   }
 
-  // 현재 월 표시
   const currentMonth = new Date().getMonth() + 1;
   const monthNames = [
     "1월",
@@ -411,18 +388,27 @@ export default function BifProfile() {
 
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {user?.nickname || "BIF"} 님
+                  {stats?.nickname || user?.nickname || "BIF"} 님
                 </h3>
                 <p className="text-sm text-gray-600">
-                  가입일: {user?.joinDate || "2023년 12월 12일"}
+                  가입일:{" "}
+                  {(() => {
+                    if (!stats?.joinDate) return "2025년 8월 1일";
+                    try {
+                      const date = new Date(stats.joinDate);
+                      if (isNaN(date.getTime())) return "2025년 08월 01일";
+                      return date.toLocaleDateString("ko-KR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      });
+                    } catch {
+                      return "2025년 08월 01일";
+                    }
+                  })()}
                 </p>
                 <p className="text-sm text-gray-600">
-                  작성한 일기:{" "}
-                  {stats?.emotionRatio?.reduce(
-                    (sum, item) => sum + item.value,
-                    0,
-                  ) || 0}
-                  개
+                  작성한 일기: {stats?.totalDiaryCount || 0}개
                 </p>
               </div>
 
@@ -437,9 +423,7 @@ export default function BifProfile() {
           </div>
         </div>
 
-        {/* 통계 섹션 */}
         <div className="space-y-6">
-          {/* 통계 섹션 헤더 */}
           <div className="flex items-center">
             <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
             <h2 className="text-xl font-bold text-gray-800">
@@ -447,7 +431,6 @@ export default function BifProfile() {
             </h2>
           </div>
 
-          {/* 로딩 중일 때 표시할 내용 */}
           {loading && (
             <div className="rounded-lg bg-white p-6 text-center shadow-sm">
               <LoadingSpinner />
@@ -455,14 +438,6 @@ export default function BifProfile() {
             </div>
           )}
 
-          {/* 에러가 있을 때 표시할 내용 */}
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
-              <p className="text-red-600">{error}</p>
-            </div>
-          )}
-
-          {/* 통계 데이터가 있고 로딩이 끝났을 때 표시할 내용 */}
           {!loading && (
             <>
               {/* 도넛 차트 섹션 */}
@@ -646,8 +621,11 @@ export default function BifProfile() {
             {activeTab === "auth" && (
               <div className="text-center">
                 <div className="mb-4 rounded-lg bg-gray-100 p-6">
+                  <p className="mb-2 text-sm text-gray-600">
+                    보호자 연결용 인증번호
+                  </p>
                   <p className="text-2xl font-bold tracking-wider text-gray-800">
-                    인증번호
+                    {stats?.connectionCode || "인증번호를 불러올 수 없습니다"}
                   </p>
                 </div>
                 <BaseButton
