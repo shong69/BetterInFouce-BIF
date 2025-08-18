@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface SimulationRecommendationRepository extends JpaRepository<SimulationRecommendation, Long> {
 
     Optional<SimulationRecommendation> findByGuardianGuardianIdAndBifBifIdAndSimulationId(
-            Long guardianId, Long bifId, Long simulationId);
+            Long guardianId, Long bifId, Long simulationId
+    );
 
 }

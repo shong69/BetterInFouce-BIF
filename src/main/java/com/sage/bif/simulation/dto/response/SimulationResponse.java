@@ -23,6 +23,7 @@ public class SimulationResponse {
     private LocalDateTime updatedAt;
 
     public static SimulationResponse from(Simulation simulation, Boolean isActive) {
+
         return SimulationResponse.builder()
                 .id(simulation.getId())
                 .title(simulation.getTitle())

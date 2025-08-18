@@ -74,6 +74,7 @@ public class SimulationServiceImpl implements SimulationService {
 
     @Override
     public SimulationChoiceResponse submitChoice(String sessionId, String userChoice) {
+
         Long simulationId = extractSimulationIdFromSessionId(sessionId);
         int currentStep = extractCurrentStepFromSessionId(sessionId);
 
@@ -124,6 +125,7 @@ public class SimulationServiceImpl implements SimulationService {
 
     @Override
     public String getFeedbackText(Long simulationId, int score) {
+
         List<SimulationFeedback> allFeedbacks = feedbackRepository.findBySimulationId(simulationId);
 
         Optional<SimulationFeedback> feedback = feedbackRepository.findBySimulationIdAndScore(simulationId, score);
@@ -145,6 +147,7 @@ public class SimulationServiceImpl implements SimulationService {
 
     @Override
     public SimulationDetailsResponse getSimulationDetails(Long simulationId) {
+
         Simulation simulation = simulationRepository.findById(simulationId)
                 .orElseThrow(() -> new SimulationException(ErrorCode.SIM_NOT_FOUND));
 
@@ -182,6 +185,7 @@ public class SimulationServiceImpl implements SimulationService {
 
     @Override
     public SimulationRecommendationResponse clickRecommendation(Long guardianId, Long bifId, Long simulationId) {
+
         Guardian guardian = guardianRepository.findById(guardianId)
                 .orElseThrow(() -> new SimulationException(ErrorCode.USER_NOT_FOUND));
 
@@ -218,6 +222,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private Long extractSimulationIdFromSessionId(String sessionId) {
+
         String[] parts = sessionId.split("_");
         if (parts.length >= 4) {
             return Long.parseLong(parts[2]);
@@ -226,6 +231,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private int extractCurrentStepFromSessionId(String sessionId) {
+
         String[] parts = sessionId.split("_");
         if (parts.length >= 4) {
             return Integer.parseInt(parts[3]);
@@ -234,11 +240,13 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private int calculateTotalScore(int currentChoiceScore) {
+
         return currentChoiceScore;
     }
 
     @Override
     public Map<String, Object> convertTextToSpeech(String text, String voiceName) {
+
         validateTextInput(text);
 
         try {
@@ -253,6 +261,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private void validateTextInput(String text) {
+
         if (text == null || text.trim().isEmpty()) {
             throw new SimulationException(ErrorCode.SIM_TTS_INVALID_REQUEST, "변환할 텍스트가 없습니다.");
         }
@@ -263,6 +272,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private Map<String, Object> buildTtsRequest(String text, String voiceName) {
+
         String selectedVoice = (voiceName != null) ? voiceName : "ko-KR-Neural2-A";
 
         Map<String, Object> requestData = new HashMap<>();
@@ -288,6 +298,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private ResponseEntity<Map<String, Object>> callGoogleTtsApi(Map<String, Object> requestData) {
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestData, headers);
@@ -304,6 +315,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     private Map<String, Object> processApiResponse(ResponseEntity<Map<String, Object>> response) {
+
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new SimulationException(ErrorCode.SIM_TTS_API_CALL_FAILED,
                     "Google TTS API 응답 오류: " + response.getStatusCode());

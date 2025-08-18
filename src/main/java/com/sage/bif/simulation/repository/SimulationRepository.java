@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SimulationRepository extends JpaRepository<Simulation, Long> {
+
     @Query("SELECT s, CASE WHEN sr.isActive IS NOT NULL THEN sr.isActive ELSE FALSE END " +
            "FROM Simulation s " +
            "LEFT JOIN SimulationRecommendation sr ON sr.simulation.id = s.id " +
