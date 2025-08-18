@@ -33,9 +33,9 @@ spring:
 #      continue-on-error: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://localhost:3306/bif?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: password
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -99,6 +99,9 @@ spring:
         resource-name: ${AZURE_OPENAI_RESOURCE_NAME}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      content-safety:
+        endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
+        api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
 
   devtools:
     restart:

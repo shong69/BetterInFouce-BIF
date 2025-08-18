@@ -45,7 +45,11 @@ spring:
         api-key: test-key
         deployment:
           name: test-deployment
-
+          
+# 앱 설정 (테스트용)
+app:
+  frontend:
+    url: http://localhost:3000
 
 
 # 서버 설정 (테스트용)
