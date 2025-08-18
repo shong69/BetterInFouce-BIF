@@ -10,8 +10,6 @@ import java.util.Optional;
 @Repository
 public interface SimulationRecommendationRepository extends JpaRepository<SimulationRecommendation, Long> {
 
-    List<SimulationRecommendation> findByBifBifIdAndIsActiveTrue(Long bifId);
-
     Optional<SimulationRecommendation> findByGuardianGuardianIdAndBifBifIdAndSimulationId(
             Long guardianId, Long bifId, Long simulationId);
 
