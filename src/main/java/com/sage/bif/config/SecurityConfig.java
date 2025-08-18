@@ -69,7 +69,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorization -> authorization
                         .requestMatchers("/api/auth/admin-login", "/api/oauth2/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
-                        .requestMatchers("/api/auth/register/**", "/api/auth/session-info", "/api/auth/logout", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/register/**", "/api/auth/session-info", "/api/auth/logout", "/api/auth/refresh", "/api/auth/registration-info").permitAll()
+                        .requestMatchers("/api/notifications/sse/subscribe").authenticated()
+                        .requestMatchers("/api/notifications/web-push/**").authenticated()
+                        .requestMatchers("/api/notifications/status").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
