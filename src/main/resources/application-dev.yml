@@ -70,6 +70,9 @@ spring:
         resource-name: ${AZURE_OPENAI_RESOURCE_NAME}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      content-safety:
+        endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
+        api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
 
   devtools:
     restart:

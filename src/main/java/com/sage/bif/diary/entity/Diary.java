@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.sage.bif.diary.model.Emotion;
 import org.hibernate.annotations.SQLRestriction;
@@ -26,11 +27,14 @@ public class Diary {
     @Column(name="diary_id")
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private UUID uuid; 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="bif_id", nullable = false)
     private Bif user;
 
-    @Column(name="selected_emotion", nullable = false)
+    @Column(name="selected_emotion", nullable = false, columnDefinition = "UUID")
     private Emotion emotion;
 
     @Column(columnDefinition = "TEXT", nullable = false, length = 800)
@@ -50,9 +54,14 @@ public class Diary {
     private AiFeedback aiFeedback;
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    protected void prePersist() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+            this.updatedAt = LocalDateTime.now();
+        }
+        if(this.uuid == null) {
+            this.uuid = UUID.randomUUID();
+        }
     }
 
     @PreUpdate

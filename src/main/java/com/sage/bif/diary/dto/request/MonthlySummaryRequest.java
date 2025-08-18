@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -27,13 +26,5 @@ public class MonthlySummaryRequest {
     @Min(value = 1, message = "월은 1월 이상이어야 합니다.")
     @Max(value = 12, message = "월은 12월 이하여야 합니다.")
     private Integer month;
-
-    public static MonthlySummaryRequest ofCurrentMonth(Long userId) {
-        LocalDate now = LocalDate.now();
-        return MonthlySummaryRequest.builder()
-                .year(now.getYear())
-                .month(now.getMonthValue())
-                .build();
-    }
 
 }
