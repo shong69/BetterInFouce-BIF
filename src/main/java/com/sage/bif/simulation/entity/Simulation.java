@@ -17,7 +17,7 @@ public class Simulation {
     @Column(name = "simulation_id")
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", nullable = false, length = 50)
     private String title;
 
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
@@ -25,9 +25,6 @@ public class Simulation {
 
     @Column(name = "category", nullable = false, length = 10)
     private String category;
-
-    @Column(name = "is_recommended", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isRecommended;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;

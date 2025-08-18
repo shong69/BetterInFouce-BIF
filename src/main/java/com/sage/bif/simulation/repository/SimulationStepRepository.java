@@ -14,6 +14,4 @@ public interface SimulationStepRepository extends JpaRepository<SimulationStep, 
 
     Optional<SimulationStep> findBySimulationIdAndStepOrder(Long simulationId, Integer stepOrder);
 
-    List<SimulationStep> findBySimulationId(Long simulationId);
-
 }

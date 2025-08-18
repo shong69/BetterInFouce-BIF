@@ -19,7 +19,7 @@ public class SimulationStep {
     @Column(name = "simulation_id", nullable = false)
     private Long simulationId;
 
-    @Column(name = "step_order", nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(name = "step_order", nullable = false, columnDefinition = "INT DEFAULT 1")
     private Integer stepOrder;
 
     @Column(name = "character_line", nullable = false, columnDefinition = "TEXT")

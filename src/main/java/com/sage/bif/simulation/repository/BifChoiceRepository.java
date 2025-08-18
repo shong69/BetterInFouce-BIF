@@ -12,10 +12,4 @@ public interface BifChoiceRepository extends JpaRepository<BifChoice, Long> {
 
     List<BifChoice> findByStepIdOrderByChoiceId(Long stepId);
 
-    List<BifChoice> findBySimulationIdAndStepId(Long simulationId, Long stepId);
-
-    Optional<BifChoice> findByStepIdAndChoiceText(Long stepId, String choiceText);
-
-    List<BifChoice> findBySimulationId(Long simulationId);
-
 }
