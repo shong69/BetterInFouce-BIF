@@ -114,7 +114,7 @@ export default function BifProfile() {
         {
           label: "사용 횟수",
           data: limitedKeywords.map((item) => item.count),
-          backgroundColor: "#4CAF50", // 통일된 초록색
+          backgroundColor: "#4CAF50",
           borderColor: "#388E3C",
           borderWidth: 1,
           borderRadius: 4,
@@ -350,7 +350,6 @@ export default function BifProfile() {
     "12월",
   ];
 
-  // 사용자 정보가 로딩 중일 때
   if (!user) {
     return (
       <>
@@ -440,7 +439,6 @@ export default function BifProfile() {
 
           {!loading && (
             <>
-              {/* 도넛 차트 섹션 */}
               <div className="rounded-lg bg-white p-4 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold text-gray-800">
                   이번 달 감정 비율
@@ -464,7 +462,6 @@ export default function BifProfile() {
                 </div>
               </div>
 
-              {/* 키워드 Top5 섹션 */}
               <div className="rounded-lg bg-white p-4 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold text-gray-800">
                   자주 사용된 키워드 TOP 5
@@ -488,7 +485,6 @@ export default function BifProfile() {
                 </div>
               </div>
 
-              {/* 월별 변화 섹션 */}
               <div className="rounded-lg bg-white p-4 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold text-gray-800">
                   지난달 대비 감정 변화
@@ -512,10 +508,8 @@ export default function BifProfile() {
                 </div>
               </div>
 
-              {/* 현명한 거북이 메시지 섹션 */}
               <div className="rounded-lg bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  {/* 크리스탈 볼 + 거북이 이미지 */}
                   <div className="relative flex justify-center sm:flex-row sm:justify-start">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-200 to-purple-200">
                       <img
@@ -530,7 +524,6 @@ export default function BifProfile() {
                     <IoSparkles className="absolute right-0 -bottom-2 h-2 w-2 text-yellow-400" />
                   </div>
 
-                  {/* 메시지 말풍선 */}
                   <div className="flex-1 rounded-lg border-l-4 border-blue-300 bg-gradient-to-b from-blue-100 to-blue-200 p-4">
                     <h3 className="mb-2 text-lg font-semibold text-gray-800">
                       현명한 거북이
