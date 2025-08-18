@@ -17,7 +17,7 @@ export default function Diary() {
   const [canWriteToday, setCanWriteToday] = useState(false);
   const emotions = EMOTIONS;
 
-  const fetchMonthlyData = async function (year, month) {
+  const fetchMonthlyData = async (year, month) => {
     try {
       const response = await fetchMonthlyDiaries(year, month);
 
@@ -33,18 +33,19 @@ export default function Diary() {
       }
     }
   };
-  function handleEmotionSelect(emotionId) {
+
+  const handleEmotionSelect = (emotionId) => {
     if (!canWriteToday) {
       return;
     }
     setStoreEmotion(emotionId);
     navigate(`/diaries/create`);
-  }
+  };
 
-  function handleDiaryClick(dailyInfo) {
+  const handleDiaryClick = (dailyInfo) => {
     const diaryId = dailyInfo.diaryId;
     navigate(`/diaries/${diaryId}`);
-  }
+  };
 
   return (
     <>
@@ -85,13 +86,13 @@ export default function Diary() {
             {!canWriteToday ? "오늘은 이미 일기를 작성했어요!" : "오늘의 기분"}
           </h5>
           <div className="grid grid-cols-5">
-            {emotions.map(function (emotion) {
+            {emotions.map((emotion) => {
               const isDisabled = !canWriteToday;
 
               return (
                 <button
                   key={emotion.id}
-                  onClick={function () {
+                  onClick={() => {
                     handleEmotionSelect(emotion.id);
                   }}
                   disabled={isDisabled}
@@ -141,7 +142,7 @@ export default function Diary() {
                 locale="ko"
                 height="auto"
                 fixedWeekCount={false}
-                datesSet={function (dateInfo) {
+                datesSet={(dateInfo) => {
                   const centerDate = new Date(
                     dateInfo.start.getTime() +
                       (dateInfo.end.getTime() - dateInfo.start.getTime()) / 2,
@@ -150,7 +151,7 @@ export default function Diary() {
                   const month = centerDate.getMonth() + 1;
                   fetchMonthlyData(year, month);
                 }}
-                dayCellContent={function (arg) {
+                dayCellContent={(arg) => {
                   const date = arg.date;
                   const dateStr = date.toLocaleDateString("en-CA");
 
@@ -160,14 +161,14 @@ export default function Diary() {
                       {dailyInfo ? (
                         <button
                           className="flex h-full w-full cursor-pointer items-center justify-center border-none bg-transparent p-0"
-                          onClick={function () {
+                          onClick={() => {
                             handleDiaryClick(dailyInfo);
                           }}
                           aria-label={`View diary for ${dateStr}`}
                         >
                           <img
                             src={
-                              emotions.find(function (e) {
+                              emotions.find((e) => {
                                 return e.id === dailyInfo.emotion;
                               })?.icon
                             }

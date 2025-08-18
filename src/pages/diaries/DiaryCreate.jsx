@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
@@ -21,66 +21,7 @@ export default function DiaryCreate() {
 
   const todayFormatted = formatDate(new Date().toISOString());
 
-  useEffect(
-    function () {
-      if (!window.handleDiaryCreatePopState) {
-        window.handleDiaryCreatePopState = function (_event) {
-          const currentContent = window.currentDiaryCreateContent || "";
-
-          if (currentContent.trim()) {
-            const confirm = window.confirm(
-              "작성 중인 일기가 있습니다. 나가시겠습니까?",
-            );
-            if (!confirm) {
-              window.history.replaceState(null, "", window.location.href);
-            } else {
-              clearSelectedEmotion();
-              window.history.pushState(null, "", "/diaries");
-              navigate("/diaries");
-            }
-          }
-        };
-      }
-
-      window.history.replaceState(null, "", window.location.href);
-
-      if (!window.diaryCreatePopStateListenerAdded) {
-        window.addEventListener("popstate", window.handleDiaryCreatePopState);
-        window.diaryCreatePopStateListenerAdded = true;
-      }
-
-      return function () {};
-    },
-    [clearSelectedEmotion, navigate],
-  );
-
-  useEffect(
-    function () {
-      window.currentDiaryCreateContent = content;
-    },
-    [content],
-  );
-
-  useEffect(
-    function () {
-      function handleBeforeUnload(event) {
-        if (content.trim()) {
-          event.preventDefault();
-          event.returnValue =
-            "작성 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
-          return event.returnValue;
-        }
-      }
-
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      return function () {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    },
-    [content],
-  );
-
-  const handleBack = function () {
+  const handleBack = () => {
     if (content.trim()) {
       setShowExitModal(true);
     } else {
@@ -88,32 +29,31 @@ export default function DiaryCreate() {
     }
   };
 
-  const handleExitConfirm = function () {
+  const handleExitConfirm = () => {
     setShowExitModal(false);
     clearSelectedEmotion();
     navigate("/diaries");
   };
-  const handleExitCancel = function () {
+
+  const handleExitCancel = () => {
     setShowExitModal(false);
   };
 
-  const handleSave = async function () {
+  const handleSave = async () => {
     if (!content.trim()) {
       showError("일기 내용을 입력해주세요.");
       return;
     }
 
     try {
-      const formattedDate = new Date().toISOString();
-
-      await createDiary({
-        date: formattedDate,
+      const response = await createDiary({
         emotion: selectedEmotion,
         content,
       });
       showSuccess("일기가 성공적으로 저장되었습니다!");
       clearSelectedEmotion();
-      navigate("/diaries");
+      const id = response.id;
+      navigate(`/diaries/${id}`);
     } catch (error) {
       if (error.response && error.response.data) {
         showError("일기를 불러오는데 실패했습니다.");
@@ -135,7 +75,7 @@ export default function DiaryCreate() {
           <div className="mr-4">
             <img
               src={
-                EMOTIONS.find(function (e) {
+                EMOTIONS.find((e) => {
                   return e.id === selectedEmotion;
                 })?.icon
               }
@@ -149,7 +89,7 @@ export default function DiaryCreate() {
           <textarea
             id="diary-content"
             value={content}
-            onChange={function (e) {
+            onChange={(e) => {
               setContent(e.target.value);
             }}
             placeholder="오늘 하루는 어땠나요?"
