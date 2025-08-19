@@ -381,8 +381,10 @@ export default function TodoDetail() {
     <div className="min-h-screen pb-20">
       <Header />
 
-      <div className="mx-auto max-w-md px-4 pt-4">
-        <DateBox />
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+        <div className="mb-1 px-2 sm:px-0">
+          <DateBox />
+        </div>
 
         <div className="mt-4 mb-6">
           <BackButton
@@ -396,7 +398,9 @@ export default function TodoDetail() {
           />
         </div>
 
-        {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        <div className="px-4">
+          {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        </div>
 
         {(completionStatus.isChecklistCompleted ||
           completionStatus.isSequenceCompleted) && (

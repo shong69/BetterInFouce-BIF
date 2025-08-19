@@ -218,7 +218,9 @@ export default function EditTodo() {
   function validateDueDate(date) {
     if (date) {
       const selectedDate = new Date(date);
-      const today = new Date();
+      const today = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+      );
 
       today.setHours(0, 0, 0, 0);
       selectedDate.setHours(0, 0, 0, 0);
@@ -233,13 +235,17 @@ export default function EditTodo() {
   function validateDueTime(date, time) {
     if (date && time) {
       const selectedDate = new Date(date);
-      const today = new Date();
+      const today = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+      );
 
       today.setHours(0, 0, 0, 0);
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate.getTime() === today.getTime()) {
-        const currentTime = new Date();
+        const currentTime = new Date(
+          new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+        );
 
         let timeString = "";
         if (typeof time === "string") {
@@ -250,7 +256,9 @@ export default function EditTodo() {
 
         if (timeString && timeString.includes(":")) {
           const [hours, minutes] = timeString.split(":");
-          const selectedDateTime = new Date();
+          const selectedDateTime = new Date(
+            new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+          );
           selectedDateTime.setHours(
             parseInt(hours, 10),
             parseInt(minutes, 10),
@@ -288,7 +296,12 @@ export default function EditTodo() {
       repeatDays: [],
       dueDate:
         type === TODO_TYPES.TASK
-          ? prev.dueDate || new Date().toISOString().split("T")[0]
+          ? prev.dueDate ||
+            new Date(
+              new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+            )
+              .toISOString()
+              .split("T")[0]
           : null,
     }));
   }
@@ -480,11 +493,11 @@ export default function EditTodo() {
   }
 
   return (
-    <div className="min-h-screen pb-10">
+    <div className="h-screen">
       <Header />
 
-      <div className="mx-auto max-w-md px-8 pt-4 pb-32">
-        <div className="mt-4 mb-6 ml-[-12px]">
+      <div className="mx-auto max-w-4xl p-6 pb-36 md:pb-40">
+        <div className="mb-6 ml-[-12px]">
           <BackButton
             onClick={() => {
               if (returnTab) {

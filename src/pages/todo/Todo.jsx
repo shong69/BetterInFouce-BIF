@@ -147,13 +147,15 @@ export default function Todo() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="h-screen">
       <Header />
 
-      <div className="mx-auto max-w-md px-4 pt-4">
-        <DateBox />
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+        <div className="mb-1 px-2 sm:px-0">
+          <DateBox />
+        </div>
 
-        <div className="mt-4">
+        <div className="mt-2 px-4">
           <TabButton
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -161,7 +163,7 @@ export default function Todo() {
             rightTitle="할 일"
           />
         </div>
-        <div className="mt-6">
+        <div className="mt-6 flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-green-600" />
@@ -222,8 +224,8 @@ export default function Todo() {
         </div>
 
         {currentItems.length > 0 && (
-          <div className="mt-8 mb-8 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="mt-8 mb-8 p-4 text-center">
+            <p className="text-xs text-gray-400">
               카드를 오른쪽으로 스와이프하면 수정/삭제 버튼이 나타납니다.
             </p>
           </div>
@@ -233,7 +235,7 @@ export default function Todo() {
       {user?.userRole === "BIF" && (
         <button
           onClick={handleAddTodo}
-          className="fixed right-6 bottom-24 flex h-14 w-14 touch-manipulation items-center justify-center rounded-full bg-green-600 shadow-lg transition-colors active:bg-green-700"
+          className="fixed right-6 bottom-28 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full bg-green-600 shadow-lg transition-colors active:bg-green-700"
         >
           <BiPlus className="text-white" size={28} />
         </button>
