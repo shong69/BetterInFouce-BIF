@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
 import { getRandomColorByTitle } from "@utils/colorUtils";
@@ -25,6 +25,32 @@ export default function Card({
 
   const colors = getRandomColorByTitle(title, id);
 
+  useEffect(() => {
+    const cardElement = cardRef.current;
+    if (!cardElement || type !== "todo") return;
+
+    const handleTouchMovePassive = (e) => {
+      if (!startX) return;
+      e.preventDefault();
+
+      const newCurrentX = e.touches[0].clientX;
+      const diffX = newCurrentX - startX;
+
+      if (diffX > 0 && diffX < 120) {
+        setCurrentX(newCurrentX);
+        cardElement.style.transform = `translateX(${diffX}px)`;
+      }
+    };
+
+    cardElement.addEventListener("touchmove", handleTouchMovePassive, {
+      passive: false,
+    });
+
+    return () => {
+      cardElement.removeEventListener("touchmove", handleTouchMovePassive);
+    };
+  }, [startX, type]);
+
   function handleTouchStart(e) {
     if (type !== "todo") {
       return;
@@ -34,22 +60,6 @@ export default function Card({
     setCurrentX(e.touches[0].clientX);
   }
 
-  function handleTouchMove(e) {
-    if (type !== "todo" || !startX) {
-      return;
-    }
-
-    const newCurrentX = e.touches[0].clientX;
-    const diffX = newCurrentX - startX;
-
-    if (diffX > 0 && diffX < 120) {
-      setCurrentX(newCurrentX);
-      if (cardRef.current) {
-        cardRef.current.style.transform = `translateX(${diffX}px)`;
-      }
-    }
-  }
-
   function handleTouchEnd() {
     if (type !== "todo" || !startX) {
       return;
@@ -57,7 +67,7 @@ export default function Card({
 
     const diffX = currentX - startX;
 
-    if (diffX > 60) {
+    if (diffX > 40) {
       setIsSwipeOpen(true);
       if (cardRef.current) {
         cardRef.current.style.transform = "translateX(120px)";
@@ -82,6 +92,51 @@ export default function Card({
     } else if (onClick) {
       onClick(id);
     }
+  }
+
+  function handlePointerStart(e) {
+    if (type !== "todo") return;
+
+    const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+    setStartX(x);
+    setCurrentX(x);
+  }
+
+  function handlePointerMove(e) {
+    if (type !== "todo" || !startX) return;
+
+    e.preventDefault();
+
+    const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+    const diffX = x - startX;
+
+    if (diffX > 0 && diffX < 120) {
+      setCurrentX(x);
+      if (cardRef.current) {
+        cardRef.current.style.transform = `translateX(${diffX}px)`;
+      }
+    }
+  }
+
+  function handlePointerEnd() {
+    if (type !== "todo" || !startX) return;
+
+    const diffX = currentX - startX;
+
+    if (diffX > 40) {
+      setIsSwipeOpen(true);
+      if (cardRef.current) {
+        cardRef.current.style.transform = "translateX(120px)";
+      }
+    } else {
+      setIsSwipeOpen(false);
+      if (cardRef.current) {
+        cardRef.current.style.transform = "translateX(0px)";
+      }
+    }
+
+    setStartX(0);
+    setCurrentX(0);
   }
 
   function handleEdit(e) {
@@ -117,20 +172,7 @@ export default function Card({
     >
       {type === "todo" && (
         <div className="absolute top-0 left-0 flex h-full items-center gap-2 pl-4">
-          <div
-            onClick={handleEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                handleEdit(e);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="focus:ring-primary-500 rounded focus:ring-2 focus:outline-none"
-            aria-label="할 일 수정"
-          >
-            <EditButton />
-          </div>
+          <EditButton onClick={handleEdit} />
           {user?.userRole === "BIF" && (
             <div
               onClick={handleDelete}
@@ -152,14 +194,18 @@ export default function Card({
 
       <div
         ref={cardRef}
+        style={{ touchAction: "pan-y" }}
         className={`relative rounded-xl p-4 transition-transform duration-200 ease-out ${
           type === "todo"
             ? `border-2 ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
             : "cursor-pointer border border-gray-300 bg-white hover:border-gray-400"
         }`}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerStart}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
         onClick={handleCardClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
