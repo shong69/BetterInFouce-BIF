@@ -20,7 +20,7 @@ const CONNECTION_STATUS = {
 export function useNotifications() {
   const navigate = useNavigate();
   const { showSuccess, showInfo, showError, clearAllToasts } = useToastStore();
-  const { user, accessToken } = useUserStore();
+  const { user } = useUserStore();
 
   const eventSourceRef = useRef(null);
   const retryCountRef = useRef(0);
@@ -212,7 +212,7 @@ export function useNotifications() {
   );
 
   const connectSSE = useCallback(() => {
-    if (!user?.bifId || !accessToken) {
+    if (!user?.bifId) {
       return;
     }
 
@@ -236,10 +236,9 @@ export function useNotifications() {
     try {
       updateConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
-      const url = new URL(`${baseUrl}/api/notifications/sse/subscribe`);
-      url.searchParams.set("token", accessToken);
+      const url = `${baseUrl}/api/notifications/sse/subscribe`;
 
-      const eventSource = new EventSource(url.toString(), {
+      const eventSource = new EventSource(url, {
         withCredentials: true,
       });
 
@@ -251,7 +250,7 @@ export function useNotifications() {
         "연결 생성에 실패했습니다.",
       );
     }
-  }, [user?.bifId, accessToken, baseUrl, setupEventSourceHandlers]);
+  }, [user?.bifId, baseUrl, setupEventSourceHandlers]);
 
   useEffect(() => {
     connectSSERef.current = connectSSE;
@@ -290,16 +289,12 @@ export function useNotifications() {
   }, [disconnect]);
 
   const handleOnline = useCallback(() => {
-    if (
-      connectionStatus !== CONNECTION_STATUS.CONNECTED &&
-      user?.bifId &&
-      accessToken
-    ) {
+    if (connectionStatus !== CONNECTION_STATUS.CONNECTED && user?.bifId) {
       retryCountRef.current = 0;
       isManuallyClosedRef.current = false;
       connectSSERef.current?.();
     }
-  }, [connectionStatus, user?.bifId, accessToken]);
+  }, [connectionStatus, user?.bifId]);
 
   const handleOffline = useCallback(() => {
     updateConnectionStatus(
@@ -314,15 +309,11 @@ export function useNotifications() {
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
-      if (
-        connectionStatus === CONNECTION_STATUS.DISCONNECTED &&
-        user?.bifId &&
-        accessToken
-      ) {
+      if (connectionStatus === CONNECTION_STATUS.DISCONNECTED && user?.bifId) {
         connectSSERef.current?.();
       }
     }
-  }, [connectionStatus, user?.bifId, accessToken]);
+  }, [connectionStatus, user?.bifId]);
 
   function getConnectionInfo() {
     return {
@@ -340,7 +331,7 @@ export function useNotifications() {
   }
 
   useEffect(() => {
-    if (!user?.bifId || !accessToken) {
+    if (!user?.bifId) {
       return;
     }
 
@@ -350,7 +341,7 @@ export function useNotifications() {
     return () => {
       disconnect();
     };
-  }, [user?.bifId, accessToken, disconnect]);
+  }, [user?.bifId, disconnect]);
 
   useEffect(() => {
     window.addEventListener("online", handleOnline);
@@ -360,7 +351,7 @@ export function useNotifications() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [connectionStatus, user?.bifId, accessToken, handleOnline, handleOffline]);
+  }, [handleOnline, handleOffline]);
 
   useEffect(() => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -368,7 +359,7 @@ export function useNotifications() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [connectionStatus, user?.bifId, accessToken, handleVisibilityChange]);
+  }, [handleVisibilityChange]);
 
   useEffect(() => {
     return () => {
