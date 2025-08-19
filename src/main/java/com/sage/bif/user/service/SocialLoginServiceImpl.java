@@ -47,12 +47,14 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
     @Override
     public Optional<SocialLogin> findByProviderUniqueId(String providerUniqueId) {
+
         return socialLoginRepository.findByProviderUniqueId(providerUniqueId);
     }
 
     @Override
     @Transactional
     public void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt) {
+
         try {
             String redisKey = REDIS_TOKEN + socialId;
             Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
@@ -61,18 +63,19 @@ public class SocialLoginServiceImpl implements SocialLoginService {
         } catch (Exception e) {
             throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
         }
-
     }
 
     @Override
     @Transactional
     public void deleteRefreshTokenFromRedis(Long socialId) {
+
         String redisKey = REDIS_TOKEN + socialId;
         redisTemplate.delete(redisKey);
     }
 
     @Override
     public boolean validateRefreshToken(Long socialId, String refreshToken) {
+
         String redisKey = REDIS_TOKEN + socialId;
         String storedToken = redisTemplate.opsForValue().get(redisKey);
 
@@ -84,6 +87,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
     @Transactional
     public void deleteBySocialId(Long socialId) {
+
         socialLoginRepository.deleteById(socialId);
     }
 

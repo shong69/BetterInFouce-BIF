@@ -26,10 +26,10 @@ public class MonthlyStatsScheduler {
         log.info("매월 1일 자정 - 모든 BIF 월별 통계 생성 시작");
 
         try {
-            List<Bif> activeBifs = bifRepository.findAll();
-            LocalDateTime lastMonth = getLastMonthDateTime();
+            final List<Bif> activeBifs = bifRepository.findAll();
+            final LocalDateTime lastMonth = getLastMonthDateTime();
 
-            for (Bif bif : activeBifs) {
+            for (final Bif bif : activeBifs) {
                 generateStatsForBif(bif, lastMonth);
             }
 
@@ -48,7 +48,7 @@ public class MonthlyStatsScheduler {
                 .withSecond(0);
     }
 
-    private void generateStatsForBif(Bif bif, LocalDateTime lastMonth) {
+    private void generateStatsForBif(final Bif bif, final LocalDateTime lastMonth) {
         try {
             statsService.generateMonthlyStats(bif.getBifId(), lastMonth);
             log.debug("BIF ID {}의 {}년 {}월 통계 생성 완료",

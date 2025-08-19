@@ -16,7 +16,9 @@ public class SimulationChoiceResponse {
     private String feedback;
     private String nextScenario;
     private String[] nextChoices;
-    private Integer currentScore;
+    private Integer currentScore;  
+    private Integer choiceScore;
+    private Integer totalScore;
     private Boolean isCompleted;
 
 }

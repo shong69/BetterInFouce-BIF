@@ -12,5 +12,6 @@ public interface StatsRepository extends JpaRepository<Stats, Long> {
 
     Optional<Stats> findByBifIdAndYearMonth(final Long bifId, final LocalDateTime yearMonth);
 
+    Optional<Stats> findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(final Long bifId, final LocalDateTime yearMonth);
 
 }
