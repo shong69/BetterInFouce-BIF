@@ -45,7 +45,6 @@ export default function Bubble({
 
     setSelectedVoice(voiceId);
     setShowVoiceMenu(false);
-    simulationService.playTTS("안녕하세요! 새로운 목소리입니다.", voiceId);
   }
 
   const availableVoices = simulationService.getAvailableVoices();

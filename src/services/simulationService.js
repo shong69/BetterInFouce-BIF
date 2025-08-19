@@ -103,8 +103,6 @@ export default function mapBackendToFrontend(backendData) {
       title: title,
       description: description,
       category: category,
-      duration: getDurationByCategory(category),
-      difficulty: getDifficultyByCategory(category),
       isActive: isActive,
       createdAt: simulation?.created_at || new Date().toISOString(),
       updatedAt: simulation?.updated_at || new Date().toISOString(),
@@ -135,26 +133,6 @@ function getCategoryFromTitle(title) {
   } else {
     return "일상";
   }
-}
-
-function getDurationByCategory(category) {
-  const durationMap = {
-    업무: 12,
-    사회: 10,
-    일상: 8,
-    의료: 15,
-  };
-  return durationMap[category] || 10;
-}
-
-function getDifficultyByCategory(category) {
-  const difficultyMap = {
-    업무: "고급",
-    사회: "중급",
-    일상: "초급",
-    의료: "중급",
-  };
-  return difficultyMap[category] || "중급";
 }
 
 function removeEmojis(text) {
@@ -208,18 +186,6 @@ export const simulationService = {
           getCategoryFromTitle(
             simulationData.simulationTitle || simulationData.title || "",
           ),
-        duration: getDurationByCategory(
-          simulationData.category ||
-            getCategoryFromTitle(
-              simulationData.simulationTitle || simulationData.title || "",
-            ),
-        ),
-        difficulty: getDifficultyByCategory(
-          simulationData.category ||
-            getCategoryFromTitle(
-              simulationData.simulationTitle || simulationData.title || "",
-            ),
-        ),
         steps: simulationData.steps || [],
         completion: simulationData.completion || {
           excellent: "완벽한 대화였습니다!",
