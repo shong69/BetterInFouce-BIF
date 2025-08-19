@@ -26,7 +26,7 @@ public class Stats {
     @Column(name = "bif_id", nullable = false)
     private Long bifId;
 
-    @Column(name = "year_month", nullable = false)
+    @Column(name = "stats_year_month", nullable = false)
     private LocalDateTime yearMonth;
 
     @Column(name = "emotion_statistics_text", columnDefinition = "TEXT", nullable = false)

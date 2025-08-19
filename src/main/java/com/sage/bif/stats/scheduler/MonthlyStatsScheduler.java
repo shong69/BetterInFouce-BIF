@@ -26,25 +26,36 @@ public class MonthlyStatsScheduler {
         log.info("매월 1일 자정 - 모든 BIF 월별 통계 생성 시작");
 
         try {
-            List<Bif> activeBifs = bifRepository.findAll();
+            final List<Bif> activeBifs = bifRepository.findAll();
+            final LocalDateTime lastMonth = getLastMonthDateTime();
 
-            LocalDateTime lastMonth = LocalDateTime.now().minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-
-            for (Bif bif : activeBifs) {
-                try {
-                    statsService.generateMonthlyStats(bif.getBifId(), lastMonth);
-                    log.debug("BIF ID {}의 {}년 {}월 통계 생성 완료",
-                            bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue());
-                } catch (Exception e) {
-                    log.error("BIF ID {}의 {}년 {}월 통계 생성 실패: {}",
-                            bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue(), e.getMessage());
-                }
+            for (final Bif bif : activeBifs) {
+                generateStatsForBif(bif, lastMonth);
             }
 
             log.info("모든 BIF 월별 통계 생성 완료 - 총 {}개", activeBifs.size());
 
         } catch (Exception e) {
             log.error("월별 통계 생성 스케줄러 실행 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+
+    private LocalDateTime getLastMonthDateTime() {
+        return LocalDateTime.now().minusMonths(1)
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0);
+    }
+
+    private void generateStatsForBif(final Bif bif, final LocalDateTime lastMonth) {
+        try {
+            statsService.generateMonthlyStats(bif.getBifId(), lastMonth);
+            log.debug("BIF ID {}의 {}년 {}월 통계 생성 완료",
+                    bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue());
+        } catch (Exception e) {
+            log.error("BIF ID {}의 {}년 {}월 통계 생성 실패: {}",
+                    bif.getBifId(), lastMonth.getYear(), lastMonth.getMonthValue(), e.getMessage());
         }
     }
 

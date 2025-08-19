@@ -15,12 +15,19 @@ import java.util.List;
 public class StatsResponse {
 
     private String statisticsText;
+    private String guardianAdviceText;
 
     private List<EmotionRatio> emotionRatio;
 
     private List<KeywordData> topKeywords;
 
     private List<MonthlyChange> monthlyChange;
+
+    private Long bifId;
+    private String nickname;
+    private String joinDate;
+    private Integer totalDiaryCount;
+    private String connectionCode;
 
     @Data
     @Builder

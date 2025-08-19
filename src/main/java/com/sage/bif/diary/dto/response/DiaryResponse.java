@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.sage.bif.diary.model.Emotion;
 
@@ -14,7 +15,7 @@ import com.sage.bif.diary.model.Emotion;
 @Builder
 public class DiaryResponse {
 
-    private Long id;
+    private UUID id;
     private Emotion emotion;
     private String content;
     private Long userId;

@@ -2,40 +2,40 @@ server:
   port: 8080
 
 spring:
-#  datasource:
-#    url: jdbc:h2:mem:testdb
-#    username: sa
-#    password:
-#    driver-class-name: org.h2.Driver
-#    hikari:
-#      maximum-pool-size: 10
-#      minimum-idle: 5
-#      connection-timeout: 30000
-#  h2:
-#    console:
-#      enabled: true
-#      path: /h2-console
-#      settings:
-#        web-allow-others: true
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#    defer-datasource-initialization: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#        dialect: org.hibernate.dialect.H2Dialect
-#        use_sql_comments: true
-#  sql:
-#    init:
-#      mode: always
-#      continue-on-error: true
+  #  datasource:
+  #    url: jdbc:h2:mem:testdb
+  #    username: sa
+  #    password:
+  #    driver-class-name: org.h2.Driver
+  #    hikari:
+  #      maximum-pool-size: 10
+  #      minimum-idle: 5
+  #      connection-timeout: 30000
+  #  h2:
+  #    console:
+  #      enabled: true
+  #      path: /h2-console
+  #      settings:
+  #        web-allow-others: true
+  #  jpa:
+  #    hibernate:
+  #      ddl-auto: update
+  #    show-sql: true
+  #    defer-datasource-initialization: true
+  #    properties:
+  #      hibernate:
+  #        format_sql: true
+  #        dialect: org.hibernate.dialect.H2Dialect
+  #        use_sql_comments: true
+  #  sql:
+  #    init:
+  #      mode: always
+  #      continue-on-error: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://localhost:3306/bif?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: password
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -99,6 +99,9 @@ spring:
         resource-name: ${AZURE_OPENAI_RESOURCE_NAME}
         deployment:
           name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      content-safety:
+        endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
+        api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
 
   devtools:
     restart:
