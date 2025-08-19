@@ -247,6 +247,53 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  changeNickname: async (newNickname) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/changenickname`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${get().accessToken}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { data } = result;
+
+        set({
+          accessToken: data.accessToken,
+          user: {
+            ...get().user,
+            nickname: data.nickname,
+          },
+        });
+
+        sessionStorage.setItem("accessToken", data.accessToken);
+
+        return {
+          success: true,
+          message: data.message || "닉네임이 변경되었습니다.",
+        };
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.message || "닉네임 변경 중 오류가 발생했습니다.",
+        };
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("닉네임 변경 실패:", error);
+      return {
+        success: false,
+        message: "닉네임 변경 중 오류가 발생했습니다.",
+      };
+    }
+  },
+
   withdraw: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/withdraw`, {
@@ -277,6 +324,53 @@ export const useUserStore = create((set, get) => ({
       return {
         success: false,
         message: "회원탈퇴 중 오류가 발생했습니다.",
+      };
+    }
+  },
+
+  changeNickname: async (newNickname) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/changenickname`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${get().accessToken}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { data } = result;
+
+        set({
+          accessToken: data.accessToken,
+          user: {
+            ...get().user,
+            nickname: data.nickname,
+          },
+        });
+
+        sessionStorage.setItem("accessToken", data.accessToken);
+
+        return {
+          success: true,
+          message: data.message || "닉네임이 변경되었습니다.",
+        };
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.message || "닉네임 변경 중 오류가 발생했습니다.",
+        };
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("닉네임 변경 실패:", error);
+      return {
+        success: false,
+        message: "닉네임 변경 중 오류가 발생했습니다.",
       };
     }
   },

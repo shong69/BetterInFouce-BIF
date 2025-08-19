@@ -2,10 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useUserStore } from "@stores";
 
-import Todo from "@pages/Todo";
 import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
 import LoginInviteCode from "@pages/user/LoginInviteCode";
+
+import Todo from "@pages/todo/Todo";
+import EditTodo from "@pages/todo/EditTodo";
+import TodoDetail from "@pages/todo/TodoDetail";
+import CreateTodo from "@pages/todo/CreateTodo";
 
 import Diary from "@pages/diaries/Diary";
 import DiaryCreate from "@pages/diaries/DiaryCreate";
@@ -71,6 +75,30 @@ function App() {
               ) : (
                 <Navigate to="/login" replace />
               )
+            }
+          />
+          <Route
+            path="/todo/:id"
+            element={
+              <ProtectedRoute>
+                <TodoDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/new"
+            element={
+              <ProtectedRoute>
+                <CreateTodo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditTodo />
+              </ProtectedRoute>
             }
           />
           <Route
