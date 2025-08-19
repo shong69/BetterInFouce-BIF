@@ -13,6 +13,8 @@ public interface StatsService {
 
     void generateMonthlyStats(Long bifId, LocalDateTime yearMonth);
 
+    void generateMonthlyStatsAsync(Long bifId, LocalDateTime yearMonth);
+
     void updateStatsWithKeywords(Long bifId, String diaryContent);
 
     void updateRealTimeStats(Long bifId);

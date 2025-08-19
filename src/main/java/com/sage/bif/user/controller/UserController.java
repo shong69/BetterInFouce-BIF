@@ -14,7 +14,6 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 import com.sage.bif.user.service.SocialLoginService;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -198,7 +197,7 @@ public class UserController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Map<String, Object>>> refreshToken(
-            @CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
+            @CookieValue(value="refreshToken", required=false) String refreshToken, HttpServletResponse response) {
 
         try {
             if (refreshToken == null || refreshToken.isEmpty()) {

@@ -61,6 +61,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         String email = userInfo.getEmail();
         String providerUniqueId = userInfo.getId();
 
+
         Optional<SocialLogin> existingSocialLogin = socialLoginService.findByProviderUniqueId(providerUniqueId);
 
         if (existingSocialLogin.isPresent()) {
@@ -75,7 +76,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                                     HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         Optional<com.sage.bif.user.entity.Bif> bif = bifService.findBySocialId(socialLogin.getSocialId());
-
         if (bif.isPresent()) {
             loginLogService.recordLogin(socialLogin.getSocialId());
             processBifLogin(bif.get().getBifId(), bif.get().getNickname(),
@@ -143,6 +143,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         session.setAttribute("registration_email", socialLogin.getEmail());
         session.setAttribute("registration_provider", registrationId);
         session.setAttribute("registration_providerUniqueId", providerUniqueId);
+
 
         response.sendRedirect(frontendUrl + "/login/select-role");
     }
