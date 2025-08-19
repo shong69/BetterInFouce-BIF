@@ -38,13 +38,12 @@ import {
 
 import turtleImage from "@assets/logo2.png";
 
-// 색상은 감정 이모지 맞춰서 변경하기
 const emotionColors = {
-  OKAY: "#E0E0E0",
-  GOOD: "#FF9800",
-  ANGRY: "#F44336",
-  DOWN: "#9C27B0",
-  GREAT: "#FFEB3B",
+  OKAY: "#9CCC65",
+  GOOD: "#F06292",
+  ANGRY: "#E55A2B",
+  DOWN: "#4A90E2",
+  GREAT: "#FFD54F",
 };
 
 const emotionLabels = {
@@ -282,13 +281,16 @@ export default function BifProfile() {
       if (result.success) {
         addToast({
           type: "success",
-          message: result.message,
+          message: "닉네임이 성공적으로 변경되었습니다!",
           duration: 3000,
           position: "top-center",
         });
+
         handleCloseUserInfoModal();
 
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         setNicknameError(result.message || "닉네임 변경에 실패했습니다.");
       }
@@ -365,178 +367,188 @@ export default function BifProfile() {
     <>
       <Header />
 
-      <div className="min-h-screen bg-gray-50 px-4 pb-20">
-        <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-800">마이페이지</h2>
-
-            <button
-              onClick={handleOpenUserInfoModal}
-              className="flex items-center space-x-2 rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300"
-            >
-              <IoPencil className="h-4 w-4" />
-              <span>회원정보 수정</span>
-            </button>
-          </div>
-
-          <div className="relative rounded-lg bg-white p-4 shadow-sm">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
-                <IoPerson className="h-8 w-8 text-gray-600" />
-              </div>
-
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {stats?.nickname || user?.nickname || "BIF"} 님
-                </h3>
-                <p className="text-sm text-gray-600">
-                  가입일:{" "}
-                  {(() => {
-                    if (!stats?.joinDate) return "2025년 8월 1일";
-                    try {
-                      const date = new Date(stats.joinDate);
-                      if (isNaN(date.getTime())) return "2025년 08월 01일";
-                      return date.toLocaleDateString("ko-KR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      });
-                    } catch {
-                      return "2025년 08월 01일";
-                    }
-                  })()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  작성한 일기: {stats?.totalDiaryCount || 0}개
-                </p>
-              </div>
+      <div className="min-h-screen bg-white px-4 pb-20">
+        <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
+          <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">마이페이지</h2>
 
               <button
-                onClick={handleLogout}
-                className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                onClick={handleOpenUserInfoModal}
+                className="flex items-center space-x-2 rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300"
               >
-                <IoLogOut className="h-4 w-4" />
-                <span>로그아웃</span>
+                <IoPencil className="h-4 w-4" />
+                <span>회원정보 수정</span>
               </button>
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="flex items-center">
-            <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
-            <h2 className="text-xl font-bold text-gray-800">
-              {monthNames[currentMonth - 1]}의 감정 통계
-            </h2>
-          </div>
-
-          {loading && (
-            <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-              <LoadingSpinner />
-              <p className="mt-2 text-gray-600">통계 데이터를 불러오는 중...</p>
-            </div>
-          )}
-
-          {!loading && (
-            <>
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                  이번 달 감정 비율
-                </h3>
-                <div className="h-64 w-full">
-                  <Doughnut
-                    ref={donutChartRef}
-                    data={
-                      stats?.emotionRatio && stats.emotionRatio.length > 0
-                        ? createDonutChartData(stats.emotionRatio)
-                        : createDonutChartData([
-                            { emotion: "OKAY", value: 0 },
-                            { emotion: "GOOD", value: 0 },
-                            { emotion: "ANGRY", value: 0 },
-                            { emotion: "DOWN", value: 0 },
-                            { emotion: "GREAT", value: 0 },
-                          ])
-                    }
-                    options={donutOptions}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                  자주 사용된 키워드 TOP 5
-                </h3>
-                <div className="h-80 w-full">
-                  <Bar
-                    ref={keywordChartRef}
-                    data={
-                      stats?.topKeywords && stats.topKeywords.length > 0
-                        ? createKeywordChartData(stats.topKeywords)
-                        : createKeywordChartData([
-                            { keyword: "가족", count: 0 },
-                            { keyword: "직장", count: 0 },
-                            { keyword: "친구", count: 0 },
-                            { keyword: "휴식", count: 0 },
-                            { keyword: "건강", count: 0 },
-                          ])
-                    }
-                    options={keywordOptions}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                  지난달 대비 감정 변화
-                </h3>
-                <div className="h-80 w-full">
-                  <Bar
-                    ref={monthlyChartRef}
-                    data={
-                      stats?.monthlyChange && stats.monthlyChange.length > 0
-                        ? createMonthlyChartData(stats.monthlyChange)
-                        : createMonthlyChartData([
-                            { emotion: "OKAY", value: 0 },
-                            { emotion: "GOOD", value: 0 },
-                            { emotion: "ANGRY", value: 0 },
-                            { emotion: "DOWN", value: 0 },
-                            { emotion: "GREAT", value: 0 },
-                          ])
-                    }
-                    options={monthlyOptions}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <div className="relative flex justify-center sm:flex-row sm:justify-start">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-200 to-purple-200">
-                      <img
-                        src={turtleImage}
-                        alt="현명한 거북이"
-                        className="h-8 w-8 object-contain"
-                      />
-                    </div>
-                    <IoSparkles className="absolute -top-1 -right-1 h-4 w-4 text-yellow-400" />
-                    <IoSparkles className="absolute -bottom-1 -left-1 h-3 w-3 text-yellow-400" />
-                    <IoSparkles className="absolute top-0 -right-2 h-2 w-2 text-yellow-400" />
-                    <IoSparkles className="absolute right-0 -bottom-2 h-2 w-2 text-yellow-400" />
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
+                    <IoPerson className="h-8 w-8 text-gray-600" />
                   </div>
 
-                  <div className="flex-1 rounded-lg border-l-4 border-blue-300 bg-gradient-to-b from-blue-100 to-blue-200 p-4">
-                    <h3 className="mb-2 text-lg font-semibold text-gray-800">
-                      현명한 거북이
-                    </h3>
-                    <p className="leading-relaxed text-gray-700">
-                      {stats?.statisticsText ||
-                        "아직 작성된 일기가 없습니다. 첫 번째 일기를 작성해보세요!"}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                  >
+                    <IoLogOut className="h-4 w-4" />
+                    <span>로그아웃</span>
+                  </button>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="truncate text-lg font-semibold text-gray-800">
+                    {user?.nickname || "BIF"} 님
+                  </h3>
+                  <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
+                    <p className="text-sm whitespace-nowrap text-gray-600">
+                      가입일:{" "}
+                      {(() => {
+                        if (!user?.createdAt)
+                          return "가입일을 불러올 수 없습니다";
+                        try {
+                          const date = new Date(user.createdAt);
+                          if (isNaN(date.getTime()))
+                            return "가입일을 불러올 수 없습니다";
+                          return date.toLocaleDateString("ko-KR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                        } catch {
+                          return "가입일을 불러올 수 없습니다";
+                        }
+                      })()}
+                    </p>
+                    <p className="text-sm whitespace-nowrap text-gray-600">
+                      작성한 일기: {stats?.totalDiaryCount || 0}개
                     </p>
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center">
+              <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
+              <h2 className="text-xl font-bold text-gray-800">
+                {monthNames[currentMonth - 1]}의 감정 통계
+              </h2>
+            </div>
+
+            {loading && (
+              <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+                <LoadingSpinner />
+                <p className="mt-2 text-gray-600">
+                  통계 데이터를 불러오는 중...
+                </p>
+              </div>
+            )}
+
+            {!loading && (
+              <>
+                <div className="rounded-lg bg-white p-4 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                    이번 달 감정 비율
+                  </h3>
+                  <div className="h-64 w-full">
+                    <Doughnut
+                      ref={donutChartRef}
+                      data={
+                        stats?.emotionRatio && stats.emotionRatio.length > 0
+                          ? createDonutChartData(stats.emotionRatio)
+                          : createDonutChartData([
+                              { emotion: "OKAY", value: 0 },
+                              { emotion: "GOOD", value: 0 },
+                              { emotion: "ANGRY", value: 0 },
+                              { emotion: "DOWN", value: 0 },
+                              { emotion: "GREAT", value: 0 },
+                            ])
+                      }
+                      options={donutOptions}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-white p-4 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                    자주 사용된 키워드 TOP 5
+                  </h3>
+                  <div className="h-80 w-full">
+                    <Bar
+                      ref={keywordChartRef}
+                      data={
+                        stats?.topKeywords && stats.topKeywords.length > 0
+                          ? createKeywordChartData(stats.topKeywords)
+                          : createKeywordChartData([
+                              { keyword: "가족", count: 0 },
+                              { keyword: "직장", count: 0 },
+                              { keyword: "친구", count: 0 },
+                              { keyword: "휴식", count: 0 },
+                              { keyword: "건강", count: 0 },
+                            ])
+                      }
+                      options={keywordOptions}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-white p-4 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                    지난달 대비 감정 변화
+                  </h3>
+                  <div className="h-80 w-full">
+                    <Bar
+                      ref={monthlyChartRef}
+                      data={
+                        stats?.monthlyChange && stats.monthlyChange.length > 0
+                          ? createMonthlyChartData(stats.monthlyChange)
+                          : createMonthlyChartData([
+                              { emotion: "OKAY", value: 0 },
+                              { emotion: "GOOD", value: 0 },
+                              { emotion: "ANGRY", value: 0 },
+                              { emotion: "DOWN", value: 0 },
+                              { emotion: "GREAT", value: 0 },
+                            ])
+                      }
+                      options={monthlyOptions}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-white p-4 shadow-sm">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="relative flex justify-center sm:flex-row sm:justify-start">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-200 to-purple-200">
+                        <img
+                          src={turtleImage}
+                          alt="현명한 거북이"
+                          className="h-8 w-8 object-contain"
+                        />
+                      </div>
+                      <IoSparkles className="absolute -top-1 -right-1 h-4 w-4 text-yellow-400" />
+                      <IoSparkles className="absolute -bottom-1 -left-1 h-3 w-3 text-yellow-400" />
+                      <IoSparkles className="absolute top-0 -right-2 h-2 w-2 text-yellow-400" />
+                      <IoSparkles className="absolute right-0 -bottom-2 h-2 w-2 text-yellow-400" />
+                    </div>
+
+                    <div className="flex-1 rounded-lg border-l-4 border-blue-300 bg-gradient-to-b from-blue-100 to-blue-200 p-4">
+                      <h3 className="mb-2 text-lg font-semibold text-gray-800">
+                        현명한 거북이
+                      </h3>
+                      <p className="leading-relaxed text-gray-700">
+                        {stats?.statisticsText ||
+                          "아직 작성된 일기가 없습니다. 첫 번째 일기를 작성해보세요!"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

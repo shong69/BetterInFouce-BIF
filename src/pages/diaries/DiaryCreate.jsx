@@ -104,10 +104,7 @@ export default function DiaryCreate() {
     }
 
     try {
-      const formattedDate = new Date().toISOString();
-
       await createDiary({
-        date: formattedDate,
         emotion: selectedEmotion,
         content,
       });
