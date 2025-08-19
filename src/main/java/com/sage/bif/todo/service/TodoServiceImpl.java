@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -86,6 +87,12 @@ public class TodoServiceImpl implements TodoService {
         List<Todo> todoList = todoRepository.findTodoWithSubTodosByBifIdAndDate(bifId, date);
 
         return todoList.stream()
+                .filter(todo -> {
+                    if (todo.getType() == TodoTypes.ROUTINE) {
+                        return isValidDayForRoutine(todo, date);
+                    }
+                    return true;
+                })
                 .map(todo -> {
                     if (todo.getType() == TodoTypes.ROUTINE) {
                         boolean isCompletedToday = isRoutineCompletedToday(todo, date);
@@ -116,9 +123,14 @@ public class TodoServiceImpl implements TodoService {
 
         validateUserPermission(todo, bifId);
 
-        updateTodoBasicInfo(todo, request);
+        boolean timeChanged = hasTimeChanged(todo, request);
 
+        updateTodoBasicInfo(todo, request);
         updateSubTodos(todo, request.getSubTodos());
+
+        if (timeChanged) {
+            todo.setLastNotificationSentAt(null);
+        }
 
         return TodoListResponse.from(todo);
     }
@@ -156,6 +168,7 @@ public class TodoServiceImpl implements TodoService {
         } else {
             todo.setIsCompleted(true);
             todo.setCompletedAt(LocalDateTime.now());
+            todo.setLastNotificationSentAt(null);
 
             return TodoListResponse.from(todo, false);
         }
@@ -302,11 +315,13 @@ public class TodoServiceImpl implements TodoService {
     }
 
     private Todo createTodoFromParsedData(Bif bif, String userInput, AiTaskParseResponse parsedData) {
+        TodoTypes todoType = safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK);
+        
         Todo.TodoBuilder builder = Todo.builder()
                 .bifUser(bif)
                 .userInput(userInput)
                 .title(parsedData.getTitle() != null ? parsedData.getTitle() : "제목 없음")
-                .type(safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK))
+                .type(todoType)
                 .dueDate(parseDate(parsedData.getDate()))
                 .dueTime(parseTime(parsedData.getTime()));
 
@@ -314,7 +329,7 @@ public class TodoServiceImpl implements TodoService {
             RepeatFrequency frequency = safeParseEnum(parsedData.getRepeatFrequency(), RepeatFrequency.class, null);
             builder.repeatFrequency(frequency);
         }
-
+        
         if (parsedData.getRepeatDays() != null && !parsedData.getRepeatDays().isEmpty()) {
             List<RepeatDays> repeatDays = parsedData.getRepeatDays().stream()
                     .map(day -> safeParseEnum(day, RepeatDays.class, null))
@@ -323,7 +338,13 @@ public class TodoServiceImpl implements TodoService {
 
             if (!repeatDays.isEmpty()) {
                 builder.repeatDays(repeatDays);
+            } else if (todoType == TodoTypes.ROUTINE) {
+                builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY, 
+                                         RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
             }
+        } else if (todoType == TodoTypes.ROUTINE) {
+            builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY, 
+                                     RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
         }
 
         return builder.build();
@@ -389,6 +410,36 @@ public class TodoServiceImpl implements TodoService {
         return routineCompletionRepository
                 .findByTodo_TodoIdAndCompletionDate(todo.getTodoId(), date)
                 .isPresent();
+    }
+
+    private boolean hasTimeChanged(Todo existingTodo, TodoUpdateRequest request) {
+        return !Objects.equals(existingTodo.getDueDate(), request.getDueDate()) ||
+                !Objects.equals(existingTodo.getDueTime(), request.getDueTime()) ||
+                !Objects.equals(existingTodo.getNotificationTime(), request.getNotificationTime()) ||
+                !Objects.equals(existingTodo.getNotificationEnabled(), request.getNotificationEnabled());
+    }
+
+    private boolean isValidDayForRoutine(Todo todo, LocalDate date) {
+        if (todo.getRepeatDays() == null || todo.getRepeatDays().isEmpty()) {
+            return false;
+        }
+
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        RepeatDays targetDay = convertToRepeatDay(dayOfWeek);
+
+        return todo.getRepeatDays().contains(targetDay);
+    }
+
+    private RepeatDays convertToRepeatDay(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> RepeatDays.MONDAY;
+            case TUESDAY -> RepeatDays.TUESDAY;
+            case WEDNESDAY -> RepeatDays.WEDNESDAY;
+            case THURSDAY -> RepeatDays.THURSDAY;
+            case FRIDAY -> RepeatDays.FRIDAY;
+            case SATURDAY -> RepeatDays.SATURDAY;
+            case SUNDAY -> RepeatDays.SUNDAY;
+        };
     }
 
 }

@@ -2,6 +2,8 @@ package com.sage.bif.user.repository;
 
 import com.sage.bif.user.entity.Guardian;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -10,6 +12,10 @@ import java.util.Optional;
 public interface GuardianRepository extends JpaRepository<Guardian, Long> {
 
     Optional<Guardian> findByNickname(String nickname);
+
     Optional<Guardian> findBySocialLogin_SocialId(Long socialId);
+
+    @Query("SELECT g.bif.bifId FROM Guardian g WHERE g.socialLogin.socialId = :socialId")
+    Optional<Long> findBifIdBySocialId(@Param("socialId") Long socialId);
 
 }
