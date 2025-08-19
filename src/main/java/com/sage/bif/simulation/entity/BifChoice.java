@@ -1,5 +1,6 @@
 package com.sage.bif.simulation.entity;
 
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
+@EntityListeners(AuditingEntityListener.class)
 public class BifChoice {
 
     @Id
@@ -25,7 +27,7 @@ public class BifChoice {
     @Column(name = "choice_text", nullable = false, columnDefinition = "TEXT")
     private String choiceText;
 
-    @Column(name = "choice_score", nullable = false, columnDefinition = "INT DEFAULT 10")
+    @Column(name = "choice_score", nullable = false, columnDefinition = "INT DEFAULT 1")
     private Integer choiceScore;
 
     @Column(name = "feedback_text", columnDefinition = "TEXT")
