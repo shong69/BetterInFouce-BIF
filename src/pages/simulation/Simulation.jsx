@@ -113,10 +113,14 @@ export default function Simulation() {
     return (
       <>
         <Header />
-        <div className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
-          <div className="py-8 text-center">
-            <div className="mb-2 text-lg text-red-500">오류가 발생했습니다</div>
-            <div className="text-gray-600">{error}</div>
+        <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
+          <div className="mb-1 sm:px-0">
+            <div className="py-8 text-center">
+              <div className="mb-2 text-lg text-red-500">
+                오류가 발생했습니다
+              </div>
+              <div className="text-gray-600">{error}</div>
+            </div>
           </div>
         </div>
         <TabBar />
@@ -128,13 +132,14 @@ export default function Simulation() {
     <>
       <Header />
 
-      <div className="flex items-center justify-between bg-white px-5 py-5">
-        <div className="text-black-600 text-[13px] font-medium">
-          {getCurrentDate()}
+      <main className="mx-auto max-w-4xl flex-1 bg-white px-5 pb-24">
+        <div className="mb-1 sm:px-0">
+          <div className="flex items-center justify-between px-2 py-5">
+            <div className="text-black-600 text-[13px] font-medium tracking-wide">
+              {getCurrentDate()}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
         {isBif && (
           <>
             {bifRecommendedSimulations.length > 0 && (

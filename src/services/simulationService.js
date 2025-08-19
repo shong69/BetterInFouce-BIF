@@ -337,30 +337,6 @@ export const simulationService = {
   getAvailableVoices: function () {
     return [
       {
-        id: "ko-KR-Chirp3-HD-Achernar",
-        name: "Achernar (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Achird",
-        name: "Achird (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Algenib",
-        name: "Algenib (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Algieba",
-        name: "Algieba (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
         id: "ko-KR-Chirp3-HD-Alnilam",
         name: "Alnilam (HD)",
         gender: "female",
@@ -370,102 +346,6 @@ export const simulationService = {
         id: "ko-KR-Chirp3-HD-Aoede",
         name: "Aoede (HD)",
         gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Autonoe",
-        name: "Autonoe (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Callirrhoe",
-        name: "Callirrhoe (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Charon",
-        name: "Charon (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Despina",
-        name: "Despina (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Enceladus",
-        name: "Enceladus (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Erinome",
-        name: "Erinome (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Fenrir",
-        name: "Fenrir (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Kore",
-        name: "Kore (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Leda",
-        name: "Leda (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Lysithea",
-        name: "Lysithea (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Mimas",
-        name: "Mimas (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Oberon",
-        name: "Oberon (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Rhea",
-        name: "Rhea (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Tethys",
-        name: "Tethys (HD)",
-        gender: "female",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Titan",
-        name: "Titan (HD)",
-        gender: "male",
-        type: "Chirp3-HD",
-      },
-      {
-        id: "ko-KR-Chirp3-HD-Triton",
-        name: "Triton (HD)",
-        gender: "male",
         type: "Chirp3-HD",
       },
     ];

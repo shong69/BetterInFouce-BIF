@@ -2,7 +2,6 @@ export default function SimulationCard({
   id = 1,
   title = "제목",
   category = "일상",
-  duration = "10분",
   onClick,
   showThumbsUpButton = false,
   onThumbsUp = null,
@@ -46,7 +45,6 @@ export default function SimulationCard({
 
   function handleThumbsUpClick(event) {
     event.stopPropagation();
-    console.log("현재 isThumbsUp 값:", isThumbsUp);
     if (onThumbsUp) {
       onThumbsUp(id);
     }
@@ -62,13 +60,10 @@ export default function SimulationCard({
         tabIndex={0}
       >
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3
-              className={`mb-1 text-[13px] font-semibold ${getCategoryColor()}`}
-            >
+          <div className="flex flex-1 items-center">
+            <h3 className={`text-[13px] font-semibold ${getCategoryColor()}`}>
               {title}
             </h3>
-            <p className="text-lg text-[9px] text-[#515151]">약 {duration}분</p>
           </div>
           <div className="flex items-start gap-2">
             {showThumbsUpButton && (
