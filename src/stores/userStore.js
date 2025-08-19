@@ -78,9 +78,27 @@ export const useUserStore = create((set, get) => ({
     let sessionInfoSuccess = false;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/session-info`, {
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+
+      const fetchOptions = {
         credentials: "include",
-      });
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (isMobile) {
+        fetchOptions.cache = "no-cache";
+        fetchOptions.mode = "cors";
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/session-info`,
+        fetchOptions,
+      );
 
       if (response.ok) {
         const result = await response.json();
@@ -91,7 +109,7 @@ export const useUserStore = create((set, get) => ({
             accessToken: data.accessToken,
             user: {
               providerUniqueId: data.providerUniqueId,
-              userRole: data.userRole,
+              userRole: data.role,
               bifId: data.bifId,
               nickname: data.nickname,
               provider: data.provider,
@@ -156,7 +174,7 @@ export const useUserStore = create((set, get) => ({
               accessToken: result.data.accessToken,
               user: {
                 providerUniqueId: result.data.providerUniqueId,
-                userRole: result.data.userRole,
+                userRole: result.data.role,
                 bifId: result.data.bifId,
                 nickname: result.data.nickname,
                 provider: result.data.provider,
@@ -205,11 +223,20 @@ export const useUserStore = create((set, get) => ({
         credentials: "include",
         body: JSON.stringify({ socialId, email }),
       });
+
       if (response.ok) {
         const result = await response.json();
         if (result.data?.accessToken) {
           get().setAccessToken(result.data.accessToken);
-          set({ user: result.data.bif });
+          const bifData = result.data.bif;
+          set({
+            user: {
+              userRole: "BIF",
+              bifId: bifData.bifId,
+              nickname: bifData.nickname,
+            },
+            registrationInfo: null,
+          });
           return { success: true };
         }
       }
@@ -236,7 +263,16 @@ export const useUserStore = create((set, get) => ({
         const result = await response.json();
         if (result.data?.accessToken) {
           get().setAccessToken(result.data.accessToken);
-          set({ user: result.data.guardian });
+
+          const guardianData = result.data.guardian;
+          set({
+            user: {
+              userRole: "GUARDIAN",
+              bifId: guardianData.bifId,
+              nickname: guardianData.nickname,
+            },
+            registrationInfo: null,
+          });
           return { success: true };
         }
       }
@@ -244,6 +280,53 @@ export const useUserStore = create((set, get) => ({
       return { success: false };
     } catch (error) {
       return { success: false, error };
+    }
+  },
+
+  changeNickname: async (newNickname) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/changenickname`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${get().accessToken}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { data } = result;
+
+        set({
+          accessToken: data.accessToken,
+          user: {
+            ...get().user,
+            nickname: data.nickname,
+          },
+        });
+
+        sessionStorage.setItem("accessToken", data.accessToken);
+
+        return {
+          success: true,
+          message: data.message || "닉네임이 변경되었습니다.",
+        };
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.message || "닉네임 변경 중 오류가 발생했습니다.",
+        };
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("닉네임 변경 실패:", error);
+      return {
+        success: false,
+        message: "닉네임 변경 중 오류가 발생했습니다.",
+      };
     }
   },
 

@@ -5,7 +5,8 @@ const NOTIFICATION_TYPES = {
   SYSTEM: "system",
 };
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL =
+  "https://bif-backend-mino.wittysky-992c3ba5.koreacentral.azurecontainerapps.io";
 const DEFAULT_HEADERS = {
   "Content-Type": "application/json",
 };

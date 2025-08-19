@@ -158,7 +158,7 @@ function App() {
             }
           />
           <Route
-            path="/simulations/:id"
+            path="/simulation/:id"
             element={
               <ProtectedRoute>
                 <SimulationProgress />

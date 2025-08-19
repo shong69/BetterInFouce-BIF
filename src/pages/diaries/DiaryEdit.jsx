@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import DateBox from "@components/ui/DateBox";
@@ -14,129 +14,77 @@ import { formatDate } from "@utils/dateUtils";
 export default function DiaryEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [content, setContent] = useState("");
-  const [selectedEmotion, setSelectedEmotion] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [diary, setDiary] = useState(null);
-  const { fetchDiary, updateDiary } = useDiaryStore();
-  const { showSuccess, showError } = useToastStore();
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [originalContent, setOriginalContent] = useState("");
 
-  useEffect(
-    function () {
-      const loadDiary = async function () {
+  const { updateDiary, fetchDiary } = useDiaryStore();
+  const { showSuccess, showError } = useToastStore();
+
+  useEffect(() => {
+    const routerData = location.state?.diaryData;
+
+    if (routerData) {
+      setContent(routerData.content);
+      setOriginalContent(routerData.content);
+    } else {
+      const loadDiary = async () => {
         try {
-          const diaryData = await fetchDiary(id);
-          if (diaryData) {
-            setDiary(diaryData);
-            setContent(diaryData.content);
-            setSelectedEmotion(diaryData.emotion);
-          }
-        } catch (error) {
-          if (error.response && error.response.data) {
-            showError("일기를 불러오는데 실패했습니다.");
-          }
-        } finally {
-          setLoading(false);
+          const diary = await fetchDiary(id);
+          setContent(diary.content);
+          setOriginalContent(diary.content);
+        } catch {
+          showError("일기를 불러올 수 없습니다. 다시 시도해주세요.");
+          navigate(`/diaries/${id}`);
         }
       };
-
       loadDiary();
-    },
-    [id, fetchDiary, showError],
-  );
+    }
+  }, [id, location.state, fetchDiary, showError, navigate]);
 
-  useEffect(
-    function () {
-      window.currentDiaryEditContent = content;
-      window.currentDiaryEditDiary = diary;
-      window.currentDiaryEditId = id;
-    },
-    [content, diary, id],
-  );
-
-  useEffect(
-    function () {
-      if (!window.handleDiaryEditPopState) {
-        window.handleDiaryEditPopState = function (_event) {
-          const currentContent = window.currentDiaryEditContent || "";
-          const currentDiary = window.currentDiaryEditDiary || null;
-
-          if (
-            currentContent.trim() &&
-            currentContent !== currentDiary?.content
-          ) {
-            const confirm = window.confirm(
-              "수정 중인 일기가 있습니다. 나가시겠습니까?",
-            );
-            if (!confirm) {
-              window.history.replaceState(null, "", window.location.href);
-            } else {
-              const currentId = window.currentDiaryEditId;
-              window.history.pushState(null, "", `/diaries/${currentId}`);
-              navigate(`/diaries/${currentId}`);
-            }
-          }
-        };
+  useEffect(() => {
+    function handleBeforeUnload(event) {
+      if (content.trim() && content !== originalContent) {
+        event.preventDefault();
+        event.returnValue =
+          "수정 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
+        return event.returnValue;
       }
+    }
 
-      window.history.replaceState(null, "", window.location.href);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [content, originalContent]);
 
-      if (!window.diaryEditPopStateListenerAdded) {
-        window.addEventListener("popstate", window.handleDiaryEditPopState);
-        window.diaryEditPopStateListenerAdded = true;
-      }
-
-      return function () {};
-    },
-    [navigate],
-  );
-
-  useEffect(
-    function () {
-      function handleBeforeUnload(event) {
-        if (content.trim() && content !== diary?.content) {
-          event.preventDefault();
-          event.returnValue =
-            "수정 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
-          return event.returnValue;
-        }
-      }
-
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      return function () {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    },
-    [content, diary?.content],
-  );
-
-  const handleBack = function () {
-    if (content.trim() && content !== diary?.content) {
+  const handleBack = () => {
+    if (content.trim() && content !== originalContent) {
       setShowExitModal(true);
     } else {
       navigate(`/diaries/${id}`);
     }
   };
 
-  const handleExitConfirm = function () {
+  const handleExitConfirm = () => {
     setShowExitModal(false);
     navigate(`/diaries/${id}`);
   };
 
-  const handleExitCancel = function () {
+  const handleExitCancel = () => {
     setShowExitModal(false);
   };
 
-  const handleSave = async function () {
+  const handleSave = async () => {
     if (!content.trim()) {
       showError("일기 내용을 입력해주세요.");
       return;
     }
 
-    if (content.trim() === diary?.content.trim()) {
+    if (content.trim() === originalContent.trim()) {
       showError("수정할 내용이 없습니다.");
       return;
     }
@@ -144,7 +92,7 @@ export default function DiaryEdit() {
     setShowSaveModal(true);
   };
 
-  const handleSaveConfirm = async function () {
+  const handleSaveConfirm = async () => {
     try {
       await updateDiary(id, { content });
       showSuccess("일기가 성공적으로 수정되었습니다!");
@@ -157,51 +105,48 @@ export default function DiaryEdit() {
     }
   };
 
-  const handleSaveCancel = function () {
+  const handleSaveCancel = () => {
     setShowSaveModal(false);
   };
 
-  if (loading) {
+  if (!location.state?.diaryData && !content) {
     return (
       <>
         <Header />
-        <div className="flex h-64 items-center justify-center">
-          <div className="text-lg">로딩 중...</div>
+        <div className="mx-auto max-w-2xl p-4 sm:p-4">
+          <DateBox />
+          <div className="mb-2">
+            <BackButton onClick={handleBack} />
+          </div>
         </div>
         <TabBar />
       </>
     );
   }
 
-  if (!diary) {
-    return (
-      <>
-        <Header />
-        <div className="flex h-64 items-center justify-center">
-          <div className="text-lg">일기를 찾을 수 없습니다.</div>
-        </div>
-        <TabBar />
-      </>
-    );
-  }
+  const diaryData = location.state?.diaryData || {
+    content,
+    createdAt: new Date(),
+    emotion: "NEUTRAL",
+  };
 
   return (
     <>
       <Header />
-      <div className="mx-auto max-w-2xl p-4 sm:p-4">
+      <div className="mx-auto mb-24 max-w-2xl p-4 sm:p-4">
         <DateBox />
         <div className="mb-2">
           <BackButton onClick={handleBack} />
         </div>
         <div className="flex items-center justify-between">
           <div className="mx-4 mb-2 text-sm font-semibold">
-            {formatDate(diary.createdAt)}의 일기
+            {formatDate(diaryData.createdAt)}의 일기
           </div>
           <div className="mr-4">
             <img
               src={
-                EMOTIONS.find(function (e) {
-                  return e.id === selectedEmotion;
+                EMOTIONS.find((e) => {
+                  return e.id === diaryData.emotion;
                 })?.icon
               }
               alt="emotion"
@@ -213,7 +158,7 @@ export default function DiaryEdit() {
           <textarea
             id="diary-content"
             value={content}
-            onChange={function (e) {
+            onChange={(e) => {
               setContent(e.target.value);
             }}
             placeholder="오늘 하루는 어땠나요?"
