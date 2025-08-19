@@ -446,6 +446,10 @@ export default function SimulationProgress() {
                     onNextStep={handleNextStep}
                     isLastStep={currentStep === simulation.steps.length - 1}
                     isHidden={hiddenFeedbackButtons.has(item.step)}
+                    onPlayTTS={(message, voice) =>
+                      simulationService.playTTS(message, voice)
+                    }
+                    isPlaying={simulationService.tts.isPlaying()}
                   />
                 )}
               </div>
