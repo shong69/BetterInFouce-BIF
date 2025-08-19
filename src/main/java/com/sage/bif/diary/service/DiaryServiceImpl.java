@@ -172,7 +172,7 @@ public class DiaryServiceImpl implements DiaryService {
             .emotion(request.getEmotion())
             .isDeleted(false)
             .build();
-        log.info("일기 정보:{}",diary);
+
         Diary savedDiary = diaryRepository.save(diary);
         
         AiFeedback feedback = aiFeedbackService.createAiFeedback(savedDiary);
