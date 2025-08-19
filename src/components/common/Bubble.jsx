@@ -6,50 +6,23 @@ export default function Bubble({
   showSpeaker = true,
   speakerIcon = "🔊",
   showNextButton = true,
+  onPlayTTS = null,
+  isPlaying = false,
+  voiceId = "ko-KR-Chirp3-HD-Alnilam",
 }) {
-  function speakText(text) {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ko-KR";
-
-      utterance.rate = 1.1;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.9;
-
-      const voices = speechSynthesis.getVoices();
-
-      const preferredVoiceName = "Google 한국의";
-
-      let selectedVoice = voices.find(
-        (voice) => voice.name === preferredVoiceName,
-      );
-
-      if (!selectedVoice) {
-        selectedVoice =
-          voices.find(
-            (voice) =>
-              voice.lang.includes("ko") &&
-              voice.name.toLowerCase().includes("female"),
-          ) || voices.find((voice) => voice.lang.includes("ko"));
-      }
-
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-
-      speechSynthesis.speak(utterance);
-    }
-  }
-
   function handleSpeakerClick() {
-    if (message) {
-      speakText(message);
+    if (message && !isPlaying && onPlayTTS) {
+      onPlayTTS(message, voiceId);
     }
   }
 
   function handleSpeakerKeyDown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      handleSpeakerClick();
+    if (
+      (event.key === "Enter" || event.key === " ") &&
+      !isPlaying &&
+      onPlayTTS
+    ) {
+      onPlayTTS(message, voiceId);
     }
   }
 
@@ -70,7 +43,7 @@ export default function Bubble({
         {!isHidden && showNextButton && onNextStep && (
           <div className="flex justify-end">
             <button
-              className="bg-secondary rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"
+              className="bg-secondary w-13 rounded-full px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"
               onClick={onNextStep}
             >
               {isLastStep ? "완료" : "다음"}
@@ -78,15 +51,23 @@ export default function Bubble({
           </div>
         )}
       </div>
+
       {showSpeaker && message && (
-        <button
-          className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
-          onClick={handleSpeakerClick}
-          onKeyDown={handleSpeakerKeyDown}
-          title="음성 재생"
-        >
-          {speakerIcon}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            className={`cursor-pointer transition-colors ${
+              isPlaying
+                ? "cursor-not-allowed text-blue-500"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+            onClick={handleSpeakerClick}
+            onKeyDown={handleSpeakerKeyDown}
+            title={isPlaying ? "재생 중입니다..." : "음성 재생"}
+            disabled={isPlaying}
+          >
+            {isPlaying ? "🔈" : speakerIcon}
+          </button>
+        </div>
       )}
     </div>
   );
