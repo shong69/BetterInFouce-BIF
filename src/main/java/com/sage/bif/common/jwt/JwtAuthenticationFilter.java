@@ -33,7 +33,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String nickname = jwtTokenProvider.getNicknameFromToken(jwt);
                 String provider = jwtTokenProvider.getProviderFromToken(jwt);
                 String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(jwt);
-                JwtTokenProvider.UserRole role = JwtTokenProvider.UserRole.valueOf(jwtTokenProvider.getRoleFromToken(jwt));
+                String roleString = jwtTokenProvider.getRoleFromToken(jwt);
+                if (roleString == null) {
+                    return;
+                }
+                JwtTokenProvider.UserRole role = JwtTokenProvider.UserRole.valueOf(roleString);
                 Long socialId = jwtTokenProvider.getSocialIdFromToken(jwt);
 
                 CustomUserDetails userDetails = new CustomUserDetails(jwt, bifId, nickname, provider, providerUniqueId, role, socialId);
