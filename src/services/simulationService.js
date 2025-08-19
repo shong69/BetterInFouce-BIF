@@ -157,6 +157,12 @@ function getDifficultyByCategory(category) {
   return difficultyMap[category] || "중급";
 }
 
+function removeEmojis(text) {
+  const emojiRegex =
+    /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
+  return text.replace(emojiRegex, "");
+}
+
 export const simulationService = {
   getSimulations: async function () {
     try {
@@ -300,8 +306,8 @@ export const simulationService = {
     if (!text || text.trim() === "") {
       throw Error("텍스트가 필요합니다.");
     }
-
-    const requestBody = { text: text };
+    const textForTTS = removeEmojis(text);
+    const requestBody = { text: textForTTS };
 
     if (voiceName) {
       requestBody.voiceName = voiceName;
