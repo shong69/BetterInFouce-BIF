@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.sage.bif.diary.model.Emotion;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -16,7 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "Emotion_Diary", indexes = {
+@Table(name = "emotion_diary", indexes = {
         @Index(name="idx_bifid_createdAt",columnList = "bif_id, created_at")
 })
 @SQLRestriction("is_deleted = false")
@@ -27,6 +29,7 @@ public class Diary {
     @Column(name="diary_id")
     private Long id;
 
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, unique = true)
     private UUID uuid; 
 
@@ -34,7 +37,7 @@ public class Diary {
     @JoinColumn(name="bif_id", nullable = false)
     private Bif user;
 
-    @Column(name="selected_emotion", nullable = false, columnDefinition = "UUID")
+    @Column(name="selected_emotion", nullable = false)
     private Emotion emotion;
 
     @Column(columnDefinition = "TEXT", nullable = false, length = 800)

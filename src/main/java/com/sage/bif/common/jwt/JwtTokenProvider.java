@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,7 +119,7 @@ public final class JwtTokenProvider {
             Claims claims = getClaimsFromToken(token);
             if (!TEMP_REGISTRATION_SUBJECT.equals(claims.getSubject())) {
                 log.warn("Invalid token subject for registration token: {}", claims.getSubject());
-                return null;
+                return Collections.emptyMap();
             }
 
             Map<String, Object> registrationInfo = new HashMap<>();
@@ -130,7 +131,7 @@ public final class JwtTokenProvider {
             return registrationInfo;
         } catch (Exception e) {
             log.error("Failed to extract registration info from temp token: {}", e.getMessage());
-            return null;
+            return Collections.emptyMap();
         }
     }
 
@@ -139,7 +140,7 @@ public final class JwtTokenProvider {
             Claims claims = getClaimsFromToken(token);
             if (!AUTHENTICATED_USER_SUBJECT.equals(claims.getSubject())) {
                 log.warn("Invalid token subject for authenticated user token: {}", claims.getSubject());
-                return null;
+                return Collections.emptyMap();
             }
 
             Map<String, Object> userInfo = new HashMap<>();
@@ -154,7 +155,7 @@ public final class JwtTokenProvider {
             return userInfo;
         } catch (Exception e) {
             log.error("Failed to extract authenticated user info from token: {}", e.getMessage());
-            return null;
+            return Collections.emptyMap();
         }
     }
 
