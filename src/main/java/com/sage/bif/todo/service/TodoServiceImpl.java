@@ -315,11 +315,13 @@ public class TodoServiceImpl implements TodoService {
     }
 
     private Todo createTodoFromParsedData(Bif bif, String userInput, AiTaskParseResponse parsedData) {
+        TodoTypes todoType = safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK);
+        
         Todo.TodoBuilder builder = Todo.builder()
                 .bifUser(bif)
                 .userInput(userInput)
                 .title(parsedData.getTitle() != null ? parsedData.getTitle() : "제목 없음")
-                .type(safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK))
+                .type(todoType)
                 .dueDate(parseDate(parsedData.getDate()))
                 .dueTime(parseTime(parsedData.getTime()));
 
@@ -327,7 +329,7 @@ public class TodoServiceImpl implements TodoService {
             RepeatFrequency frequency = safeParseEnum(parsedData.getRepeatFrequency(), RepeatFrequency.class, null);
             builder.repeatFrequency(frequency);
         }
-
+        
         if (parsedData.getRepeatDays() != null && !parsedData.getRepeatDays().isEmpty()) {
             List<RepeatDays> repeatDays = parsedData.getRepeatDays().stream()
                     .map(day -> safeParseEnum(day, RepeatDays.class, null))
@@ -336,7 +338,13 @@ public class TodoServiceImpl implements TodoService {
 
             if (!repeatDays.isEmpty()) {
                 builder.repeatDays(repeatDays);
+            } else if (todoType == TodoTypes.ROUTINE) {
+                builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY, 
+                                         RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
             }
+        } else if (todoType == TodoTypes.ROUTINE) {
+            builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY, 
+                                     RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
         }
 
         return builder.build();

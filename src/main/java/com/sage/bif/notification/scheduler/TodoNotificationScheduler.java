@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -30,7 +31,7 @@ public class TodoNotificationScheduler {
     @Scheduled(cron = "0 * * * * *")
     @Transactional(readOnly = true)
     public void checkAndSendTodoNotifications() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         LocalDate today = now.toLocalDate();
 
         try {
