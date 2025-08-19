@@ -49,25 +49,28 @@ export default function LoginSelectRole() {
 
   return (
     <>
-      <div className="flex justify-center pt-60 pb-20">
-        <Logo />
-      </div>
-      <div className="flex flex-1 flex-col items-center justify-center px-6 pt-20">
-        <div className="w-full max-w-sm">
-          <div className="space-y-6">
-            <SecondaryButton
-              onClick={handleBifSelect}
-              title="보호자가 아닙니다."
-            />
-            <PrimaryButton
-              onClick={handleGuardianSelect}
-              title="보호자 입니다."
-              className="text-shadow-lg/30"
-            />
+      <div className="flex min-h-screen flex-col">
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="flex w-full max-w-sm flex-col items-center space-y-8">
+            <div className="mb-30 flex justify-center">
+              <Logo />
+            </div>
+
+            <div className="w-full space-y-4">
+              <SecondaryButton
+                onClick={handleBifSelect}
+                title="보호자가 아닙니다."
+              />
+              <PrimaryButton
+                onClick={handleGuardianSelect}
+                title="보호자 입니다."
+                className="text-shadow-lg/30"
+              />
+            </div>
           </div>
         </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 }

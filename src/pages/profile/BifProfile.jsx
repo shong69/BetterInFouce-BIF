@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useStatsStore } from "@stores/statsStore";
 import { useUserStore } from "@stores/userStore";
 import { useToastStore } from "@stores/toastStore";
+import { Navigate } from "react-router-dom";
 
 import {
   Chart,
@@ -38,7 +39,7 @@ import {
 
 import turtleImage from "@assets/logo2.png";
 
-const emotionColors = {
+const EMOTION_COLORS = {
   OKAY: "#9CCC65",
   GOOD: "#F06292",
   ANGRY: "#E55A2B",
@@ -46,7 +47,7 @@ const emotionColors = {
   GREAT: "#FFD54F",
 };
 
-const emotionLabels = {
+const EMOTION_LABELS = {
   OKAY: "평범",
   GOOD: "좋음",
   ANGRY: "화남",
@@ -54,7 +55,7 @@ const emotionLabels = {
   GREAT: "최고",
 };
 
-const _MONTH_NAMES = [
+const MONTH_NAMES = [
   "1월",
   "2월",
   "3월",
@@ -85,16 +86,46 @@ export default function BifProfile() {
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
 
+  const handleLoadUserStats = useCallback(async () => {
+    try {
+      if (user?.bifId) {
+        const now = new Date();
+        await fetchMonthlyStats(
+          user.bifId,
+          now.getFullYear(),
+          now.getMonth() + 1,
+        );
+      }
+    } catch {
+      addToast({
+        type: "error",
+        message: "통계 데이터를 불러오는데 실패했습니다.",
+        duration: 3000,
+        position: "top-center",
+      });
+    }
+  }, [fetchMonthlyStats, user?.bifId, addToast]);
+
+  useEffect(() => {
+    if (user?.bifId) {
+      handleLoadUserStats();
+    }
+  }, [handleLoadUserStats, user?.bifId]);
+
+  if (user?.userRole !== "BIF") {
+    return <Navigate to="/guardian-profile" replace />;
+  }
+
   function createDonutChartData(emotionRatio) {
     return {
       labels: emotionRatio.map(
-        (item) => emotionLabels[item.emotion] || item.emotion,
+        (item) => EMOTION_LABELS[item.emotion] || item.emotion,
       ),
       datasets: [
         {
           data: emotionRatio.map((item) => item.value),
           backgroundColor: emotionRatio.map(
-            (item) => emotionColors[item.emotion] || "#CCCCCC",
+            (item) => EMOTION_COLORS[item.emotion] || "#CCCCCC",
           ),
           borderWidth: 2,
           borderColor: "#FFFFFF",
@@ -126,7 +157,7 @@ export default function BifProfile() {
   function createMonthlyChartData(monthlyChange) {
     return {
       labels: monthlyChange.map(
-        (item) => emotionLabels[item.emotion] || item.emotion,
+        (item) => EMOTION_LABELS[item.emotion] || item.emotion,
       ),
       datasets: [
         {
@@ -225,32 +256,6 @@ export default function BifProfile() {
     },
   };
 
-  const handleLoadUserStats = useCallback(async () => {
-    try {
-      if (user?.bifId) {
-        const now = new Date();
-        await fetchMonthlyStats(
-          user.bifId,
-          now.getFullYear(),
-          now.getMonth() + 1,
-        );
-      }
-    } catch {
-      addToast({
-        type: "error",
-        message: " 통계 데이터를 불러오는데 실패했습니다.",
-        duration: 3000,
-        position: "top-center",
-      });
-    }
-  }, [fetchMonthlyStats, user?.bifId, addToast]);
-
-  useEffect(() => {
-    if (user?.bifId) {
-      handleLoadUserStats();
-    }
-  }, [handleLoadUserStats, user?.bifId]);
-
   function handleOpenUserInfoModal() {
     setShowUserInfoModal(true);
   }
@@ -337,20 +342,6 @@ export default function BifProfile() {
   }
 
   const currentMonth = new Date().getMonth() + 1;
-  const monthNames = [
-    "1월",
-    "2월",
-    "3월",
-    "4월",
-    "5월",
-    "6월",
-    "7월",
-    "8월",
-    "9월",
-    "10월",
-    "11월",
-    "12월",
-  ];
 
   if (!user) {
     return (
@@ -435,7 +426,7 @@ export default function BifProfile() {
             <div className="flex items-center">
               <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
               <h2 className="text-xl font-bold text-gray-800">
-                {monthNames[currentMonth - 1]}의 감정 통계
+                {MONTH_NAMES[currentMonth - 1]}의 감정 통계
               </h2>
             </div>
 

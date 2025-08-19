@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useStatsStore } from "@stores/statsStore";
 import { useUserStore } from "@stores/userStore";
+import { Navigate } from "react-router-dom";
 
 import {
   Chart,
@@ -31,38 +32,64 @@ import turtleImage from "@assets/logo2.png";
 
 const DEFAULT_BIF_ID = "1";
 
+const EMOTION_COLORS = {
+  OKAY: "#9CCC65",
+  GOOD: "#F06292",
+  ANGRY: "#E55A2B",
+  DOWN: "#4A90E2",
+  GREAT: "#FFD54F",
+};
+
+const EMOTION_LABELS = {
+  OKAY: "평범",
+  GOOD: "좋음",
+  ANGRY: "화남",
+  DOWN: "우울",
+  GREAT: "최고",
+};
+
 export default function GuardianStats() {
   const { user } = useUserStore();
+  const { stats, loading, error, fetchMonthlyStats } = useStatsStore();
 
   const donutChartRef = useRef(null);
   const monthlyChartRef = useRef(null);
 
-  const emotionColors = {
-    OKAY: "#9CCC65",
-    GOOD: "#F06292",
-    ANGRY: "#E55A2B",
-    DOWN: "#4A90E2",
-    GREAT: "#FFD54F",
-  };
+  const handleLoadUserStats = useCallback(async () => {
+    try {
+      const bifId =
+        user?.bifId || localStorage.getItem("bifId") || DEFAULT_BIF_ID;
 
-  const emotionLabels = {
-    OKAY: "평범",
-    GOOD: "좋음",
-    ANGRY: "화남",
-    DOWN: "우울",
-    GREAT: "최고",
-  };
+      const now = new Date();
+
+      await fetchMonthlyStats(bifId, now.getFullYear(), now.getMonth() + 1);
+    } catch (err) {
+      throw ("사용자 통계 데이터 로드 실패:", err);
+    }
+  }, [fetchMonthlyStats, user?.bifId]);
+
+  useEffect(() => {
+    localStorage.setItem("userType", "GUARDIAN");
+
+    if (user?.bifId) {
+      handleLoadUserStats();
+    }
+  }, [handleLoadUserStats, user?.bifId]);
+
+  if (user?.userRole !== "GUARDIAN") {
+    return <Navigate to="/bif-profile" replace />;
+  }
 
   function createDonutChartData(emotionRatio) {
     return {
       labels: emotionRatio.map(
-        (item) => emotionLabels[item.emotion] || item.emotion,
+        (item) => EMOTION_LABELS[item.emotion] || item.emotion,
       ),
       datasets: [
         {
           data: emotionRatio.map((item) => item.value),
           backgroundColor: emotionRatio.map(
-            (item) => emotionColors[item.emotion] || "#CCCCCC",
+            (item) => EMOTION_COLORS[item.emotion] || "#CCCCCC",
           ),
           borderWidth: 2,
           borderColor: "#FFFFFF",
@@ -76,7 +103,7 @@ export default function GuardianStats() {
   function createMonthlyChartData(monthlyChange) {
     return {
       labels: monthlyChange.map(
-        (item) => emotionLabels[item.emotion] || item.emotion,
+        (item) => EMOTION_LABELS[item.emotion] || item.emotion,
       ),
       datasets: [
         {
@@ -170,29 +197,6 @@ export default function GuardianStats() {
       },
     },
   };
-
-  const { stats, loading, error, fetchMonthlyStats } = useStatsStore();
-
-  const handleLoadUserStats = useCallback(async () => {
-    try {
-      const bifId =
-        user?.bifId || localStorage.getItem("bifId") || DEFAULT_BIF_ID;
-
-      const now = new Date();
-
-      await fetchMonthlyStats(bifId, now.getFullYear(), now.getMonth() + 1);
-    } catch (err) {
-      throw ("사용자 통계 데이터 로드 실패:", err);
-    }
-  }, [fetchMonthlyStats, user?.bifId]);
-
-  useEffect(() => {
-    localStorage.setItem("userType", "GUARDIAN");
-
-    if (user?.bifId) {
-      handleLoadUserStats();
-    }
-  }, [handleLoadUserStats, user?.bifId]);
 
   return (
     <>

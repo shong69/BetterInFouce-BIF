@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useUserStore } from "@stores/userStore";
 import { useToastStore } from "@stores/toastStore";
+import { Navigate } from "react-router-dom";
 
 import Header from "@components/common/Header";
 import BaseButton from "@components/ui/BaseButton";
@@ -16,6 +17,10 @@ export default function GuardianProfile() {
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+
+  if (user?.userRole !== "GUARDIAN") {
+    return <Navigate to="/bif-profile" replace />;
+  }
 
   async function handleNicknameChange() {
     if (!newNickname.trim()) {
