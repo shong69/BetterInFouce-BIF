@@ -2,12 +2,11 @@ package com.sage.bif.stats.exception;
 
 public class StatsDataParseException extends RuntimeException {
     
-    public StatsDataParseException(String message) {
+    public StatsDataParseException(final String message) {
         super(message);
     }
-    
-    public StatsDataParseException(String message, Throwable cause) {
+
+    public StatsDataParseException(final String message, final Throwable cause) {
         super(message, cause);
     }
-
 } 

@@ -42,14 +42,13 @@ public class StatsController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
     })
     public ResponseEntity<ApiResponse<StatsResponse>> getMonthlyStats(
-            @AuthenticationPrincipal final UserDetails userDetails) {
+            @AuthenticationPrincipal final UserDetails userDetails,
+            @RequestParam(required = false) final Long bifId) {
 
-        if (!(userDetails instanceof CustomUserDetails)) {
+        if (!(userDetails instanceof CustomUserDetails customUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.BIF) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -57,7 +56,8 @@ public class StatsController {
         }
 
         try {
-            final StatsResponse statsResponse = statsService.getMonthlyStats(customUserDetails.getBifId());
+            final Long targetBifId = bifId != null ? bifId : customUserDetails.getBifId();
+            final StatsResponse statsResponse = statsService.getMonthlyStats(targetBifId);
             return ResponseEntity.ok(ApiResponse.success(statsResponse));
         } catch (Exception e) {
             log.error("월별 통계 조회 중 오류 발생: {}", e.getMessage(), e);
@@ -79,12 +79,10 @@ public class StatsController {
             @AuthenticationPrincipal final UserDetails userDetails,
             @RequestParam final Long bifId) {
 
-        if (!(userDetails instanceof CustomUserDetails)) {
+        if (!(userDetails instanceof CustomUserDetails customUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("인증 정보가 올바르지 않습니다."));
         }
-
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
         if (customUserDetails.getRole() != JwtTokenProvider.UserRole.GUARDIAN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -92,7 +90,6 @@ public class StatsController {
         }
 
         try {
-            // 가디언이 해당 BIF와 연결되어 있는지 검증
             Guardian guardian = guardianRepository.findBySocialLogin_SocialId(customUserDetails.getSocialId())
                     .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, "가디언 정보를 찾을 수 없습니다."));
 

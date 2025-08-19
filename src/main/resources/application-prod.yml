@@ -29,11 +29,10 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-      ssl:
-        enabled: true
+       host: ${REDIS_HOST}
+       port: ${REDIS_PORT}
+       ssl:
+         enabled: false
 
   security:
     user:

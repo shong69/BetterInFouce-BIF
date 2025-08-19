@@ -39,7 +39,6 @@ public class GuardianServiceImpl implements GuardianService {
         if (existingGuardian.isPresent()) {
             return existingGuardian.get();
         }
-
         Bif bif = bifRepository.findByConnectionCode(connectionCode)
                 .orElseThrow(() -> new BaseException(ErrorCode.AUTH_INVALID_INVITATION_CODE));
 
