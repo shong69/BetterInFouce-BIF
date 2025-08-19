@@ -1,6 +1,5 @@
 package com.sage.bif.common.oauth;
 
-import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.service.SocialLoginService;
@@ -8,10 +7,8 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -25,6 +22,11 @@ import java.util.Map;
 import java.util.Optional;
 
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+
+    private static final int TEMP_TOKEN_MAX_AGE = 30 * 60; // 30분
+    private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7일
+    private static final String TEMP_REGISTRATION_TOKEN_NAME = "tempRegistrationToken";
+    private static final String AUTHENTICATED_USER_TOKEN_NAME = "authenticatedUserToken";
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -61,127 +63,148 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         String email = userInfo.getEmail();
         String providerUniqueId = userInfo.getId();
 
-
         Optional<SocialLogin> existingSocialLogin = socialLoginService.findByProviderUniqueId(providerUniqueId);
 
         if (existingSocialLogin.isPresent()) {
-            handleExistingUser(existingSocialLogin.get(), providerUniqueId, registrationId, request, response);
+            handleExistingUser(existingSocialLogin.get(), providerUniqueId, registrationId, response);
         } else {
-            handleNewUser(email, providerUniqueId, registrationId, request, response);
+            handleNewUser(email, providerUniqueId, registrationId, response);
         }
     }
 
     private void handleExistingUser(SocialLogin socialLogin, String providerUniqueId,
                                     String registrationId,
-                                    HttpServletRequest request, HttpServletResponse response) throws IOException {
+                                    HttpServletResponse response) throws IOException {
 
         Optional<com.sage.bif.user.entity.Bif> bif = bifService.findBySocialId(socialLogin.getSocialId());
+
         if (bif.isPresent()) {
-            loginLogService.recordLogin(socialLogin.getSocialId());
             processBifLogin(bif.get().getBifId(), bif.get().getNickname(),
                     providerUniqueId, registrationId,
-                    socialLogin.getSocialId(), request, response);
+                    socialLogin.getSocialId(), response);
         } else {
             Optional<com.sage.bif.user.entity.Guardian> guardian = guardianService.findBySocialId(socialLogin.getSocialId());
 
             if (guardian.isPresent()) {
-                loginLogService.recordLogin(socialLogin.getSocialId());
                 processGuardianLogin(guardian.get().getBif().getBifId(), guardian.get().getNickname(),
                         providerUniqueId, registrationId,
-                        socialLogin.getSocialId(), request, response);
+                        socialLogin.getSocialId(), response);
             } else {
-                handleIncompleteRegistration(socialLogin, providerUniqueId, registrationId, request, response);
+                handleIncompleteRegistration(socialLogin, providerUniqueId, registrationId, response);
             }
         }
     }
 
     private void processBifLogin(Long bifId, String nickname, String providerUniqueId,
                                  String registrationId, Long socialId,
-                                 HttpServletRequest request, HttpServletResponse response) throws IOException {
+                                 HttpServletResponse response) throws IOException {
 
-        String accessToken = jwtTokenProvider.generateAccessToken(
-                JwtTokenProvider.UserRole.BIF, bifId, nickname, registrationId, providerUniqueId, socialId
+        loginLogService.recordLogin(socialId);
+
+        var socialLoginOpt = socialLoginService.findBySocialId(socialId);
+        if (socialLoginOpt.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "소셜 로그인 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        var socialLogin = socialLoginOpt.get();
+
+        // JWT 기반 인증 사용자 토큰 생성
+        String authenticatedUserToken = jwtTokenProvider.generateAuthenticatedUserToken(
+                socialId, socialLogin.getEmail(), registrationId, providerUniqueId,
+                "BIF", bifId, nickname
         );
 
+        // Refresh 토큰 생성 및 저장
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
         LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
+        // 쿠키 설정
+        setSecureCookie(response, AUTHENTICATED_USER_TOKEN_NAME, authenticatedUserToken, TEMP_TOKEN_MAX_AGE);
         setRefreshTokenCookie(response, refreshToken);
-
-        saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.BIF, socialId));
 
         response.sendRedirect(frontendUrl + "/");
     }
 
-
     private void processGuardianLogin(Long bifId, String nickname, String providerUniqueId,
                                       String registrationId, Long socialId,
-                                      HttpServletRequest request, HttpServletResponse response) throws IOException {
+                                      HttpServletResponse response) throws IOException {
 
-        String accessToken = jwtTokenProvider.generateAccessToken(
-                JwtTokenProvider.UserRole.GUARDIAN, bifId, nickname, registrationId, providerUniqueId, socialId
+        loginLogService.recordLogin(socialId);
+
+        var socialLoginOpt = socialLoginService.findBySocialId(socialId);
+        if (socialLoginOpt.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "소셜 로그인 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        var socialLogin = socialLoginOpt.get();
+
+        // JWT 기반 인증 사용자 토큰 생성
+        String authenticatedUserToken = jwtTokenProvider.generateAuthenticatedUserToken(
+                socialId, socialLogin.getEmail(), registrationId, providerUniqueId,
+                "GUARDIAN", bifId, nickname
         );
 
+        // Refresh 토큰 생성 및 저장
         String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
         LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
         socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
+        // 쿠키 설정
+        setSecureCookie(response, AUTHENTICATED_USER_TOKEN_NAME, authenticatedUserToken, TEMP_TOKEN_MAX_AGE);
         setRefreshTokenCookie(response, refreshToken);
-
-        saveUserSession(request, new CustomUserDetails(accessToken, bifId, nickname, registrationId, providerUniqueId, JwtTokenProvider.UserRole.GUARDIAN, socialId));
 
         response.sendRedirect(frontendUrl + "/");
     }
 
     private void handleIncompleteRegistration(SocialLogin socialLogin, String providerUniqueId,
                                               String registrationId,
-                                              HttpServletRequest request, HttpServletResponse response) throws IOException {
+                                              HttpServletResponse response) throws IOException {
 
-        HttpSession session = request.getSession();
-        session.setAttribute("registration_socialId", socialLogin.getSocialId());
-        session.setAttribute("registration_email", socialLogin.getEmail());
-        session.setAttribute("registration_provider", registrationId);
-        session.setAttribute("registration_providerUniqueId", providerUniqueId);
+        String tempRegistrationToken = jwtTokenProvider.generateTempRegistrationToken(
+                socialLogin.getSocialId(),
+                socialLogin.getEmail(),
+                registrationId,
+                providerUniqueId
+        );
 
-
+        setSecureCookie(response, TEMP_REGISTRATION_TOKEN_NAME, tempRegistrationToken, TEMP_TOKEN_MAX_AGE);
         response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void handleNewUser(String email, String providerUniqueId,
                                String registrationId,
-                               HttpServletRequest request, HttpServletResponse response) throws IOException {
+                               HttpServletResponse response) throws IOException {
 
         SocialLogin socialLogin = socialLoginService.createSocialLogin(email,
                 SocialLogin.SocialProvider.valueOf(registrationId.toUpperCase()), providerUniqueId);
 
-        HttpSession session = request.getSession();
-        session.setAttribute("registration_socialId", socialLogin.getSocialId());
-        session.setAttribute("registration_email", email);
-        session.setAttribute("registration_provider", registrationId);
-        session.setAttribute("registration_providerUniqueId", providerUniqueId);
+        String tempRegistrationToken = jwtTokenProvider.generateTempRegistrationToken(
+                socialLogin.getSocialId(),
+                email,
+                registrationId,
+                providerUniqueId
+        );
 
+        setSecureCookie(response, TEMP_REGISTRATION_TOKEN_NAME, tempRegistrationToken, TEMP_TOKEN_MAX_AGE);
         response.sendRedirect(frontendUrl + "/login/select-role");
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(refreshTokenCookie);
+        setSecureCookie(response, "refreshToken", refreshToken, REFRESH_TOKEN_MAX_AGE);
     }
 
-    private void saveUserSession(HttpServletRequest request, CustomUserDetails userDetails) {
-        HttpSession session = request.getSession();
-        session.setAttribute("accessToken", userDetails.getAccessToken());
-        session.setAttribute("providerUniqueId", userDetails.getProviderUniqueId());
-        session.setAttribute("userRole", userDetails.getRole().name());
-        session.setAttribute("bifId", userDetails.getBifId());
-        session.setAttribute("nickname", userDetails.getNickname());
-        session.setAttribute("provider", userDetails.getProvider());
-        session.setAttribute("socialId", userDetails.getSocialId());
+    private void setSecureCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        String cookieValue = String.format(
+                "%s=%s; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=%d",
+                name, value, maxAge
+        );
+        response.addHeader("Set-Cookie", cookieValue);
+
+        // CORS 헤더 명시적 설정
+        response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
 }

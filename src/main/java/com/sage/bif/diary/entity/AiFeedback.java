@@ -29,7 +29,7 @@ public class AiFeedback {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="diary_id", nullable = false, unique = true)
+    @JoinColumn(name="diary_id", nullable = true, unique = true)
     private Diary diary;
 
     @Column(columnDefinition = "TEXT", nullable=true)

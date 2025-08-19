@@ -47,6 +47,9 @@ public class UserController {
     private static final String BIF_ID = "bifId";
     private static final String NICKNAME = "nickname";
     private static final String SERVER_ERROR = "SERVER_ERROR";
+    private static final String TEMP_REGISTRATION_TOKEN = "tempRegistrationToken";
+    private static final String AUTHENTICATED_USER_TOKEN = "authenticatedUserToken";
+    private static final String SUCCESS = "SUCCESS";
 
     private final BifService bifService;
     private final GuardianService guardianService;
@@ -206,7 +209,7 @@ public class UserController {
             }
 
             String validationResult = jwtTokenProvider.validateToken(refreshToken);
-            if (!"SUCCESS".equals(validationResult)) {
+            if (!SUCCESS.equals(validationResult)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Refresh Token이 유효하지 않습니다.", validationResult));
             }
@@ -251,67 +254,146 @@ public class UserController {
     }
 
     @GetMapping("/session-info")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getSessionInfo(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getSessionInfo(
+            HttpServletRequest request,
+            @CookieValue(value = TEMP_REGISTRATION_TOKEN, required = false) String tempRegistrationToken,
+            @CookieValue(value = AUTHENTICATED_USER_TOKEN, required = false) String authenticatedUserToken) {
+
         try {
-            HttpSession session = request.getSession(false);
-            Map<String, Object> sessionData = new HashMap<>();
+            logCookieInformation(request, tempRegistrationToken, authenticatedUserToken);
 
-            if(session == null ) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("세션이 없습니다."));
-            } else {
-                String accessToken = (String) session.getAttribute(ACCESS_TOKEN);
-                if (accessToken != null) {
-                    sessionData.put(ACCESS_TOKEN, accessToken);
-                    sessionData.put(PROVIDER_UNIQUE_ID, session.getAttribute(PROVIDER_UNIQUE_ID));
-                    sessionData.put(ROLE, session.getAttribute(ROLE));
-                    sessionData.put(BIF_ID, session.getAttribute(BIF_ID));
-                    sessionData.put(NICKNAME, session.getAttribute(NICKNAME));
-                    sessionData.put(PROVIDER, session.getAttribute(PROVIDER));
-
-                    return ResponseEntity.ok(ApiResponse.success(sessionData, "세션 정보 조회 성공"));
+            // 1. 임시 등록 토큰 확인 (미완료 회원가입)
+            if (tempRegistrationToken != null) {
+                var registrationResult = processRegistrationToken(tempRegistrationToken);
+                if (registrationResult != null) {
+                    return registrationResult;
                 }
             }
 
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth instanceof OAuth2AuthenticationToken oauth2Token) {
-                oauth2Token = (OAuth2AuthenticationToken) auth;
-                String providerUniqueId = oauth2Token.getPrincipal().getName();
-
-                var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
-                if (socialLoginOpt.isPresent()) {
-                    Long socialId = socialLoginOpt.get().getSocialId();
-
-                    var bif = bifService.findBySocialId(socialId);
-                    var guardian = guardianService.findBySocialId(socialId);
-
-                    if (bif.isPresent() || guardian.isPresent()) {
-                        SecurityContextHolder.clearContext();
-                        session.invalidate();
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.","EXISTING_USER_LOGOUT_REQUIRED"));
-                    } else {
-                        String email = socialLoginOpt.map(SocialLogin::getEmail).orElse(null);
-                        String provider = oauth2Token.getAuthorizedClientRegistrationId();
-
-                        Map<String, Object> registrationInfo = new HashMap<>();
-                        registrationInfo.put("socialId", socialId);
-                        registrationInfo.put("email", email);
-                        registrationInfo.put(PROVIDER, provider);
-                        registrationInfo.put(PROVIDER_UNIQUE_ID, providerUniqueId);
-
-                        sessionData.put("registrationInfo", registrationInfo);
-                    }
+            // 2. 인증된 사용자 토큰 확인 (완료된 로그인)
+            if (authenticatedUserToken != null) {
+                var userResult = processAuthenticatedUserToken(authenticatedUserToken);
+                if (userResult != null) {
+                    return userResult;
                 }
             }
 
-            return ResponseEntity.ok(ApiResponse.success(sessionData, "세션 정보 조회 성공"));
+            // 3. OAuth2 인증 진행 중인 경우 확인
+            var oauth2Result = processOAuth2Authentication();
+            if (oauth2Result != null) {
+                return oauth2Result;
+            }
+
+            // 4. 아무 인증 정보도 없음
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("인증 정보가 없습니다."));
 
         } catch (Exception e) {
-            log.error("세션 정보 조회 실패: {}", e.getMessage());
+            log.error("세션 정보 조회 실패: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("세션 정보 조회 실패: " + e.getMessage()));
         }
+    }
+
+    private void logCookieInformation(HttpServletRequest request, String tempToken, String authToken) {
+        log.info("Session-info called - tempRegistrationToken: {}, authenticatedUserToken: {}",
+                tempToken != null ? "present" : "null",
+                authToken != null ? "present" : "null");
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                log.debug("Cookie - Name: {}, Domain: {}, Path: {}",
+                        cookie.getName(), cookie.getDomain(), cookie.getPath());
+            }
+        } else {
+            log.warn("No cookies found in request");
+        }
+    }
+
+    private ResponseEntity<ApiResponse<Map<String, Object>>> processRegistrationToken(String token) {
+        log.info("Processing tempRegistrationToken...");
+        String validationResult = jwtTokenProvider.validateToken(token);
+        log.info("Token validation result: {}", validationResult);
+
+        if (SUCCESS.equals(validationResult)) {
+            Map<String, Object> registrationInfo = jwtTokenProvider.getRegistrationInfoFromTempToken(token);
+            log.info("Registration info extracted: {}", registrationInfo != null ? "success" : "failed");
+
+            if (registrationInfo != null) {
+                Map<String, Object> sessionData = new HashMap<>();
+                sessionData.put("registrationInfo", registrationInfo);
+                return ResponseEntity.ok(ApiResponse.success(sessionData, "임시 등록 정보 조회 성공"));
+            }
+        } else {
+            log.warn("Invalid temp registration token: {}", validationResult);
+        }
+        return null;
+    }
+
+    private ResponseEntity<ApiResponse<Map<String, Object>>> processAuthenticatedUserToken(String token) {
+        log.info("Processing authenticatedUserToken...");
+        String validationResult = jwtTokenProvider.validateToken(token);
+        log.info("Auth token validation result: {}", validationResult);
+
+        if (SUCCESS.equals(validationResult)) {
+            Map<String, Object> userInfo = jwtTokenProvider.getAuthenticatedUserInfoFromToken(token);
+            log.info("User info extracted: {}", userInfo != null ? "success" : "failed");
+
+            if (userInfo != null) {
+                Map<String, Object> sessionData = new HashMap<>();
+                sessionData.put(ACCESS_TOKEN, token);
+                sessionData.put(PROVIDER_UNIQUE_ID, userInfo.get(PROVIDER_UNIQUE_ID));
+                sessionData.put(ROLE, userInfo.get(ROLE));
+                sessionData.put(BIF_ID, userInfo.get(BIF_ID));
+                sessionData.put(NICKNAME, userInfo.get(NICKNAME));
+                sessionData.put(PROVIDER, userInfo.get(PROVIDER));
+
+                return ResponseEntity.ok(ApiResponse.success(sessionData, "인증된 사용자 정보 조회 성공"));
+            }
+        } else {
+            log.warn("Invalid authenticated user token: {}", validationResult);
+        }
+        return null;
+    }
+
+    private ResponseEntity<ApiResponse<Map<String, Object>>> processOAuth2Authentication() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!(auth instanceof OAuth2AuthenticationToken oauth2Token)) {
+            return null;
+        }
+
+        String providerUniqueId = oauth2Token.getPrincipal().getName();
+        var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
+
+        if (socialLoginOpt.isEmpty()) {
+            return null;
+        }
+
+        Long socialId = socialLoginOpt.get().getSocialId();
+        var bif = bifService.findBySocialId(socialId);
+        var guardian = guardianService.findBySocialId(socialId);
+
+        if (bif.isPresent() || guardian.isPresent()) {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("기존 사용자입니다. 다시 로그인해주세요.", "EXISTING_USER_LOGOUT_REQUIRED"));
+        }
+
+        // OAuth2 진행 중이지만 등록 미완료 상태
+        String email = socialLoginOpt.map(SocialLogin::getEmail).orElse(null);
+        String provider = oauth2Token.getAuthorizedClientRegistrationId();
+
+        Map<String, Object> registrationInfo = new HashMap<>();
+        registrationInfo.put("socialId", socialId);
+        registrationInfo.put("email", email);
+        registrationInfo.put(PROVIDER, provider);
+        registrationInfo.put(PROVIDER_UNIQUE_ID, providerUniqueId);
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("registrationInfo", registrationInfo);
+
+        return ResponseEntity.ok(ApiResponse.success(sessionData, "OAuth2 등록 정보 조회 성공"));
     }
 
     @DeleteMapping("/withdraw")
@@ -490,22 +572,23 @@ public class UserController {
         return responseData;
     }
 
+    private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7일
+
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN, refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(refreshTokenCookie);
+        setSecureCookie(response, REFRESH_TOKEN, refreshToken, REFRESH_TOKEN_MAX_AGE);
+    }
+
+    private void setSecureCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        String cookieValue = String.format(
+                "%s=%s; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=%d",
+                name, value, maxAge
+        );
+        response.addHeader("Set-Cookie", cookieValue);
+        response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
     private void clearRefreshTokenCookie(HttpServletResponse response) {
-        Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN, "");
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(0);
-        response.addCookie(refreshTokenCookie);
+        setSecureCookie(response, REFRESH_TOKEN, "", 0);
     }
 
 }
