@@ -238,8 +238,6 @@ public class StatsServiceImpl implements StatsService {
             emotionCounts.put(statsEmotion, emotionCounts.get(statsEmotion) + 1);
         }
 
-        // persist will be handled by generateMonthlyStats or updateRealTimeStats
-
         log.debug("BIF ID {}의 {}년 {}월 감정 데이터 계산 완료: {}",
                 bifId, yearMonth.getYear(), yearMonth.getMonthValue(), emotionCounts);
 
