@@ -10,11 +10,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (user?.userRole === "GUARDIAN") {
-    const restrictedPaths = [
-      /^\/todo\/new$/,
-      /^\/todo\/\d+$/,
-      /^\/todo\/\d+\/edit$/,
-    ];
+    const restrictedPaths = [/^\/todo\/new$/, /^\/todo\/\d+$/];
 
     if (restrictedPaths.some((pattern) => pattern.test(location.pathname))) {
       return <Navigate to="/" replace />;
