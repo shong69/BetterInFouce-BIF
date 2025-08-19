@@ -12,6 +12,7 @@ import com.sage.bif.stats.repository.EmotionStatisticsTemplateRepository;
 import com.sage.bif.stats.repository.GuardianAdviceTemplateRepository;
 import com.sage.bif.stats.repository.StatsRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import com.sage.bif.stats.event.model.StatsUpdatedEvent;
@@ -48,6 +49,7 @@ public class StatsServiceImpl implements StatsService {
     private final ObjectMapper objectMapper;
     private final DiaryRepository diaryRepository;
     private final BifRepository bifRepository;
+    private final ObjectProvider<StatsService> statsServiceProvider;
 
 
     @Override
@@ -58,7 +60,7 @@ public class StatsServiceImpl implements StatsService {
         final Optional<Stats> stats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
 
         if (stats.isEmpty()) {
-            generateMonthlyStatsAsync(bifId, currentYearMonth);
+            statsServiceProvider.getObject().generateMonthlyStatsAsync(bifId, currentYearMonth);
             return createEmptyStatsResponse(bifId);
         }
 
@@ -99,7 +101,7 @@ public class StatsServiceImpl implements StatsService {
         final Optional<Stats> stats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
 
         if (stats.isEmpty()) {
-            generateMonthlyStatsAsync(bifId, currentYearMonth);
+            statsServiceProvider.getObject().generateMonthlyStatsAsync(bifId, currentYearMonth);
             return createEmptyStatsResponse(bifId);
         }
 
@@ -168,7 +170,7 @@ public class StatsServiceImpl implements StatsService {
     @Transactional
     public void generateMonthlyStatsAsync(final Long bifId, final LocalDateTime yearMonth) {
         try {
-            generateMonthlyStats(bifId, yearMonth);
+            statsServiceProvider.getObject().generateMonthlyStats(bifId, yearMonth);
         } catch (Exception e) {
             log.error("BIF ID {}의 {}년 {}월 통계 생성 중 오류 발생: {}",
                     bifId, yearMonth.getYear(), yearMonth.getMonthValue(), e.getMessage(), e);
