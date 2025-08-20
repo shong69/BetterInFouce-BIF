@@ -11,8 +11,13 @@ import TabButton from "@components/ui/TabButton";
 import { BiPlus } from "react-icons/bi";
 import { HiOutlineClipboardList } from "react-icons/hi";
 
-import { useLoadingStore, useToastStore, useTodoStore } from "@stores";
-import { getTodos, getTodoDetail, deleteTodo } from "@services/todoService";
+import {
+  useLoadingStore,
+  useToastStore,
+  useTodoStore,
+  useUserStore,
+} from "@stores";
+import { getTodos, deleteTodo } from "@services/todoService";
 
 function EmptyTodoState() {
   return (
@@ -28,6 +33,7 @@ export default function Todo() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     todoId: null,
@@ -42,10 +48,11 @@ export default function Todo() {
   const { showLoading, hideLoading } = useLoadingStore();
   const { showSuccess, showError, showWarning } = useToastStore();
   const { selectedDate } = useTodoStore();
+  const { user } = useUserStore();
 
   useEffect(() => {
     async function fetchTodoList() {
-      showLoading("할 일을 가져오는 중...");
+      setIsLoading(true);
       try {
         const data = await getTodos(selectedDate);
         setTasks(data.filter((todo) => todo.type === "TASK") || []);
@@ -53,18 +60,23 @@ export default function Todo() {
       } catch {
         showError("할 일을 불러오는데 실패했습니다.");
       } finally {
-        hideLoading();
+        setIsLoading(false);
       }
     }
 
     fetchTodoList();
-  }, [selectedDate, showLoading, hideLoading, showError]);
+  }, [selectedDate, showError]);
 
   const currentItems = activeTab === "ROUTINE" ? routines : tasks;
   const incompletedItems = currentItems.filter((item) => !item.isCompleted);
   const completedItems = currentItems.filter((item) => item.isCompleted);
 
   function handleCardClick(id) {
+    if (user?.userRole === "GUARDIAN") {
+      showWarning("Guardian은 할 일 상세보기에 접근할 수 없습니다.");
+      return;
+    }
+
     const allItems = [...tasks, ...routines];
     const clickedItem = allItems.find((item) => item.todoId === id);
 
@@ -77,28 +89,9 @@ export default function Todo() {
     }
   }
 
-  async function handleEdit(id) {
-    try {
-      showLoading("할 일 정보를 불러오는 중...");
-      await getTodoDetail(id);
-      hideLoading();
-
-      const returnTab = activeTab === "ROUTINE" ? "routine" : "task";
-      navigate(`/todo/${id}/edit?returnTab=${returnTab}`);
-    } catch (error) {
-      hideLoading();
-
-      if (error.response?.status === 404) {
-        showError("존재하지 않는 할 일입니다.");
-      } else if (error.response?.status === 403) {
-        showWarning("수정 권한이 없습니다.");
-      } else if (error.response?.status === 401) {
-        showError("로그인이 필요합니다.");
-        setTimeout(() => navigate("/login"), 1000);
-      } else {
-        showError("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
-      }
-    }
+  function handleEdit(id) {
+    const returnTab = activeTab === "ROUTINE" ? "routine" : "task";
+    navigate(`/todo/${id}/edit?returnTab=${returnTab}`);
   }
 
   async function handleDelete(id) {
@@ -154,13 +147,15 @@ export default function Todo() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="h-screen">
       <Header />
 
-      <div className="mx-auto max-w-md px-4 pt-4">
-        <DateBox />
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+        <div className="mb-1 px-2 sm:px-0">
+          <DateBox />
+        </div>
 
-        <div className="mt-4">
+        <div className="mt-2 px-4">
           <TabButton
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -168,73 +163,83 @@ export default function Todo() {
             rightTitle="할 일"
           />
         </div>
-        <div className="mt-6">
-          {incompletedItems.length > 0 && (
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium text-gray-600">
-                할 일 ({incompletedItems.length}개)
-              </h3>
-              <div className="space-y-4">
-                {incompletedItems.map((item) => (
-                  <Card
-                    key={item.todoId}
-                    id={item.todoId}
-                    type="todo"
-                    title={item.title}
-                    hasOrder={item.hasOrder}
-                    subTodos={item.subTodos || []}
-                    isCompleted={false}
-                    onEdit={() => handleEdit(item.todoId)}
-                    onDelete={() => handleDelete(item.todoId)}
-                    onClick={handleCardClick}
-                  />
-                ))}
-              </div>
+        <div className="mt-6 flex-1 overflow-y-auto p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-green-600" />
             </div>
-          )}
+          ) : (
+            <>
+              {incompletedItems.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="mb-3 text-sm font-medium text-gray-600">
+                    할 일 ({incompletedItems.length}개)
+                  </h3>
+                  <div className="space-y-4">
+                    {incompletedItems.map((item) => (
+                      <Card
+                        key={item.todoId}
+                        id={item.todoId}
+                        type="todo"
+                        title={item.title}
+                        hasOrder={item.hasOrder}
+                        subTodos={item.subTodos || []}
+                        isCompleted={false}
+                        onEdit={() => handleEdit(item.todoId)}
+                        onDelete={() => handleDelete(item.todoId)}
+                        onClick={handleCardClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {completedItems.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-primary mb-3 text-sm font-medium">
-                ✅ 완료한 일 ({completedItems.length}개)
-              </h3>
-              <div className="space-y-4">
-                {completedItems.map((item) => (
-                  <Card
-                    key={item.todoId}
-                    id={item.todoId}
-                    type="todo"
-                    title={item.title}
-                    hasOrder={item.hasOrder}
-                    subTodos={item.subTodos || []}
-                    isCompleted={true}
-                    onEdit={() => handleEdit(item.todoId)}
-                    onDelete={() => handleDelete(item.todoId)}
-                    onClick={handleCardClick}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+              {completedItems.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-primary mb-3 text-sm font-medium">
+                    ✅ 완료한 일 ({completedItems.length}개)
+                  </h3>
+                  <div className="space-y-4">
+                    {completedItems.map((item) => (
+                      <Card
+                        key={item.todoId}
+                        id={item.todoId}
+                        type="todo"
+                        title={item.title}
+                        hasOrder={item.hasOrder}
+                        subTodos={item.subTodos || []}
+                        isCompleted={true}
+                        onEdit={() => handleEdit(item.todoId)}
+                        onDelete={() => handleDelete(item.todoId)}
+                        onClick={handleCardClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {currentItems.length === 0 && <EmptyTodoState />}
+              {currentItems.length === 0 && <EmptyTodoState />}
+            </>
+          )}
         </div>
 
         {currentItems.length > 0 && (
-          <div className="mt-8 mb-8 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="mt-8 mb-8 p-4 text-center">
+            <p className="text-xs text-gray-400">
               카드를 오른쪽으로 스와이프하면 수정/삭제 버튼이 나타납니다.
             </p>
           </div>
         )}
       </div>
 
-      <button
-        onClick={handleAddTodo}
-        className="fixed right-6 bottom-24 flex h-14 w-14 touch-manipulation items-center justify-center rounded-full bg-green-600 shadow-lg transition-colors active:bg-green-700"
-      >
-        <BiPlus className="text-white" size={28} />
-      </button>
+      {user?.userRole === "BIF" && (
+        <button
+          onClick={handleAddTodo}
+          className="fixed right-6 bottom-28 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full bg-green-600 shadow-lg transition-colors active:bg-green-700"
+        >
+          <BiPlus className="text-white" size={28} />
+        </button>
+      )}
 
       <Modal
         isOpen={deleteModal.isOpen}

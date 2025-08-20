@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useUserStore } from "@stores";
+import { useNotifications } from "@hooks/useNotifications";
 
 import Login from "@pages/user/Login";
 import LoginSelectRole from "@pages/user/LoginSelectRole";
@@ -26,6 +27,21 @@ import GuardianStats from "@pages/profile/GuardianStats";
 import ProtectedRoute from "@components/auth/ProtectedRoute";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import ToastNotification from "@components/ui/ToastNotification";
+import NotificationPermissionHandler from "@components/notifications/NotificationPermissionHandler";
+
+function AppContent() {
+  const { isAuthenticated } = useUserStore();
+
+  useNotifications();
+
+  return (
+    <>
+      {isAuthenticated() && <NotificationPermissionHandler />}
+      <LoadingSpinner />
+      <ToastNotification />
+    </>
+  );
+}
 
 function App() {
   const { isAuthenticated, registrationInfo, isLoading, initializeAuth } =
@@ -174,10 +190,9 @@ function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
 
-      <LoadingSpinner />
-      <ToastNotification />
+        <AppContent />
+      </BrowserRouter>
     </>
   );
 }

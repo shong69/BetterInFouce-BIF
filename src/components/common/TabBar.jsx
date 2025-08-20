@@ -48,7 +48,7 @@ export default function TabBar() {
   ];
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 border-t border-gray-100 bg-white shadow-lg">
+    <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-gray-100 bg-white shadow-lg">
       <div className="flex justify-around">
         {tabs.map(function (tab) {
           const isActive = tab.isActive(currentPath);
