@@ -2,13 +2,15 @@ FROM gradle:8.11.1-jdk17-alpine AS builder
 
 WORKDIR /app
 
-COPY build.gradle settings.gradle ./
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
+
+COPY settings.gradle build.gradle ./
 COPY gradle gradle
 
-RUN gradle dependencies --no-daemon
+RUN --mount=type=cache,target=/home/gradle/.gradle gradle dependencies --no-daemon
 
 COPY src src
-RUN gradle bootJar --no-daemon
+RUN --mount=type=cache,target=/home/gradle/.gradle gradle bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre-alpine
 
@@ -16,7 +18,7 @@ WORKDIR /app
 
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata curl
 ENV TZ=Asia/Seoul
 
 COPY --from=builder /app/build/libs/*.jar app.jar
