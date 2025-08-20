@@ -13,6 +13,7 @@ import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { formatDate } from "@utils/dateUtils";
 import { EMOTIONS } from "@constants/emotions";
+import logo2 from "@assets/logo2.png";
 
 export default function DiaryView() {
   const { id } = useParams();
@@ -290,11 +291,7 @@ export default function DiaryView() {
         </div>
         <div className="flex justify-start">
           <div className="flex max-w-[95%] items-start gap-2">
-            <img
-              src="/src/assets/logo2.png"
-              alt="현명한 거북이"
-              className="h-10 w-10"
-            />
+            <img src={logo2} alt="현명한 거북이" className="h-10 w-10" />
             {renderTurtleMessage()}
           </div>
         </div>

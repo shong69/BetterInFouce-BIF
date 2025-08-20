@@ -46,6 +46,15 @@ export default function SimulationProgress() {
   const simrunCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
+  const choicesRef = useRef(null);
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (conversationRef.current) {
+        conversationRef.current.scrollTop =
+          conversationRef.current.scrollHeight;
+      }
+    }, 100);
+  };
 
   useEffect(
     function () {
@@ -178,7 +187,6 @@ export default function SimulationProgress() {
         setScore(newTotal);
       }
     }
-
     const userResponse = {
       type: "user",
       message: selectedOptionText,
@@ -248,6 +256,7 @@ export default function SimulationProgress() {
       setConversationHistory(function (prev) {
         return [...prev, opponentMessage];
       });
+      scrollToBottom();
     } else {
       const totalScore = localStorage.getItem(`sim_${id}_total`) || score;
 
@@ -339,7 +348,7 @@ export default function SimulationProgress() {
 
   const progress =
     simulation.steps && simulation.steps.length > 0
-      ? ((currentStep + 1) / simulation.steps.length) * 100
+      ? (currentStep / simulation.steps.length) * 100
       : 0;
 
   return (
@@ -459,11 +468,7 @@ export default function SimulationProgress() {
           {showTyping && (
             <div className="flex justify-start">
               <div className="flex max-w-[90%] items-start gap-2">
-                <img
-                  src="/src/assets/logo2.png"
-                  alt="현명한 거북이"
-                  className="h-7 w-7"
-                />
+                <img src={logo2} alt="현명한 거북이" className="h-7 w-7" />
                 <div className="max-w-full min-w-[200px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-gray-800">
@@ -490,7 +495,7 @@ export default function SimulationProgress() {
         </div>
 
         {selectedOption === null && (
-          <>
+          <div ref={choicesRef}>
             <div className="mb-4 text-center text-sm text-gray-600">
               상황에 알맞은 답변을 선택해주세요!
             </div>
@@ -517,7 +522,7 @@ export default function SimulationProgress() {
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
       </main>
 
