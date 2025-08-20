@@ -19,19 +19,23 @@ public class WebPushConfig {
     @Value("${vapid.private-key}")
     private String vapidPrivateKey;
 
+    @Value("${vapid.subject}")
+    private String vapidSubject;
+
     @Bean
     public PushService pushService() throws GeneralSecurityException {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
 
-        if (vapidPublicKey.isEmpty() || vapidPrivateKey.isEmpty()) {
-            throw new WebPushConfigurationException("VAPID 키가 설정되지 않았습니다. vapid.public-key와 vapid.private-key를 설정해주세요.");
+        if (vapidPublicKey.isEmpty() || vapidPrivateKey.isEmpty() || vapidSubject.isEmpty()) {
+            throw new WebPushConfigurationException("VAPID 키가 설정되지 않았습니다. vapid.public-key, vapid.private-key, vapid.subject를 설정해주세요.");
         }
 
         PushService pushService = new PushService();
         pushService.setPublicKey(vapidPublicKey);
         pushService.setPrivateKey(vapidPrivateKey);
+        pushService.setSubject(vapidSubject);
 
         return pushService;
     }

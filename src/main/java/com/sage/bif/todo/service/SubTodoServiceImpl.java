@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class SubTodoServiceImpl implements SubTodoService {
 
         subTodo.setIsCompleted(isCompleted);
         if (isCompleted) {
-            subTodo.setCompletedAt(LocalDateTime.now());
+            subTodo.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         } else {
             subTodo.setCompletedAt(null);
         }
