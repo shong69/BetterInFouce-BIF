@@ -129,13 +129,13 @@ export default function Simulation() {
           <DateBox />
         </div>
 
-        <div className="mx-3 mt-6 mb-[78px] sm:mb-[78px]">
+        <div className="mx-3 mt-6 mb-24">
           {isBif && (
             <>
               {bifRecommendedSimulations.length > 0 && (
-                <section className="mb-8 w-full">
-                  <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                    추천
+                <section className="mb-6 w-full">
+                  <h2 className="mb-3 text-sm font-bold text-gray-800">
+                    👍 추천
                   </h2>
                   <div className="w-full space-y-3">
                     {bifRecommendedSimulations.map((simulation) => (
@@ -156,10 +156,8 @@ export default function Simulation() {
               )}
 
               {bifOtherSimulations.length > 0 && (
-                <section className="mb-8 w-full">
-                  <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                    주제
-                  </h2>
+                <section className="mb-6 w-full">
+                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
                   <div className="w-full space-y-3">
                     {bifOtherSimulations.map((simulation) => (
                       <SimulationCard
@@ -183,9 +181,9 @@ export default function Simulation() {
           {isGuardian && (
             <>
               {guardianRecommendedSimulations.length > 0 && (
-                <section className="mb-8 w-full">
-                  <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                    추천
+                <section className="mb-6 w-full">
+                  <h2 className="mb-3 text-sm font-bold text-gray-800">
+                    👍 추천
                   </h2>
                   <div className="w-full space-y-3">
                     {guardianRecommendedSimulations.map((simulation) => (
@@ -205,10 +203,8 @@ export default function Simulation() {
                 </section>
               )}
               {guardianOtherSimulations.length > 0 && (
-                <section className="mb-8 w-full">
-                  <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                    주제
-                  </h2>
+                <section className="mb-6 w-full">
+                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
                   <div className="w-full space-y-3">
                     {guardianOtherSimulations.map((simulation) => (
                       <SimulationCard
@@ -232,10 +228,8 @@ export default function Simulation() {
           {!isBif && !isGuardian && (
             <>
               {simulations.length > 0 && (
-                <section className="mb-8 w-full">
-                  <h2 className="mb-4 text-[15px] font-extrabold text-gray-800">
-                    시뮬레이션
-                  </h2>
+                <section className="mb-6 w-full">
+                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
                   <div className="w-full space-y-3">
                     {simulations.map((simulation) => (
                       <SimulationCard
@@ -260,6 +254,7 @@ export default function Simulation() {
           )}
         </div>
       </div>
+
       <TabBar />
     </>
   );
