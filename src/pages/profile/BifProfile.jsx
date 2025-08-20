@@ -106,8 +106,8 @@ export default function BifProfile() {
     handleLoadUserStats();
   }, [handleLoadUserStats]);
 
-  if (user?.userRole !== "BIF") {
-    return <Navigate to="/bif-profile" replace />;
+  if (user && user.userRole && user.userRole !== "BIF") {
+    return <Navigate to="/login" replace />;
   }
 
   function createDonutChartData(emotionRatio) {
@@ -379,7 +379,7 @@ export default function BifProfile() {
 
                 <button
                   onClick={handleOpenUserInfoModal}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300"
+                  className="flex items-center space-x-2 rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-800"
                 >
                   <IoPencil className="h-4 w-4" />
                   <span>회원정보 수정</span>
@@ -395,7 +395,7 @@ export default function BifProfile() {
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                      className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-400"
                     >
                       <IoLogOut className="h-4 w-4" />
                       <span>로그아웃</span>
@@ -461,16 +461,14 @@ export default function BifProfile() {
                   </h2>
                 </div>
 
-                {loading && (
+                {loading ? (
                   <div className="rounded-lg bg-white p-6 text-center shadow-sm">
                     <LoadingSpinner />
                     <p className="mt-2 text-gray-600">
                       통계 데이터를 불러오는 중...
                     </p>
                   </div>
-                )}
-
-                {!loading && (
+                ) : (
                   <>
                     <div className="rounded-lg bg-white p-4 shadow-sm">
                       <h3 className="mb-4 text-lg font-semibold text-gray-800">

@@ -105,8 +105,8 @@ export default function CreateTodo() {
     <div className="min-h-screen pb-20">
       <Header />
 
-      <div className="mx-4 pt-4">
-        <div className="mt-4 mb-6 ml-[-7px]">
+      <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
+        <div className="mb-4 ml-[-7px] px-2 sm:px-0">
           <BackButton
             onClick={() => {
               if (returnTab) {
@@ -118,11 +118,11 @@ export default function CreateTodo() {
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 px-2 sm:px-0">
           <h1 className="text-lg text-gray-800">할 일</h1>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 px-2 sm:px-0">
           <div>
             <label htmlFor="todo-input" className="sr-only">
               할 일 내용
@@ -132,8 +132,7 @@ export default function CreateTodo() {
               ref={textareaRef}
               value={userInput}
               onChange={handleTitleChange}
-              placeholder="시작할 업무나 할 일을 적어주세요. 시간 단계별로 정리해 드릴게요! (예:'오후 3시까지 김대리님께 메일 
-  보내기', '냉장고 청소하기')"
+              placeholder="시작할 업무나 할 일을 적어주세요. 시간 단계별로 정리해 드릴게요! (예:'오후 3시까지 김대리님께 메일 보내기', '냉장고 청소하기')"
               className={`focus:ring-opacity-50 w-full resize-none rounded-xl border p-4 text-base placeholder-gray-300 transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 hasValidationError
                   ? "border-red-500 focus:border-red-300"
@@ -167,8 +166,8 @@ export default function CreateTodo() {
             </div>
           )}
 
-          <div className="fixed right-0 bottom-35 left-0 bg-gradient-to-t from-white via-white to-transparent px-4 pt-6">
-            <div className="mx-auto max-w-md">
+          <div className="fixed right-0 bottom-35 left-0 px-2 sm:px-0">
+            <div className="mx-auto max-w-4xl px-4">
               <SecondaryButton
                 title={globalLoading ? "생성 중..." : "AI 작업 생성"}
                 onClick={handleSubmit}

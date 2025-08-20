@@ -10,7 +10,7 @@ export default function Header() {
     user?.userRole === "GUARDIAN" ? "/guardian-profile" : "/bif-profile";
 
   return (
-    <header className="sticky top-0 flex items-center justify-between bg-white px-3 py-3 shadow-sm">
+    <header className="sticky top-0 z-40 flex items-center justify-between bg-white px-3 py-3 shadow-sm">
       <Logo />
       <Link
         to={profilePath}

@@ -17,7 +17,7 @@ import {
   uncompleteTodo,
   updateTodoStep,
 } from "@services/todoService";
-import { useToastStore, useLoadingStore } from "@stores";
+import { useToastStore, useUserStore } from "@stores";
 import { getRandomColorByTitle } from "@utils/colorUtils";
 
 export default function TodoDetail() {
@@ -26,13 +26,14 @@ export default function TodoDetail() {
   const [todoData, setTodoData] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const typeFromUrl = new URLSearchParams(window.location.search).get("type");
   const returnTab = new URLSearchParams(window.location.search).get(
     "returnTab",
   );
   const { showError } = useToastStore();
-  const { showLoading, hideLoading } = useLoadingStore();
+  const { user } = useUserStore();
 
   const colors = useMemo(() => {
     if (!todoData?.title || !todoData?.todoId) {
@@ -86,8 +87,6 @@ export default function TodoDetail() {
   }
 
   useEffect(() => {
-    showLoading("상세 할 일을 가져오는 중...");
-
     async function fetchTodoDetail() {
       try {
         const data = await getTodoDetail(id);
@@ -100,14 +99,19 @@ export default function TodoDetail() {
         showError("할 일을 불러오는데 실패했습니다.");
         navigate("/");
       } finally {
-        hideLoading();
+        setIsLoading(false);
       }
     }
 
     fetchTodoDetail();
-  }, [id, navigate, showLoading, hideLoading, showError]);
+  }, [id, navigate, showError]);
 
   async function toggleSubTodoComplete(subTodoId) {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (isRecentClick()) return;
 
     const subTodoIndex = todoData.subTodos.findIndex(
@@ -166,6 +170,11 @@ export default function TodoDetail() {
   }
 
   async function handlePreviousStep() {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (currentStep <= 0 || isRecentClick()) {
       return;
     }
@@ -191,6 +200,11 @@ export default function TodoDetail() {
   }
 
   async function handleNextStep() {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (isRecentClick() || currentStep >= todoData.subTodos.length - 1) {
       return;
     }
@@ -228,7 +242,7 @@ export default function TodoDetail() {
     );
   }
 
-  if (!todoData) {
+  if (!todoData || isLoading) {
     return (
       <div className="min-h-screen pb-20">
         <Header />
@@ -367,8 +381,10 @@ export default function TodoDetail() {
     <div className="min-h-screen pb-20">
       <Header />
 
-      <div className="mx-auto max-w-md px-4 pt-4">
-        <DateBox />
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+        <div className="mb-1 px-2 sm:px-0">
+          <DateBox />
+        </div>
 
         <div className="mt-4 mb-6">
           <BackButton
@@ -382,7 +398,9 @@ export default function TodoDetail() {
           />
         </div>
 
-        {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        <div className="px-4">
+          {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        </div>
 
         {(completionStatus.isChecklistCompleted ||
           completionStatus.isSequenceCompleted) && (

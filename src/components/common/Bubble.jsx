@@ -1,3 +1,4 @@
+import logo2 from "@assets/logo2.png";
 export default function Bubble({
   message,
   onNextStep = null,
@@ -28,11 +29,7 @@ export default function Bubble({
 
   return (
     <div className="flex max-w-[85%] items-start gap-2">
-      <img
-        src="/src/assets/logo2.png"
-        alt="현명한 거북이"
-        className="h-7 w-7"
-      />
+      <img src={logo2} alt="현명한 거북이" className="h-7 w-7" />
       <div className="max-w-full min-w-[180px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-[13px] font-semibold text-gray-800">
