@@ -1,3 +1,5 @@
+import { IoIosArrowForward } from "react-icons/io";
+
 export default function SimulationCard({
   id = 1,
   title = "제목",
@@ -53,7 +55,7 @@ export default function SimulationCard({
   return (
     <div className="relative">
       <div
-        className="w-full cursor-pointer rounded-xl bg-white p-3 pt-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        className="w-full cursor-pointer rounded-xl border-1 border-gray-300 bg-white p-3 pt-4 text-left shadow-sm"
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         role="button"
@@ -61,7 +63,7 @@ export default function SimulationCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex flex-1 items-center">
-            <h3 className={`text-lg font-medium ${getCategoryColor()}`}>
+            <h3 className={`text-md font-medium ${getCategoryColor()}`}>
               {title}
             </h3>
           </div>
@@ -89,7 +91,7 @@ export default function SimulationCard({
               >
                 {category}
               </span>
-              <div className="text-primary font-sm text-lg">&#x276F;</div>
+              <IoIosArrowForward className="text-primary font-sm text-lg" />
             </div>
           </div>
         </div>
