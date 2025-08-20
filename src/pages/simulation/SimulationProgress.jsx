@@ -47,14 +47,6 @@ export default function SimulationProgress() {
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
   const choicesRef = useRef(null);
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (conversationRef.current) {
-        conversationRef.current.scrollTop =
-          conversationRef.current.scrollHeight;
-      }
-    }, 100);
-  };
 
   useEffect(
     function () {
@@ -162,6 +154,36 @@ export default function SimulationProgress() {
     };
   }, []);
 
+  useEffect(() => {
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+
+    if (lastMessage && lastMessage.type === "opponent") {
+      setTimeout(() => {
+        const messageElements = document.querySelectorAll(
+          '[class*="bg-[#F2F7FB]"]',
+        );
+        const lastElement = messageElements[messageElements.length - 1];
+
+        if (lastElement) {
+          const rect = lastElement.getBoundingClientRect();
+          const stickyHeaderHeight = 140;
+          const topOffset = 80;
+          const extraSpace = 20;
+
+          window.scrollTo({
+            top:
+              window.scrollY +
+              rect.top -
+              stickyHeaderHeight -
+              topOffset -
+              extraSpace,
+            behavior: "smooth",
+          });
+        }
+      }, 200);
+    }
+  }, [conversationHistory]);
+
   async function handleOptionSelect(optionIndex) {
     if (selectedOption !== null) return;
 
@@ -256,7 +278,6 @@ export default function SimulationProgress() {
       setConversationHistory(function (prev) {
         return [...prev, opponentMessage];
       });
-      scrollToBottom();
     } else {
       const totalScore = localStorage.getItem(`sim_${id}_total`) || score;
 
@@ -362,7 +383,7 @@ export default function SimulationProgress() {
         <BackButton onClick={handleBackToMain} />
       </div>
 
-      <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
+      <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-32">
         <div className="sticky top-20 z-10 mb-6 rounded-xl bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3
