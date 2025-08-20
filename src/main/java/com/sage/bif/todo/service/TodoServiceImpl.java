@@ -34,6 +34,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -161,13 +162,13 @@ public class TodoServiceImpl implements TodoService {
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
             routineCompletionRepository.insertIgnoreCompletion(todoId, today);
 
             return TodoListResponse.from(todo, true);
         } else {
             todo.setIsCompleted(true);
-            todo.setCompletedAt(LocalDateTime.now());
+            todo.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             todo.setLastNotificationSentAt(null);
 
             return TodoListResponse.from(todo, false);
@@ -183,7 +184,7 @@ public class TodoServiceImpl implements TodoService {
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
             routineCompletionRepository.deleteCompletion(todoId, today);
 
             return TodoListResponse.from(todo, false);
