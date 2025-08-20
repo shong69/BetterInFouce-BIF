@@ -159,11 +159,11 @@ export default function BifProfile() {
           data: monthlyChange.map((item) => item.previousValue || 0),
           backgroundColor: monthlyChange.map((item) => {
             const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}40`; // 40은 투명도 (25%)
+            return `${baseColor}40`;
           }),
           borderColor: monthlyChange.map((item) => {
             const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}80`; // 80은 투명도 (50%)
+            return `${baseColor}80`;
           }),
           borderWidth: 1,
           borderRadius: 4,
@@ -411,17 +411,13 @@ export default function BifProfile() {
                         가입일:{" "}
                         {(() => {
                           if (stats?.joinDate) {
-                            try {
-                              const date = new Date(stats.joinDate);
-                              if (!isNaN(date.getTime())) {
-                                return date.toLocaleDateString("ko-KR", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                });
-                              }
-                            } catch {
-                              // stats.joinDate 파싱 실패 시 user.createdAt 시도
+                            const date = new Date(stats.joinDate);
+                            if (!isNaN(date.getTime())) {
+                              return date.toLocaleDateString("ko-KR", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
                             }
                           }
 
