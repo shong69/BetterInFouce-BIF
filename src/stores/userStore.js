@@ -60,7 +60,7 @@ export const useUserStore = create((set, get) => ({
         accessToken: savedToken,
         user: payload
           ? {
-              userRole: payload.role,
+              userRole: payload.userRole || payload.role,
               bifId: payload.bifId,
               nickname: payload.nickname,
               provider: payload.provider,
@@ -105,11 +105,13 @@ export const useUserStore = create((set, get) => ({
         const { data } = result;
 
         if (data.accessToken) {
+          const tokenPayload = getTokenPayload(data.accessToken);
+
           set({
             accessToken: data.accessToken,
             user: {
               providerUniqueId: data.providerUniqueId,
-              userRole: data.role,
+              userRole: data.userRole || data.role || tokenPayload?.role,
               bifId: data.bifId,
               nickname: data.nickname,
               provider: data.provider,
@@ -170,11 +172,16 @@ export const useUserStore = create((set, get) => ({
         if (refreshResponse.ok) {
           const result = await refreshResponse.json();
           if (result.data?.accessToken) {
+            const tokenPayload = getTokenPayload(result.data.accessToken);
+
             set({
               accessToken: result.data.accessToken,
               user: {
                 providerUniqueId: result.data.providerUniqueId,
-                userRole: result.data.role,
+                userRole:
+                  result.data.userRole ||
+                  result.data.role ||
+                  tokenPayload?.role,
                 bifId: result.data.bifId,
                 nickname: result.data.nickname,
                 provider: result.data.provider,

@@ -583,7 +583,7 @@ export default function EditTodo() {
                   key={subTodo.subTodoId}
                   className="flex items-center gap-4"
                 >
-                  <span className="bg-toggle flex h-6 w-6 items-center justify-center rounded-full border text-xs text-white">
+                  <span className="bg-secondary flex h-7 w-7 min-w-[1.75rem] items-center justify-center rounded-full border text-xs font-medium text-white">
                     {index + 1}
                   </span>
                   <input
@@ -591,7 +591,7 @@ export default function EditTodo() {
                     value={subTodo.title}
                     onChange={(e) => handleSubTodoChange(index, e.target.value)}
                     placeholder={`세부 할일 ${index + 1}`}
-                    className="flex-1 rounded-lg border border-gray-100 p-3 text-base focus:border-gray-200 focus:outline-none"
+                    className="flex-1 rounded-lg border border-gray-200 p-3 text-base focus:border-gray-200 focus:outline-none"
                   />
                   <button
                     onClick={() => handleRemoveSubTodo(index)}

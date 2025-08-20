@@ -7,8 +7,9 @@ import TabBar from "@components/common/TabBar";
 import Modal from "@components/ui/Modal";
 import DateBox from "@components/ui/DateBox";
 import TabButton from "@components/ui/TabButton";
+import DatePickerModal from "@components/ui/DatePickerModal";
 
-import { BiPlus } from "react-icons/bi";
+import { BiPlus, BiCalendar } from "react-icons/bi";
 import { HiOutlineClipboardList } from "react-icons/hi";
 
 import {
@@ -40,6 +41,10 @@ export default function Todo() {
     todoTitle: "",
   });
 
+  const [datePickerModal, setDatePickerModal] = useState({
+    isOpen: false,
+  });
+
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get("tab");
@@ -47,7 +52,7 @@ export default function Todo() {
   });
   const { showLoading, hideLoading } = useLoadingStore();
   const { showSuccess, showError, showWarning } = useToastStore();
-  const { selectedDate } = useTodoStore();
+  const { selectedDate, setSelectedDate } = useTodoStore();
   const { user } = useUserStore();
 
   useEffect(() => {
@@ -146,13 +151,34 @@ export default function Todo() {
     navigate(`/todo/new?returnTab=${returnTab}`);
   }
 
+  function openDatePicker() {
+    setDatePickerModal({ isOpen: true });
+  }
+
+  function closeDatePicker() {
+    setDatePickerModal({ isOpen: false });
+  }
+
+  function handleDateSelect(selectedDateValue) {
+    setSelectedDate(selectedDateValue);
+    closeDatePicker();
+  }
+
   return (
     <div className="h-screen">
       <Header />
 
       <div className="mx-auto max-w-4xl p-2 sm:p-4">
         <div className="mb-1 px-2 sm:px-0">
-          <DateBox />
+          <div className="flex items-center gap-1">
+            <DateBox />
+            <button
+              onClick={openDatePicker}
+              className="text-black-600 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+            >
+              <BiCalendar size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="mt-2 px-4">
@@ -172,10 +198,10 @@ export default function Todo() {
             <>
               {incompletedItems.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="mb-3 text-sm font-medium text-gray-600">
+                  <h3 className="mb-3 text-sm font-bold text-gray-800">
                     할 일 ({incompletedItems.length}개)
                   </h3>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {incompletedItems.map((item) => (
                       <Card
                         key={item.todoId}
@@ -196,7 +222,7 @@ export default function Todo() {
 
               {completedItems.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-primary mb-3 text-sm font-medium">
+                  <h3 className="mb-3 text-sm font-bold text-gray-800">
                     ✅ 완료한 일 ({completedItems.length}개)
                   </h3>
                   <div className="space-y-4">
@@ -257,6 +283,13 @@ export default function Todo() {
           </p>
         </div>
       </Modal>
+
+      <DatePickerModal
+        isOpen={datePickerModal.isOpen}
+        onClose={closeDatePicker}
+        onDateSelect={handleDateSelect}
+        currentDate={selectedDate}
+      />
 
       <TabBar />
     </div>

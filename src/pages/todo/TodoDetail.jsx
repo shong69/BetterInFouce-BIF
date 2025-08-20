@@ -232,7 +232,7 @@ export default function TodoDetail() {
   function renderTodoHeader() {
     return (
       <div className="mb-4 flex items-center justify-between">
-        <h2 className={`text-lg font-medium ${colors.title}`}>
+        <h2 className={`text-md font-medium ${colors.title}`}>
           {todoData.title}
         </h2>
         <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
@@ -251,7 +251,7 @@ export default function TodoDetail() {
           <div className="mt-4 mb-6">
             <BackButton />
           </div>
-          <div className="rounded-xl border-2 border-gray-200 bg-white p-8">
+          <div className="rounded-xl border-1 border-gray-300 bg-white p-8 shadow-sm">
             <div className="animate-pulse space-y-4">
               <div className="h-6 rounded bg-gray-200" />
               <div className="space-y-2">
@@ -268,7 +268,7 @@ export default function TodoDetail() {
 
   function renderChecklist() {
     return (
-      <div className="rounded-xl border-2 border-gray-200 bg-white p-4">
+      <div className="rounded-xl border-1 border-gray-300 bg-white p-4 shadow-sm">
         {renderTodoHeader()}
 
         <div className="mb-4 space-y-3">
@@ -304,7 +304,7 @@ export default function TodoDetail() {
                   </div>
                 </div>
                 <span
-                  className={`text-gray-700 ${item.isCompleted ? "text-gray-400 line-through" : ""}`}
+                  className={`text-md text-gray-700 ${item.isCompleted ? "text-gray-400 line-through" : ""}`}
                 >
                   {item.title}
                 </span>
@@ -327,13 +327,10 @@ export default function TodoDetail() {
     const currentSubTodo = todoData.subTodos[currentStep];
 
     return (
-      <div className="rounded-xl border-2 border-gray-200 bg-white p-4">
+      <div className="rounded-xl border-1 border-gray-300 bg-white p-4 shadow-sm">
         {renderTodoHeader()}
 
         <div className="mb-6 text-center">
-          <div className="mb-2 text-sm text-gray-500">
-            {currentStep + 1}/{todoData.subTodos.length}
-          </div>
           <div className={`rounded-2xl ${colors.tag} p-6`}>
             <h3 className={`text-xl font-medium ${colors.title}`}>
               {currentSubTodo?.title}
@@ -353,7 +350,7 @@ export default function TodoDetail() {
           <button
             onClick={handlePreviousStep}
             disabled={currentStep === 0}
-            className={`flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
+            className={`text-md flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
               currentStep === 0
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : colors.tag
@@ -364,7 +361,7 @@ export default function TodoDetail() {
           <button
             onClick={handleNextStep}
             disabled={!todoData || currentStep >= todoData.subTodos.length - 1}
-            className={`flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
+            className={`text-md flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
               currentStep === todoData.subTodos.length - 1
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : colors.button
