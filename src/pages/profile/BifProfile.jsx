@@ -375,7 +375,7 @@ export default function BifProfile() {
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800">마이페이지</h2>
+                <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
 
                 <button
                   onClick={handleOpenUserInfoModal}
@@ -386,16 +386,16 @@ export default function BifProfile() {
                 </button>
               </div>
 
-              <div className="rounded-lg bg-white p-4 shadow-sm">
+              <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
-                      <IoPerson className="h-8 w-8 text-gray-600" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                      <IoPerson className="h-5 w-5 text-gray-600" />
                     </div>
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-400"
+                      className="flex items-center space-x-1 rounded bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-400"
                     >
                       <IoLogOut className="h-4 w-4" />
                       <span>로그아웃</span>
@@ -403,7 +403,7 @@ export default function BifProfile() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="truncate text-lg font-semibold text-gray-800">
+                    <h3 className="truncate text-lg font-bold text-gray-800">
                       {stats?.nickname || user?.nickname || "BIF"} 님
                     </h3>
                     <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
@@ -452,7 +452,7 @@ export default function BifProfile() {
               <div className="space-y-6">
                 <div className="flex items-center">
                   <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
-                  <h2 className="text-xl font-bold text-gray-800">
+                  <h2 className="text-lg font-bold text-gray-800">
                     {MONTH_NAMES[currentMonth - 1]}의 감정 통계
                   </h2>
                 </div>
@@ -467,7 +467,7 @@ export default function BifProfile() {
                 ) : (
                   <>
                     <div className="rounded-lg bg-white p-4 shadow-sm">
-                      <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                      <h3 className="text-md mb-4 font-bold text-gray-800">
                         이번 달 감정 비율
                       </h3>
                       <div className="h-64 w-full">
@@ -490,7 +490,7 @@ export default function BifProfile() {
                     </div>
 
                     <div className="rounded-lg bg-white p-4 shadow-sm">
-                      <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                      <h3 className="text-md mb-4 font-bold text-gray-800">
                         자주 사용된 키워드 TOP 5
                       </h3>
                       <div className="h-80 w-full">
@@ -513,7 +513,7 @@ export default function BifProfile() {
                     </div>
 
                     <div className="rounded-lg bg-white p-4 shadow-sm">
-                      <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                      <h3 className="text-md mb-4 font-bold text-gray-800">
                         지난달 대비 감정 변화
                       </h3>
                       <div className="h-80 w-full">
@@ -546,7 +546,7 @@ export default function BifProfile() {
                           />
                           <div className="w-full max-w-full rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
                             <div className="mb-2 flex items-center gap-2">
-                              <span className="text-[13px] font-semibold text-gray-800">
+                              <span className="text-sm font-semibold text-gray-800">
                                 현명한 거북이
                               </span>
                             </div>
@@ -613,13 +613,15 @@ export default function BifProfile() {
                       value={newNickname}
                       onChange={(e) => setNewNickname(e.target.value)}
                       placeholder="새로운 닉네임을 입력해주세요."
-                      className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                      className="mt-6.5 mb-4 w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
                     />
-                    {nicknameError && (
-                      <p className="mt-2 text-center text-sm text-red-500">
-                        {nicknameError}
-                      </p>
-                    )}
+
+                    <p
+                      className={`text-warning mt-2 text-center text-sm ${nicknameError ? "visible" : "invisible"}`}
+                    >
+                      {nicknameError ? nicknameError : "i"}
+                    </p>
+
                     <div className="mt-4 flex space-x-3">
                       <BaseButton
                         onClick={handleCloseUserInfoModal}
@@ -639,7 +641,7 @@ export default function BifProfile() {
 
                 {activeTab === "auth" && (
                   <div className="text-center">
-                    <div className="mb-4 rounded-lg bg-gray-100 p-6">
+                    <div className="mb-6 rounded-lg bg-gray-100 p-6">
                       <p className="mb-2 text-sm text-gray-600">
                         보호자 연결용 인증번호
                       </p>
@@ -659,7 +661,7 @@ export default function BifProfile() {
 
                 {activeTab === "withdraw" && (
                   <div>
-                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                    <div className="mb-4 rounded-lg border-1 border-red-200 bg-red-50 p-4 shadow-sm">
                       <p className="text-sm text-red-700">
                         정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.
                       </p>
@@ -669,7 +671,7 @@ export default function BifProfile() {
                       value={withdrawNickname}
                       onChange={(e) => setWithdrawNickname(e.target.value)}
                       placeholder="닉네임을 입력해주세요."
-                      className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                      className="w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
                     />
                     {withdrawError && (
                       <p className="text-center text-sm text-red-500">
