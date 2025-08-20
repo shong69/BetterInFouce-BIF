@@ -61,7 +61,7 @@ export default function SimulationCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex flex-1 items-center">
-            <h3 className={`text-lg font-medium ${getCategoryColor()}`}>
+            <h3 className={`text-md font-medium ${getCategoryColor()}`}>
               {title}
             </h3>
           </div>
