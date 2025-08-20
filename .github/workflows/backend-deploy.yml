@@ -155,7 +155,7 @@ jobs:
 
       - name: Verify deployment
         run: |
-          echo "Waiting for deployment to be ready..."
+          echo "Waiting for deployment to be ready......"
           sleep 60
           
           APP_URL=$(az containerapp show \
