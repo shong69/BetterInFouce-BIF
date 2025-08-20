@@ -166,7 +166,7 @@ export default function SimulationProgress() {
 
         if (lastElement) {
           const rect = lastElement.getBoundingClientRect();
-          const stickyHeaderHeight = 140;
+          const stickyHeaderHeight = 160;
           const topOffset = 80;
           const extraSpace = 20;
 
