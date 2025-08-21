@@ -133,7 +133,7 @@ export default function DiaryEdit() {
   return (
     <>
       <Header />
-      <div className="mx-auto max-w-2xl p-4 sm:p-4">
+      <div className="mx-auto mb-24 max-w-2xl p-4 sm:p-4">
         <DateBox />
         <div className="mb-2">
           <BackButton onClick={handleBack} />

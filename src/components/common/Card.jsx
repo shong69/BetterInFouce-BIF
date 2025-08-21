@@ -1,15 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
 import { getRandomColorByTitle } from "@utils/colorUtils";
-import { HiChevronRight, HiChevronDown } from "react-icons/hi";
+import { IoIosArrowDown } from "react-icons/io";
+import { useUserStore } from "@stores";
 
 export default function Card({
   id,
   title,
-  category,
   hasOrder,
-  duration,
   subTodos = [],
   type = "todo",
   isCompleted = false,
@@ -17,6 +16,7 @@ export default function Card({
   onDelete,
   onClick,
 }) {
+  const { user } = useUserStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -24,6 +24,32 @@ export default function Card({
   const cardRef = useRef(null);
 
   const colors = getRandomColorByTitle(title, id);
+
+  useEffect(() => {
+    const cardElement = cardRef.current;
+    if (!cardElement || type !== "todo") return;
+
+    const handleTouchMovePassive = (e) => {
+      if (!startX) return;
+      e.preventDefault();
+
+      const newCurrentX = e.touches[0].clientX;
+      const diffX = newCurrentX - startX;
+
+      if (diffX > 0 && diffX < 120) {
+        setCurrentX(newCurrentX);
+        cardElement.style.transform = `translateX(${diffX}px)`;
+      }
+    };
+
+    cardElement.addEventListener("touchmove", handleTouchMovePassive, {
+      passive: false,
+    });
+
+    return () => {
+      cardElement.removeEventListener("touchmove", handleTouchMovePassive);
+    };
+  }, [startX, type]);
 
   function handleTouchStart(e) {
     if (type !== "todo") {
@@ -34,22 +60,6 @@ export default function Card({
     setCurrentX(e.touches[0].clientX);
   }
 
-  function handleTouchMove(e) {
-    if (type !== "todo" || !startX) {
-      return;
-    }
-
-    const newCurrentX = e.touches[0].clientX;
-    const diffX = newCurrentX - startX;
-
-    if (diffX > 0 && diffX < 120) {
-      setCurrentX(newCurrentX);
-      if (cardRef.current) {
-        cardRef.current.style.transform = `translateX(${diffX}px)`;
-      }
-    }
-  }
-
   function handleTouchEnd() {
     if (type !== "todo" || !startX) {
       return;
@@ -57,7 +67,7 @@ export default function Card({
 
     const diffX = currentX - startX;
 
-    if (diffX > 60) {
+    if (diffX > 40) {
       setIsSwipeOpen(true);
       if (cardRef.current) {
         cardRef.current.style.transform = "translateX(120px)";
@@ -82,6 +92,51 @@ export default function Card({
     } else if (onClick) {
       onClick(id);
     }
+  }
+
+  function handlePointerStart(e) {
+    if (type !== "todo") return;
+
+    const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+    setStartX(x);
+    setCurrentX(x);
+  }
+
+  function handlePointerMove(e) {
+    if (type !== "todo" || !startX) return;
+
+    e.preventDefault();
+
+    const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+    const diffX = x - startX;
+
+    if (diffX > 0 && diffX < 120) {
+      setCurrentX(x);
+      if (cardRef.current) {
+        cardRef.current.style.transform = `translateX(${diffX}px)`;
+      }
+    }
+  }
+
+  function handlePointerEnd() {
+    if (type !== "todo" || !startX) return;
+
+    const diffX = currentX - startX;
+
+    if (diffX > 40) {
+      setIsSwipeOpen(true);
+      if (cardRef.current) {
+        cardRef.current.style.transform = "translateX(120px)";
+      }
+    } else {
+      setIsSwipeOpen(false);
+      if (cardRef.current) {
+        cardRef.current.style.transform = "translateX(0px)";
+      }
+    }
+
+    setStartX(0);
+    setCurrentX(0);
   }
 
   function handleEdit(e) {
@@ -111,116 +166,46 @@ export default function Card({
     setIsExpanded(!isExpanded);
   }
 
-  function renderContent() {
-    if (type === "simulation") {
-      return (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className={`text-lg font-medium ${colors.title} flex-1`}>
-              {title}
-            </h3>
-            <span
-              className={`rounded-full px-3 py-1 text-sm ${colors.tag} ml-3`}
-            >
-              {category}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">약 {duration}분</p>
-            <HiChevronRight className="h-5 w-5 text-green-600" />
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className={`text-lg font-medium ${colors.title}`}>{title}</h3>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
-              {hasOrder ? "순서 있음" : "체크리스트"}
-            </span>
-            {subTodos.length > 0 && (
-              <button
-                onClick={handleToggle}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
-              >
-                <HiChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {isExpanded && (
-          <div className="mt-4">
-            {subTodos.map((item) => (
-              <div
-                key={item.subTodoId}
-                className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
-              >
-                <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
-                <span>{item.title}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div
       className={`relative ${type === "todo" ? "overflow-hidden" : ""} rounded-xl`}
     >
       {type === "todo" && (
         <div className="absolute top-0 left-0 flex h-full items-center gap-2 pl-4">
-          <div
-            onClick={handleEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                handleEdit(e);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="focus:ring-primary-500 rounded focus:ring-2 focus:outline-none"
-            aria-label="할 일 수정"
-          >
-            <EditButton />
-          </div>
-          <div
-            onClick={handleDelete}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                handleDelete(e);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
-            aria-label="할 일 삭제"
-          >
-            <DeleteButton />
-          </div>
+          <EditButton onClick={handleEdit} />
+          {user?.userRole === "BIF" && (
+            <div
+              onClick={handleDelete}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleDelete(e);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
+              aria-label="할 일 삭제"
+            >
+              <DeleteButton />
+            </div>
+          )}
         </div>
       )}
 
       <div
         ref={cardRef}
-        className={`relative rounded-xl p-4 transition-transform duration-200 ease-out ${
+        style={{ touchAction: "pan-y" }}
+        className={`relative rounded-xl p-3 pt-4 text-left transition-transform duration-200 ease-out ${
           type === "todo"
-            ? `border-2 ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
-            : "cursor-pointer border border-gray-300 bg-white hover:border-gray-400"
+            ? `border-1 border-gray-300 shadow-sm ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
+            : "cursor-pointer border-1 border-gray-300 bg-white shadow-sm hover:border-gray-400"
         }`}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerStart}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
         onClick={handleCardClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -232,7 +217,44 @@ export default function Card({
         tabIndex={0}
         aria-label={`${title} 카드`}
       >
-        {renderContent()}
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-1 items-center">
+              <h3 className={`text-md font-medium ${colors.title}`}>{title}</h3>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <span
+                className={`rounded-xl px-3 py-1 text-sm font-medium ${colors.tag}`}
+              >
+                {hasOrder ? "순서 있음" : "체크리스트"}
+              </span>
+              {subTodos.length > 0 && (
+                <button
+                  onClick={handleToggle}
+                  className={`flex items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
+                >
+                  <IoIosArrowDown
+                    className={`text-primary font-sm text-lg transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {isExpanded && (
+            <div className="mt-4">
+              {subTodos.map((item) => (
+                <div
+                  key={item.subTodoId}
+                  className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
+                >
+                  <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
+                  <span>{item.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

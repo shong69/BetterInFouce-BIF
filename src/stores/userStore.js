@@ -60,7 +60,7 @@ export const useUserStore = create((set, get) => ({
         accessToken: savedToken,
         user: payload
           ? {
-              userRole: payload.role,
+              userRole: payload.userRole || payload.role,
               bifId: payload.bifId,
               nickname: payload.nickname,
               provider: payload.provider,
@@ -78,20 +78,40 @@ export const useUserStore = create((set, get) => ({
     let sessionInfoSuccess = false;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/session-info`, {
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+
+      const fetchOptions = {
         credentials: "include",
-      });
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (isMobile) {
+        fetchOptions.cache = "no-cache";
+        fetchOptions.mode = "cors";
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/session-info`,
+        fetchOptions,
+      );
 
       if (response.ok) {
         const result = await response.json();
         const { data } = result;
 
         if (data.accessToken) {
+          const tokenPayload = getTokenPayload(data.accessToken);
+
           set({
             accessToken: data.accessToken,
             user: {
               providerUniqueId: data.providerUniqueId,
-              userRole: data.userRole,
+              userRole: data.userRole || data.role || tokenPayload?.role,
               bifId: data.bifId,
               nickname: data.nickname,
               provider: data.provider,
@@ -152,11 +172,16 @@ export const useUserStore = create((set, get) => ({
         if (refreshResponse.ok) {
           const result = await refreshResponse.json();
           if (result.data?.accessToken) {
+            const tokenPayload = getTokenPayload(result.data.accessToken);
+
             set({
               accessToken: result.data.accessToken,
               user: {
                 providerUniqueId: result.data.providerUniqueId,
-                userRole: result.data.userRole,
+                userRole:
+                  result.data.userRole ||
+                  result.data.role ||
+                  tokenPayload?.role,
                 bifId: result.data.bifId,
                 nickname: result.data.nickname,
                 provider: result.data.provider,
@@ -205,11 +230,20 @@ export const useUserStore = create((set, get) => ({
         credentials: "include",
         body: JSON.stringify({ socialId, email }),
       });
+
       if (response.ok) {
         const result = await response.json();
         if (result.data?.accessToken) {
           get().setAccessToken(result.data.accessToken);
-          set({ user: result.data.bif });
+          const bifData = result.data.bif;
+          set({
+            user: {
+              userRole: "BIF",
+              bifId: bifData.bifId,
+              nickname: bifData.nickname,
+            },
+            registrationInfo: null,
+          });
           return { success: true };
         }
       }
@@ -236,7 +270,16 @@ export const useUserStore = create((set, get) => ({
         const result = await response.json();
         if (result.data?.accessToken) {
           get().setAccessToken(result.data.accessToken);
-          set({ user: result.data.guardian });
+
+          const guardianData = result.data.guardian;
+          set({
+            user: {
+              userRole: "GUARDIAN",
+              bifId: guardianData.bifId,
+              nickname: guardianData.nickname,
+            },
+            registrationInfo: null,
+          });
           return { success: true };
         }
       }

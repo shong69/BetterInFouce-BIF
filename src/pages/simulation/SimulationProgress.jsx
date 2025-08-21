@@ -12,14 +12,14 @@ function ProgressBar({ progress = 0, label = "진행도" }) {
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-medium text-gray-500">{label}</span>
-        <span className="text-[9px] font-medium text-gray-500">
+        <span className="text-sm font-medium text-gray-600">{label}</span>
+        <span className="text-sm font-medium text-gray-600">
           {Math.round(progress)}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-[#D3EACA]">
+      <div className="bg-secondary/20 h-2 rounded-full">
         <div
-          className="bg-toggle h-2 rounded-full transition-all duration-300"
+          className="bg-secondary h-2 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -46,6 +46,7 @@ export default function SimulationProgress() {
   const simrunCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
+  const choicesRef = useRef(null);
 
   useEffect(
     function () {
@@ -153,6 +154,36 @@ export default function SimulationProgress() {
     };
   }, []);
 
+  useEffect(() => {
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+
+    if (lastMessage && lastMessage.type === "opponent") {
+      setTimeout(() => {
+        const messageElements = document.querySelectorAll(
+          '[class*="bg-[#F2F7FB]"]',
+        );
+        const lastElement = messageElements[messageElements.length - 1];
+
+        if (lastElement) {
+          const rect = lastElement.getBoundingClientRect();
+          const stickyHeaderHeight = 160;
+          const topOffset = 80;
+          const extraSpace = 20;
+
+          window.scrollTo({
+            top:
+              window.scrollY +
+              rect.top -
+              stickyHeaderHeight -
+              topOffset -
+              extraSpace,
+            behavior: "smooth",
+          });
+        }
+      }, 200);
+    }
+  }, [conversationHistory]);
+
   async function handleOptionSelect(optionIndex) {
     if (selectedOption !== null) return;
 
@@ -178,7 +209,6 @@ export default function SimulationProgress() {
         setScore(newTotal);
       }
     }
-
     const userResponse = {
       type: "user",
       message: selectedOptionText,
@@ -339,7 +369,7 @@ export default function SimulationProgress() {
 
   const progress =
     simulation.steps && simulation.steps.length > 0
-      ? ((currentStep + 1) / simulation.steps.length) * 100
+      ? (currentStep / simulation.steps.length) * 100
       : 0;
 
   return (
@@ -353,11 +383,11 @@ export default function SimulationProgress() {
         <BackButton onClick={handleBackToMain} />
       </div>
 
-      <main className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
-        <div className="sticky top-20 z-10 mb-6 rounded-xl bg-white p-5 shadow-sm">
+      <main className="w-full max-w-full flex-1 bg-white px-5 pb-32">
+        <div className="sticky top-20 z-10 mb-6 rounded-xl border-1 border-gray-300 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3
-              className={`text-[14px] font-bold ${
+              className={`text-md font-bold ${
                 simulation.category === "업무"
                   ? "text-[#EF4444]"
                   : simulation.category === "일상"
@@ -368,7 +398,7 @@ export default function SimulationProgress() {
               {simulation.title}
             </h3>
             <span
-              className={`rounded-xl px-3 py-1 text-xs font-medium ${
+              className={`rounded-xl px-3 py-1 text-sm font-medium ${
                 simulation.category === "업무"
                   ? "bg-[#FEE2E2] text-[#EF4444]"
                   : simulation.category === "일상"
@@ -393,7 +423,7 @@ export default function SimulationProgress() {
                 {item.type === "opponent" && item.message && (
                   <div className="flex max-w-[80%] items-start gap-2">
                     <div className="rounded-2xl rounded-tl-md bg-[#F2F7FB] px-3 py-2 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                      <span className="text-[12px] font-medium">
+                      <span className="text-sm font-medium">
                         {item.message}
                       </span>
                     </div>
@@ -433,7 +463,7 @@ export default function SimulationProgress() {
                 {item.type === "user" && item.message && (
                   <div className="flex max-w-[80%] justify-end">
                     <div className="rounded-2xl rounded-tr-md bg-[#88C16F] px-3 py-2 text-black shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                      <span className="text-[12px] font-medium">
+                      <span className="text-sm font-medium">
                         {item.message}
                       </span>
                     </div>
@@ -459,11 +489,7 @@ export default function SimulationProgress() {
           {showTyping && (
             <div className="flex justify-start">
               <div className="flex max-w-[90%] items-start gap-2">
-                <img
-                  src="/src/assets/logo2.png"
-                  alt="현명한 거북이"
-                  className="h-7 w-7"
-                />
+                <img src={logo2} alt="현명한 거북이" className="h-7 w-7" />
                 <div className="max-w-full min-w-[200px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-gray-800">
@@ -490,7 +516,7 @@ export default function SimulationProgress() {
         </div>
 
         {selectedOption === null && (
-          <>
+          <div ref={choicesRef}>
             <div className="mb-4 text-center text-sm text-gray-600">
               상황에 알맞은 답변을 선택해주세요!
             </div>
@@ -500,7 +526,7 @@ export default function SimulationProgress() {
                   return (
                     <button
                       key={`choice-${currentStep}-${choice.choiceText || choice}-${Date.now()}`}
-                      className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-shadow hover:border-gray-300 hover:shadow-md"
+                      className="w-full rounded-xl border-1 border-gray-300 bg-white p-4 text-left text-sm shadow-sm"
                       onClick={function () {
                         handleOptionSelect(index);
                       }}
@@ -517,7 +543,7 @@ export default function SimulationProgress() {
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
       </main>
 

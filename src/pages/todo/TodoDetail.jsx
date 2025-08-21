@@ -17,7 +17,7 @@ import {
   uncompleteTodo,
   updateTodoStep,
 } from "@services/todoService";
-import { useToastStore, useLoadingStore } from "@stores";
+import { useToastStore, useUserStore } from "@stores";
 import { getRandomColorByTitle } from "@utils/colorUtils";
 
 export default function TodoDetail() {
@@ -26,13 +26,14 @@ export default function TodoDetail() {
   const [todoData, setTodoData] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const typeFromUrl = new URLSearchParams(window.location.search).get("type");
   const returnTab = new URLSearchParams(window.location.search).get(
     "returnTab",
   );
   const { showError } = useToastStore();
-  const { showLoading, hideLoading } = useLoadingStore();
+  const { user } = useUserStore();
 
   const colors = useMemo(() => {
     if (!todoData?.title || !todoData?.todoId) {
@@ -86,8 +87,6 @@ export default function TodoDetail() {
   }
 
   useEffect(() => {
-    showLoading("상세 할 일을 가져오는 중...");
-
     async function fetchTodoDetail() {
       try {
         const data = await getTodoDetail(id);
@@ -100,14 +99,19 @@ export default function TodoDetail() {
         showError("할 일을 불러오는데 실패했습니다.");
         navigate("/");
       } finally {
-        hideLoading();
+        setIsLoading(false);
       }
     }
 
     fetchTodoDetail();
-  }, [id, navigate, showLoading, hideLoading, showError]);
+  }, [id, navigate, showError]);
 
   async function toggleSubTodoComplete(subTodoId) {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (isRecentClick()) return;
 
     const subTodoIndex = todoData.subTodos.findIndex(
@@ -166,6 +170,11 @@ export default function TodoDetail() {
   }
 
   async function handlePreviousStep() {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (currentStep <= 0 || isRecentClick()) {
       return;
     }
@@ -191,6 +200,11 @@ export default function TodoDetail() {
   }
 
   async function handleNextStep() {
+    if (user?.userRole === "GUARDIAN") {
+      showError("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+      return;
+    }
+
     if (isRecentClick() || currentStep >= todoData.subTodos.length - 1) {
       return;
     }
@@ -218,7 +232,7 @@ export default function TodoDetail() {
   function renderTodoHeader() {
     return (
       <div className="mb-4 flex items-center justify-between">
-        <h2 className={`text-lg font-medium ${colors.title}`}>
+        <h2 className={`text-md font-medium ${colors.title}`}>
           {todoData.title}
         </h2>
         <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
@@ -228,7 +242,7 @@ export default function TodoDetail() {
     );
   }
 
-  if (!todoData) {
+  if (!todoData || isLoading) {
     return (
       <div className="min-h-screen pb-20">
         <Header />
@@ -237,7 +251,7 @@ export default function TodoDetail() {
           <div className="mt-4 mb-6">
             <BackButton />
           </div>
-          <div className="rounded-xl border-2 border-gray-200 bg-white p-8">
+          <div className="rounded-xl border-1 border-gray-300 bg-white p-8 shadow-sm">
             <div className="animate-pulse space-y-4">
               <div className="h-6 rounded bg-gray-200" />
               <div className="space-y-2">
@@ -254,7 +268,7 @@ export default function TodoDetail() {
 
   function renderChecklist() {
     return (
-      <div className="rounded-xl border-2 border-gray-200 bg-white p-4">
+      <div className="rounded-xl border-1 border-gray-300 bg-white p-4 shadow-sm">
         {renderTodoHeader()}
 
         <div className="mb-4 space-y-3">
@@ -290,7 +304,7 @@ export default function TodoDetail() {
                   </div>
                 </div>
                 <span
-                  className={`text-gray-700 ${item.isCompleted ? "text-gray-400 line-through" : ""}`}
+                  className={`text-md text-gray-700 ${item.isCompleted ? "text-gray-400 line-through" : ""}`}
                 >
                   {item.title}
                 </span>
@@ -313,13 +327,10 @@ export default function TodoDetail() {
     const currentSubTodo = todoData.subTodos[currentStep];
 
     return (
-      <div className="rounded-xl border-2 border-gray-200 bg-white p-4">
+      <div className="rounded-xl border-1 border-gray-300 bg-white p-4 shadow-sm">
         {renderTodoHeader()}
 
         <div className="mb-6 text-center">
-          <div className="mb-2 text-sm text-gray-500">
-            {currentStep + 1}/{todoData.subTodos.length}
-          </div>
           <div className={`rounded-2xl ${colors.tag} p-6`}>
             <h3 className={`text-xl font-medium ${colors.title}`}>
               {currentSubTodo?.title}
@@ -339,7 +350,7 @@ export default function TodoDetail() {
           <button
             onClick={handlePreviousStep}
             disabled={currentStep === 0}
-            className={`flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
+            className={`text-md flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
               currentStep === 0
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : colors.tag
@@ -350,7 +361,7 @@ export default function TodoDetail() {
           <button
             onClick={handleNextStep}
             disabled={!todoData || currentStep >= todoData.subTodos.length - 1}
-            className={`flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
+            className={`text-md flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
               currentStep === todoData.subTodos.length - 1
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : colors.button
@@ -367,8 +378,10 @@ export default function TodoDetail() {
     <div className="min-h-screen pb-20">
       <Header />
 
-      <div className="mx-auto max-w-md px-4 pt-4">
-        <DateBox />
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+        <div className="mb-1 px-2 sm:px-0">
+          <DateBox />
+        </div>
 
         <div className="mt-4 mb-6">
           <BackButton
@@ -382,7 +395,9 @@ export default function TodoDetail() {
           />
         </div>
 
-        {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        <div className="px-4">
+          {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+        </div>
 
         {(completionStatus.isChecklistCompleted ||
           completionStatus.isSequenceCompleted) && (
