@@ -82,8 +82,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          build-args: |
-            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+          build-args: VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
             VITE_VAPID_PUBLIC_KEY=${{ secrets.VITE_VAPID_PUBLIC_KEY }}
           tags: |
             ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.image-tag.outputs.tag }}
@@ -129,7 +128,7 @@ jobs:
       - name: Verify deployment
         run: |
           echo "Waiting for deployment to be ready..."
-          sleep 60
+          sleep 30
 
           APP_URL=$(az containerapp show \
             --name ${{ env.CONTAINER_APP_NAME }} \
