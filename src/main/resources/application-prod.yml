@@ -29,10 +29,10 @@ spring:
 
   data:
     redis:
-       host: ${REDIS_HOST}
-       port: ${REDIS_PORT}
-       ssl:
-         enabled: false
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      ssl:
+        enabled: false
 
   security:
     user:
@@ -101,7 +101,22 @@ app:
 vapid:
   public-key: ${VAPID_PUBLIC_KEY}
   private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
 
 springdoc:
   swagger-ui:
     enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
