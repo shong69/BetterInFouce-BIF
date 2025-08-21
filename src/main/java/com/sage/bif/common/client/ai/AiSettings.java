@@ -5,6 +5,7 @@ import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 public class AiSettings {
 
@@ -108,7 +109,7 @@ public class AiSettings {
     }
 
     public static AiChatSettings getTodoCreationWithCurrentDate() {
-        return getTodoCreationWithDate(LocalDate.now());
+        return getTodoCreationWithDate(LocalDate.now(ZoneId.of("Asia/Seoul")));
     }
 
     public static AiChatSettings getTodoCreationWithDate(LocalDate date) {
