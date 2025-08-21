@@ -22,4 +22,21 @@ export const useStatsStore = create((set) => ({
       });
     }
   },
+
+  fetchGuardianStats: async (bifId) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.get(`/api/stats/bif_stats`, {
+        params: { bifId },
+      });
+      set({ stats: response.data.data, loading: false });
+    } catch (error) {
+      set({
+        error:
+          error.response?.data?.message ||
+          "보호자 통계 데이터를 불러오는데 실패했습니다.",
+        loading: false,
+      });
+    }
+  },
 }));
