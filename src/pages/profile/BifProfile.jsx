@@ -195,7 +195,7 @@ export default function BifProfile() {
         labels: {
           padding: 20,
           usePointStyle: true,
-          font: { size: 12 },
+          font: { size: 11 },
         },
       },
       tooltip: {
@@ -373,7 +373,7 @@ export default function BifProfile() {
         <Header />
         <div className="flex-1 bg-white">
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
-            <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+            <div className="mb-6 rounded-lg bg-white p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
 
@@ -448,7 +448,7 @@ export default function BifProfile() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-white p-4 shadow-sm">
+            <div className="rounded-lg bg-white p-4">
               <div className="space-y-6">
                 <div className="flex items-center">
                   <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
@@ -466,7 +466,7 @@ export default function BifProfile() {
                   </div>
                 ) : (
                   <>
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         이번 달 감정 비율
                       </h3>
@@ -489,7 +489,7 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         자주 사용된 키워드 TOP 5
                       </h3>
@@ -512,7 +512,7 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         지난달 대비 감정 변화
                       </h3>
@@ -544,7 +544,7 @@ export default function BifProfile() {
                             alt="현명한 거북이"
                             className="h-7 w-7"
                           />
-                          <div className="w-full max-w-full rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+                          <div className="w-full max-w-full rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3">
                             <div className="mb-2 flex items-center gap-2">
                               <span className="text-sm font-semibold text-gray-800">
                                 현명한 거북이
