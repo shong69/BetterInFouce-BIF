@@ -41,7 +41,7 @@ const EMOTION_COLORS = {
   GREAT: "#FFD54F",
 };
 
-const KEYWORD_COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"];
+const KEYWORD_COLORS = ["#EF4444", "#3B82F6", "#22C55E", "#F59E0B", "#A855F7"];
 
 const EMOTION_LABELS = {
   OKAY: "평범",
@@ -157,14 +157,8 @@ export default function BifProfile() {
         {
           label: "지난달",
           data: monthlyChange.map((item) => item.previousValue || 0),
-          backgroundColor: monthlyChange.map((item) => {
-            const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}40`;
-          }),
-          borderColor: monthlyChange.map((item) => {
-            const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}80`;
-          }),
+          backgroundColor: "#D1D5DB",
+          borderColor: "#9CA3AF",
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
@@ -536,8 +530,8 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="mb-16 rounded-lg bg-white p-4 shadow-sm">
-                      <div className="flex w-full justify-center">
+                    <div className="mb-16 rounded-lg bg-white p-1">
+                      <div className="flex w-full justify-start">
                         <div className="flex max-w-full items-start gap-2">
                           <img
                             src={turtleImage}
