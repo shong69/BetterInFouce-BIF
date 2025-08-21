@@ -41,7 +41,7 @@ const EMOTION_COLORS = {
   GREAT: "#FFD54F",
 };
 
-const KEYWORD_COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"];
+const KEYWORD_COLORS = ["#EF4444", "#3B82F6", "#22C55E", "#F59E0B", "#A855F7"];
 
 const EMOTION_LABELS = {
   OKAY: "평범",
@@ -157,14 +157,8 @@ export default function BifProfile() {
         {
           label: "지난달",
           data: monthlyChange.map((item) => item.previousValue || 0),
-          backgroundColor: monthlyChange.map((item) => {
-            const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}40`;
-          }),
-          borderColor: monthlyChange.map((item) => {
-            const baseColor = EMOTION_COLORS[item.emotion] || "#4CAF50";
-            return `${baseColor}80`;
-          }),
+          backgroundColor: "#D1D5DB",
+          borderColor: "#9CA3AF",
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
@@ -195,7 +189,7 @@ export default function BifProfile() {
         labels: {
           padding: 20,
           usePointStyle: true,
-          font: { size: 12 },
+          font: { size: 11 },
         },
       },
       tooltip: {
@@ -373,7 +367,7 @@ export default function BifProfile() {
         <Header />
         <div className="flex-1 bg-white">
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
-            <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+            <div className="mb-6 rounded-lg bg-white p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
 
@@ -448,7 +442,7 @@ export default function BifProfile() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-white p-4 shadow-sm">
+            <div className="rounded-lg bg-white p-4">
               <div className="space-y-6">
                 <div className="flex items-center">
                   <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
@@ -466,7 +460,7 @@ export default function BifProfile() {
                   </div>
                 ) : (
                   <>
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         이번 달 감정 비율
                       </h3>
@@ -489,7 +483,7 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         자주 사용된 키워드 TOP 5
                       </h3>
@@ -512,7 +506,7 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                       <h3 className="text-md mb-4 font-bold text-gray-800">
                         지난달 대비 감정 변화
                       </h3>
@@ -536,8 +530,8 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="mb-16 rounded-lg bg-white p-4 shadow-sm">
-                      <div className="flex w-full justify-center">
+                    <div className="mb-16 rounded-lg bg-white p-1">
+                      <div className="flex w-full justify-start">
                         <div className="flex max-w-full items-start gap-2">
                           <img
                             src={turtleImage}
