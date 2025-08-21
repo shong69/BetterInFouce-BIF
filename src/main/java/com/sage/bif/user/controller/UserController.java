@@ -26,12 +26,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.sage.bif.common.exception.ErrorCode.AUTH_FAILED;
 
 @Slf4j
 @RestController
@@ -179,33 +182,29 @@ public class UserController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(
-            @CookieValue("refreshToken") String refreshToken,
-            HttpServletRequest request, HttpServletResponse response) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletResponse response) {
 
         try {
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                String providerUniqueId = jwtTokenProvider.getProviderUniqueIdFromToken(refreshToken);
-                var socialLoginOpt = socialLoginService.findByProviderUniqueId(providerUniqueId);
-
-                if (socialLoginOpt.isPresent()) {
-                    Long socialId = socialLoginOpt.get().getSocialId();
-                    loginLogService.recordLogout(socialId);
-                    socialLoginService.deleteRefreshTokenFromRedis(socialLoginOpt.get().getSocialId());
-                }
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("인증되지 않은 사용자입니다.", "UNAUTHORIZED"));
             }
 
-            clearRefreshTokenCookie(response);
+            Long socialId = userDetails.getSocialId();
+            log.info("socialId: "+socialId);
 
-            HttpSession session = request.getSession(false);
-            if(session != null) {
-                session.invalidate();
-            }
-            SecurityContextHolder.clearContext();
+            loginLogService.recordLogout(socialId);
+
+            socialLoginService.deleteRefreshTokenFromRedis(socialId);
+
+            clearAllJwtCookies(response);
 
             return ResponseEntity.ok(ApiResponse.success("로그아웃 성공"));
 
         } catch (Exception e) {
             log.error("로그아웃 실패: {}", e.getMessage());
+            clearAllJwtCookies(response);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("로그아웃 실패: " + e.getMessage()));
         }
@@ -407,15 +406,15 @@ public class UserController {
 
     @DeleteMapping("/withdraw")
     public ResponseEntity<ApiResponse<String>> withdrawUser(
-            Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request, HttpServletResponse response) {
 
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
+            if (userDetails == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("인증되지 않은 사용자입니다.", "UNAUTHORIZED"));
             }
 
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Long socialId = userDetails.getSocialId();
             JwtTokenProvider.UserRole userRole = userDetails.getRole();
 
@@ -431,7 +430,7 @@ public class UserController {
 
             socialLoginService.deleteRefreshTokenFromRedis(socialId);
 
-            clearRefreshTokenCookie(response);
+            clearAllJwtCookies(response);
             HttpSession session = request.getSession(false);
             if(session != null) {
                 session.invalidate();
@@ -445,6 +444,7 @@ public class UserController {
 
         } catch (Exception e) {
             log.error("회원탈퇴 실패: {}", e.getMessage());
+            clearAllJwtCookies(response);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("회원탈퇴 중 오류가 발생했습니다.", SERVER_ERROR));
         }
@@ -604,8 +604,22 @@ public class UserController {
         response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
-    private void clearRefreshTokenCookie(HttpServletResponse response) {
-        setSecureCookie(response, REFRESH_TOKEN, "", 0);
+    private void clearAllJwtCookies(HttpServletResponse response) {
+        String[] cookiesToClear = {
+                ACCESS_TOKEN,
+                REFRESH_TOKEN,
+                AUTHENTICATED_USER_TOKEN,
+                TEMP_REGISTRATION_TOKEN
+        };
+
+        for (String cookieName : cookiesToClear ) {
+            Cookie rootCookie = new Cookie(cookieName, null);
+            rootCookie.setMaxAge(0);
+            rootCookie.setPath("/");
+            rootCookie.setHttpOnly(true);
+            rootCookie.setSecure(false);
+            response.addCookie(rootCookie);
+        }
     }
 
 }
