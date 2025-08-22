@@ -248,7 +248,7 @@ export default function TodoDetail() {
         <Header />
         <div className="mx-auto max-w-md px-4 pt-4">
           <DateBox />
-          <div className="mt-4 mb-6">
+          <div className="mt-4 mb-6 ml-3">
             <BackButton />
           </div>
           <div className="rounded-xl border-1 border-gray-300 bg-white p-8 shadow-sm">
@@ -383,7 +383,7 @@ export default function TodoDetail() {
           <DateBox />
         </div>
 
-        <div className="mt-4 mb-6">
+        <div className="mt-4 mb-6 ml-3">
           <BackButton
             onClick={() => {
               if (returnTab) {
