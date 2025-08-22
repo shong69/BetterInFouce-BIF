@@ -37,7 +37,17 @@ export const useUserStore = create((set, get) => ({
 
     const isTokenExpired = (token) => {
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return true;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        const payload = JSON.parse(json);
         const currentTime = Math.floor(Date.now() / 1000);
         return payload.exp < currentTime + 30;
       } catch {
@@ -47,7 +57,17 @@ export const useUserStore = create((set, get) => ({
 
     const getTokenPayload = (token) => {
       try {
-        return JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        return JSON.parse(json);
       } catch {
         return null;
       }
@@ -287,6 +307,53 @@ export const useUserStore = create((set, get) => ({
       return { success: false };
     } catch (error) {
       return { success: false, error };
+    }
+  },
+
+  changeNickname: async (newNickname) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/changenickname`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${get().accessToken}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { data } = result;
+
+        set({
+          accessToken: data.accessToken,
+          user: {
+            ...get().user,
+            nickname: data.nickname,
+          },
+        });
+
+        sessionStorage.setItem("accessToken", data.accessToken);
+
+        return {
+          success: true,
+          message: data.message || "닉네임이 변경되었습니다.",
+        };
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.message || "닉네임 변경 중 오류가 발생했습니다.",
+        };
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("닉네임 변경 실패:", error);
+      return {
+        success: false,
+        message: "닉네임 변경 중 오류가 발생했습니다.",
+      };
     }
   },
 
