@@ -167,93 +167,97 @@ export default function Card({
   }
 
   return (
-    <div
-      className={`relative ${type === "todo" ? "overflow-hidden" : ""} rounded-xl`}
-    >
-      {type === "todo" && (
-        <div className="absolute top-0 left-0 flex h-full items-center gap-2 pl-4">
-          <EditButton onClick={handleEdit} />
-          {user?.userRole === "BIF" && (
-            <div
-              onClick={handleDelete}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  handleDelete(e);
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
-              aria-label="할 일 삭제"
-            >
-              <DeleteButton />
-            </div>
-          )}
-        </div>
-      )}
-
+    <div className="rounded-xl shadow-sm">
       <div
-        ref={cardRef}
-        style={{ touchAction: "pan-y" }}
-        className={`relative rounded-xl p-3 pt-4 text-left transition-transform duration-200 ease-out ${
-          type === "todo"
-            ? `border-1 border-gray-300 shadow-sm ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
-            : "cursor-pointer border-1 border-gray-300 bg-white shadow-sm hover:border-gray-400"
-        }`}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onPointerDown={handlePointerStart}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerLeave={handlePointerEnd}
-        onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleCardClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={`${title} 카드`}
+        className={`relative ${type === "todo" ? "overflow-hidden" : ""} rounded-xl`}
       >
-        <div>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-1 items-center">
-              <h3 className={`text-md font-medium ${colors.title}`}>{title}</h3>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <span
-                className={`rounded-xl px-3 py-1 text-sm font-medium ${colors.tag}`}
+        {type === "todo" && (
+          <div className="absolute top-0 left-0 flex h-full items-center gap-2 pl-4">
+            <EditButton onClick={handleEdit} />
+            {user?.userRole === "BIF" && (
+              <div
+                onClick={handleDelete}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleDelete(e);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className="focus:ring-warning-500 rounded focus:ring-2 focus:outline-none"
+                aria-label="할 일 삭제"
               >
-                {hasOrder ? "순서 있음" : "체크리스트"}
-              </span>
-              {subTodos.length > 0 && (
-                <button
-                  onClick={handleToggle}
-                  className={`flex items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
-                >
-                  <IoIosArrowDown
-                    className={`text-primary font-sm text-lg transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                  />
-                </button>
-              )}
-            </div>
+                <DeleteButton />
+              </div>
+            )}
           </div>
+        )}
 
-          {isExpanded && (
-            <div className="mt-4">
-              {subTodos.map((item) => (
-                <div
-                  key={item.subTodoId}
-                  className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
+        <div
+          ref={cardRef}
+          style={{ touchAction: "pan-y" }}
+          className={`relative rounded-xl p-3 pt-4 text-left transition-transform duration-200 ease-out ${
+            type === "todo"
+              ? `border-1 border-gray-300 ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
+              : "cursor-pointer border-1 border-gray-300 bg-white hover:border-gray-400"
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerStart}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerLeave={handlePointerEnd}
+          onClick={handleCardClick}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleCardClick();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={`${title} 카드`}
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-1 items-center">
+                <h3 className={`text-md font-medium ${colors.title}`}>
+                  {title}
+                </h3>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <span
+                  className={`rounded-xl px-3 py-1 text-sm font-medium ${colors.tag}`}
                 >
-                  <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
-                  <span>{item.title}</span>
-                </div>
-              ))}
+                  {hasOrder ? "순서 있음" : "체크리스트"}
+                </span>
+                {subTodos.length > 0 && (
+                  <button
+                    onClick={handleToggle}
+                    className={`flex items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
+                  >
+                    <IoIosArrowDown
+                      className={`text-primary font-sm text-lg transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+
+            {isExpanded && (
+              <div className="mt-4">
+                {subTodos.map((item) => (
+                  <div
+                    key={item.subTodoId}
+                    className="flex items-center rounded-lg px-3 py-1 text-sm text-gray-700"
+                  >
+                    <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
+                    <span>{item.title}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

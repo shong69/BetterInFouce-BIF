@@ -10,6 +10,7 @@ import TabButton from "@components/ui/TabButton";
 import DatePickerModal from "@components/ui/DatePickerModal";
 
 import { BiPlus, BiCalendar } from "react-icons/bi";
+import { formatDateToYMD } from "@utils/dateUtils";
 import { HiOutlineClipboardList } from "react-icons/hi";
 
 import {
@@ -78,7 +79,7 @@ export default function Todo() {
 
   function handleCardClick(id) {
     if (user?.userRole === "GUARDIAN") {
-      showWarning("Guardian은 할 일 상세보기에 접근할 수 없습니다.");
+      showWarning("할 일의 상세 내용은 피보호자만 볼 수 있어요.");
       return;
     }
 
@@ -160,7 +161,7 @@ export default function Todo() {
   }
 
   function handleDateSelect(selectedDateValue) {
-    setSelectedDate(selectedDateValue);
+    setSelectedDate(formatDateToYMD(selectedDateValue));
     closeDatePicker();
   }
 
@@ -168,10 +169,10 @@ export default function Todo() {
     <div className="h-screen">
       <Header />
 
-      <div className="mx-auto max-w-4xl p-2 sm:p-4">
+      <div className="mx-auto max-w-4xl p-2 pb-16 sm:p-4">
         <div className="mb-1 px-2 sm:px-0">
           <div className="flex items-center gap-1">
-            <DateBox />
+            <DateBox customDate={selectedDate} />
             <button
               onClick={openDatePicker}
               className="text-black-600 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
@@ -261,7 +262,7 @@ export default function Todo() {
       {user?.userRole === "BIF" && (
         <button
           onClick={handleAddTodo}
-          className="fixed right-6 bottom-28 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full bg-green-600 shadow-lg transition-colors active:bg-green-700"
+          className="bg-primary fixed right-6 bottom-28 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full shadow-lg transition-colors active:bg-green-700 lg:right-76"
         >
           <BiPlus className="text-white" size={28} />
         </button>
@@ -276,8 +277,8 @@ export default function Todo() {
         onPrimaryClick={confirmDelete}
       >
         <div className="text-center">
-          <p className="mb-2 text-lg font-medium">할 일 삭제</p>
-          <p className="text-gray-600">
+          <p className="mb-2 text-xl font-bold">할 일 삭제</p>
+          <p className="text-sm text-gray-600">
             "<span className="font-medium">{deleteModal.todoTitle}</span>"을(를)
             삭제하시겠습니까?
           </p>
@@ -288,7 +289,7 @@ export default function Todo() {
         isOpen={datePickerModal.isOpen}
         onClose={closeDatePicker}
         onDateSelect={handleDateSelect}
-        currentDate={selectedDate}
+        currentDate={new Date(selectedDate)}
       />
 
       <TabBar />

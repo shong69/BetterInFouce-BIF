@@ -9,13 +9,17 @@ export async function getTodos(date) {
   let dateString = "";
 
   if (date) {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    dateString = `${year}-${month}-${day}`;
+    if (typeof date === "string") {
+      dateString = date;
+    } else if (date instanceof Date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const day = date.getDate().toString().padStart(2, "0");
+      dateString = `${year}-${month}-${day}`;
+    }
   }
 
-  const params = date ? { date: dateString } : {};
+  const params = dateString ? { date: dateString } : {};
   const response = await api.get("/api/todos", { params });
   return response.data;
 }
