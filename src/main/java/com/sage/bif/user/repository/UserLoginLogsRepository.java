@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface UserLoginLogsRepository extends JpaRepository<UserLoginLogs, Long> {
 
-    @Query("SELECT u FROM UserLoginLogs u WHERE u.socialId = :socialId AND u.logoutAt IS NULL ORDER BY u.loginAt DESC")
+    @Query("SELECT u FROM UserLoginLogs u WHERE u.socialId = :socialId AND u.logoutAt IS NULL ORDER BY u.loginAt DESC LIMIT 1")
     Optional<UserLoginLogs> findLatestActiveSession(@Param("socialId") Long socialId);
 
     @Modifying

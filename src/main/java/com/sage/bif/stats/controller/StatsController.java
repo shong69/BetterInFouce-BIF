@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import java.time.format.DateTimeFormatter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -98,8 +99,21 @@ public class StatsController {
                         .body(ApiResponse.error("연결되지 않은 BIF의 통계는 조회할 수 없습니다."));
             }
 
-            final GuardianStatsResponse guardianStatsResponse = statsService.getGuardianStats(bifId);
-            return ResponseEntity.ok(ApiResponse.success(guardianStatsResponse));
+            final GuardianStatsResponse base = statsService.getGuardianStats(bifId);
+
+            final String joinDate = guardian.getCreatedAt() != null
+                    ? guardian.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    : "";
+
+            final GuardianStatsResponse response = GuardianStatsResponse.builder()
+                    .bifNickname(base.getBifNickname())
+                    .advice(base.getAdvice())
+                    .guardianJoinDate(joinDate)
+                    .emotionRatio(base.getEmotionRatio())
+                    .monthlyChange(base.getMonthlyChange())
+                    .build();
+
+            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (BaseException e) {
             log.error("보호자 통계 조회 중 비즈니스 오류 발생: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
