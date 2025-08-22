@@ -1,5 +1,6 @@
 package com.sage.bif.user.repository;
 
+import com.sage.bif.user.entity.Bif;
 import com.sage.bif.user.entity.Guardian;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,5 +18,7 @@ public interface GuardianRepository extends JpaRepository<Guardian, Long> {
 
     @Query("SELECT g.bif.bifId FROM Guardian g WHERE g.socialLogin.socialId = :socialId")
     Optional<Long> findBifIdBySocialId(@Param("socialId") Long socialId);
+
+    boolean existsByBif(Bif bif);
 
 }
