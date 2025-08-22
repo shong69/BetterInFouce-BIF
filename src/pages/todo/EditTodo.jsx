@@ -466,11 +466,15 @@ export default function EditTodo() {
       showSuccess("할 일이 수정되었습니다.");
       navigate(-1);
     } catch (error) {
-      const errorMessage =
-        error?.response?.data?.message || error?.message?.includes("network")
-          ? "네트워크 연결을 확인해주세요."
-          : "할 일 수정에 실패했습니다. 다시 시도해주세요.";
-      showError(errorMessage);
+      if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
+        showError(error.response.data.message);
+      } else {
+        const errorMessage =
+          error?.response?.data?.message || error?.message?.includes("network")
+            ? "네트워크 연결을 확인해주세요."
+            : "할 일 수정에 실패했습니다. 다시 시도해주세요.";
+        showError(errorMessage);
+      }
     } finally {
       hideLoading();
     }
@@ -497,7 +501,7 @@ export default function EditTodo() {
       <Header />
 
       <div className="mx-auto max-w-4xl p-6 pb-36 md:pb-40">
-        <div className="mb-6 ml-[-12px]">
+        <div className="mb-6 ml-[-6px]">
           <BackButton
             onClick={() => {
               if (returnTab) {
@@ -731,7 +735,7 @@ export default function EditTodo() {
       </div>
 
       <div className="fixed right-0 bottom-25 left-0 bg-gradient-to-t from-white via-white to-transparent px-4 pt-6">
-        <div className="mx-auto max-w-md px-4">
+        <div className="max-full mx-auto px-2">
           <PrimaryButton
             title="저장"
             onClick={handleSave}
