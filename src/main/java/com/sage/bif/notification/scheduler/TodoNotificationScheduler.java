@@ -5,6 +5,8 @@ import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.TodoTypes;
 import com.sage.bif.todo.repository.TodoRepository;
+import com.sage.bif.user.entity.Bif;
+import com.sage.bif.user.repository.GuardianRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,9 +29,10 @@ public class TodoNotificationScheduler {
     private static final int ROUTINE_TIME_TOLERANCE_MINUTES = 1;
     private final TodoRepository todoRepository;
     private final NotificationFacadeService notificationFacadeService;
+    private final GuardianRepository guardianRepository;
 
     @Scheduled(cron = "0 * * * * *")
-    @Transactional(readOnly = true)
+    @Transactional
     public void checkAndSendTodoNotifications() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         LocalDate today = now.toLocalDate();
@@ -64,13 +67,13 @@ public class TodoNotificationScheduler {
 
     private void processNotification(Todo todo, LocalDateTime now) {
         try {
+            updateNotificationStatusSafely(todo, now);
+
             CompletableFuture.runAsync(() -> sendNotificationAsync(todo))
                     .exceptionally(throwable -> {
                         log.error("알림 전송 비동기 처리 실패: todoId={}", todo.getTodoId(), throwable);
                         return null;
                     });
-
-            updateNotificationStatusSafely(todo, now);
 
             log.info("할 일 알림 전송 완료: todoId={}, bifId={}, title={}",
                     todo.getTodoId(), todo.getBifUser().getBifId(), todo.getTitle());
@@ -109,6 +112,12 @@ public class TodoNotificationScheduler {
     }
 
     private boolean shouldSendNotification(Todo todo, LocalDateTime currentDateTime) {
+        Bif bifUser = todo.getBifUser();
+        if (bifUser != null && guardianRepository.existsByBif(bifUser)) {
+            log.debug("사용자가 보호자이므로 알림을 보내지 않습니다: bifId={}", bifUser.getBifId());
+            return false;
+        }
+
         if (!isBasicValidationPassed(todo)) {
             if (log.isDebugEnabled()) {
                 log.debug("기본 검증 실패: todoId={}, enabled={}, completed={}, deleted={}, dueTime={}", 
@@ -170,8 +179,7 @@ public class TodoNotificationScheduler {
     }
 
     private boolean isInNotificationTimeRange(LocalDateTime currentDateTime, LocalDateTime notificationDateTime) {
-        return currentDateTime.isAfter(notificationDateTime.minusMinutes(NOTIFICATION_TIME_RANGE_MINUTES)) &&
-                currentDateTime.isBefore(notificationDateTime.plusMinutes(NOTIFICATION_TIME_RANGE_MINUTES));
+        return currentDateTime.withSecond(0).withNano(0).equals(notificationDateTime.withSecond(0).withNano(0));
     }
 
     private boolean hasRecentNotificationSent(Todo todo, LocalDateTime scheduledNotificationTime) {
