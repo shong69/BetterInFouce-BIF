@@ -12,6 +12,8 @@ import com.sage.bif.stats.repository.EmotionStatisticsTemplateRepository;
 import com.sage.bif.stats.repository.GuardianAdviceTemplateRepository;
 import com.sage.bif.stats.repository.StatsRepository;
 import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.ObjectProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,6 +53,9 @@ public class StatsServiceImpl implements StatsService {
     private final BifRepository bifRepository;
     private final ObjectProvider<StatsService> statsServiceProvider;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
 
     @Override
     @Transactional
@@ -78,6 +83,7 @@ public class StatsServiceImpl implements StatsService {
             final String bifNickname = getBifNickname(bifId);
 
             final String advice = getGuardianAdviceFromStats(bifId);
+            final String guardianJoinDate = getGuardianJoinDateByBifId(bifId);
 
             log.debug("BIF ID {}의 보호자 통계 생성 완료 - 닉네임: {}, 조언 길이: {}",
                     bifId, bifNickname, advice.length());
@@ -85,6 +91,7 @@ public class StatsServiceImpl implements StatsService {
             return GuardianStatsResponse.builder()
                     .bifNickname(bifNickname)
                     .advice(advice)
+                    .guardianJoinDate(guardianJoinDate)
                     .emotionRatio(bifStats.getEmotionRatio())
                     .monthlyChange(bifStats.getMonthlyChange())
                     .build();
@@ -357,10 +364,15 @@ public class StatsServiceImpl implements StatsService {
             case "ANGER" -> EmotionType.ANGRY;
             case "NEUTRAL" -> EmotionType.OKAY;
             case "EXCELLENT" -> EmotionType.GREAT;
+            case "ANGRY" -> EmotionType.ANGRY;
+            case "DOWN" -> EmotionType.DOWN;
+            case "GOOD" -> EmotionType.GOOD;
+            case "GREAT" -> EmotionType.GREAT;
+            case "OKAY" -> EmotionType.OKAY;
             default -> {
                 log.warn("Unknown emotion type: {}, defaulting to OKAY", dbeaverEmotion);
                 yield EmotionType.OKAY;
-        }
+            }
         };
     }
 
@@ -462,41 +474,42 @@ public class StatsServiceImpl implements StatsService {
 
     private String generateStatisticsTextFromTemplate(final Map<EmotionType, Integer> emotionCounts) {
         final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
+        String result;
         if (total == 0) {
-            return "이번 달에는 감정 데이터가 없습니다.";
+            result = "지난 달 감정 데이터가 없습니다.";
+        } else {
+            final Map<EmotionType, Double> ratios = emotionCounts.entrySet().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> (double) entry.getValue() / total * 100
+                    ));
+
+            final EmotionType dominantEmotion = emotionCounts.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey)
+                    .orElse(EmotionType.OKAY);
+
+            final double dominantRatio = ratios.get(dominantEmotion);
+
+            final String okayRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.OKAY));
+            final String goodRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.GOOD));
+            final String angryRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.ANGRY));
+            final String downRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.DOWN));
+            final String greatRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.GREAT));
+
+            final Optional<EmotionStatisticsTemplate> template = templateRepository.findByEmotionRanges(okayRange, goodRange, angryRange, downRange, greatRange);
+
+            if (template.isPresent()) {
+                log.debug("Found emotion statistics template for ranges: okay={}, good={}, angry={}, down={}, great={}",
+                        okayRange, goodRange, angryRange, downRange, greatRange);
+                result = template.get().getStatisticsText();
+            } else {
+                log.warn("No emotion statistics template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback statistics.",
+                        okayRange, goodRange, angryRange, downRange, greatRange);
+                result = generateStatisticsBasedStatisticsText(ratios, dominantEmotion, dominantRatio);
+            }
         }
-
-        final Map<EmotionType, Double> ratios = emotionCounts.entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> (double) entry.getValue() / total * 100
-                ));
-
-        final EmotionType dominantEmotion = emotionCounts.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(EmotionType.OKAY);
-
-        final double dominantRatio = ratios.get(dominantEmotion);
-
-        final String okayRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.OKAY));
-        final String goodRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.GOOD));
-        final String angryRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.ANGRY));
-        final String downRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.DOWN));
-        final String greatRange = getRangeForPercentage(getEmotionRatio(ratios, EmotionType.GREAT));
-
-        final Optional<EmotionStatisticsTemplate> template = templateRepository.findByEmotionRanges(okayRange, goodRange, angryRange, downRange, greatRange);
-
-        if (template.isPresent()) {
-            log.debug("Found emotion statistics template for ranges: okay={}, good={}, angry={}, down={}, great={}",
-                    okayRange, goodRange, angryRange, downRange, greatRange);
-            return template.get().getStatisticsText();
-        }
-
-        log.warn("No emotion statistics template found for ranges: okay={}, good={}, angry={}, down={}, great={}. Using fallback statistics.",
-                okayRange, goodRange, angryRange, downRange, greatRange);
-
-        return generateStatisticsBasedStatisticsText(ratios, dominantEmotion, dominantRatio);
+        return result;
     }
 
     private String getRangeForPercentage(final double percentage) {
@@ -718,6 +731,26 @@ public class StatsServiceImpl implements StatsService {
         } catch (Exception e) {
             log.error("BIF 닉네임 조회 중 오류 발생 - BIF ID: {}", bifId, e);
             return "BIF_" + bifId;
+        }
+    }
+
+    private String getGuardianJoinDateByBifId(final Long bifId) {
+        try {
+            final List<java.time.LocalDateTime> results = entityManager.createQuery(
+                    "select g.createdAt from com.sage.bif.user.entity.Guardian g where g.bif.bifId = :bifId order by g.createdAt asc",
+                    java.time.LocalDateTime.class)
+                    .setParameter("bifId", bifId)
+                    .setMaxResults(1)
+                    .getResultList();
+
+            if (results.isEmpty()) {
+                return "";
+            }
+
+            return results.get(0).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        } catch (Exception e) {
+            log.warn("Failed to fetch guardian join date for bifId {}: {}", bifId, e.getMessage());
+            return "";
         }
     }
 

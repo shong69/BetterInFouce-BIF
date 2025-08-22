@@ -15,6 +15,7 @@ public class GuardianStatsResponse {
 
     private String bifNickname;
     private String advice;
+    private String guardianJoinDate;
     private List<StatsResponse.EmotionRatio> emotionRatio;
     private List<StatsResponse.MonthlyChange> monthlyChange;
 
