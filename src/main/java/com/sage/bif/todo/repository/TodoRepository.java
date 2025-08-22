@@ -27,4 +27,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("DELETE FROM Todo t WHERE t.bifUser.bifId = :bifId")
     int deleteByBifUser_BifId(@Param("bifId") Long bifId);
 
+    @Modifying
+    @Query(value = "DELETE FROM todo_repeat_days WHERE todo_id IN (SELECT todo_id FROM todos WHERE bif_id = :bifId)", nativeQuery = true)
+    int deleteRepeatDaysByBifId(@Param("bifId") Long bifId);
+
 }

@@ -84,6 +84,7 @@ public enum ErrorCode {
     SUBTODO_ACCESS_DENIED(HttpStatus.FORBIDDEN, "SUBTODO_ACCESS_DENIED", "해당 세부 할일에 접근할 권한이 없습니다."),
     SUBTODO_INVALID_RELATION(HttpStatus.BAD_REQUEST, "SUBTODO_INVALID_RELATION", "세부 할일이 해당 할일에 속하지 않습니다."),
     SUBTODOS_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "SUBTODOS_NOT_COMPLETED", "모든 세부 할일을 완료해야 합니다."),
+    SUBTODO_COUNT_INSUFFICIENT(HttpStatus.BAD_REQUEST, "SUBTODO_COUNT_INSUFFICIENT", "세부 할일은 2개 이상이어야 합니다."),
 
     DIARY_NOT_FOUND(HttpStatus.FORBIDDEN, "DIARY_NOT_FOUND", "해당 일기를 찾을 수 없습니다."),
     DIARY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "DIARY_INVALID_INPUT", "일기 입력이 올바르지 않습니다."),
