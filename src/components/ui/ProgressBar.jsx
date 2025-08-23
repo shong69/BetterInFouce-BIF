@@ -23,8 +23,8 @@ export default function ProgressBar({
   return (
     <div className={`flex flex-col ${sizeClasses[size]}`}>
       <div className="flex items-center justify-between">
-        <span className="font-medium text-gray-600">{label}</span>
-        <span className="font-medium text-gray-700">
+        <span className="text-sm font-medium text-gray-600">{label}</span>
+        <span className="text-sm font-medium text-gray-600">
           {isPercentage
             ? `${Math.round(progress)}%`
             : `${currentStep}/${totalSteps}`}

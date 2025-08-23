@@ -37,7 +37,17 @@ export const useUserStore = create((set, get) => ({
 
     const isTokenExpired = (token) => {
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return true;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        const payload = JSON.parse(json);
         const currentTime = Math.floor(Date.now() / 1000);
         return payload.exp < currentTime + 30;
       } catch {
@@ -47,7 +57,17 @@ export const useUserStore = create((set, get) => ({
 
     const getTokenPayload = (token) => {
       try {
-        return JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        return JSON.parse(json);
       } catch {
         return null;
       }
@@ -60,7 +80,7 @@ export const useUserStore = create((set, get) => ({
         accessToken: savedToken,
         user: payload
           ? {
-              userRole: payload.role,
+              userRole: payload.userRole || payload.role,
               bifId: payload.bifId,
               nickname: payload.nickname,
               provider: payload.provider,
@@ -105,11 +125,13 @@ export const useUserStore = create((set, get) => ({
         const { data } = result;
 
         if (data.accessToken) {
+          const tokenPayload = getTokenPayload(data.accessToken);
+
           set({
             accessToken: data.accessToken,
             user: {
               providerUniqueId: data.providerUniqueId,
-              userRole: data.role,
+              userRole: data.userRole || data.role || tokenPayload?.role,
               bifId: data.bifId,
               nickname: data.nickname,
               provider: data.provider,
@@ -170,11 +192,16 @@ export const useUserStore = create((set, get) => ({
         if (refreshResponse.ok) {
           const result = await refreshResponse.json();
           if (result.data?.accessToken) {
+            const tokenPayload = getTokenPayload(result.data.accessToken);
+
             set({
               accessToken: result.data.accessToken,
               user: {
                 providerUniqueId: result.data.providerUniqueId,
-                userRole: result.data.role,
+                userRole:
+                  result.data.userRole ||
+                  result.data.role ||
+                  tokenPayload?.role,
                 bifId: result.data.bifId,
                 nickname: result.data.nickname,
                 provider: result.data.provider,

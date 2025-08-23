@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
 import { getRandomColorByTitle } from "@utils/colorUtils";
-import { HiChevronDown } from "react-icons/hi";
+import { IoIosArrowDown } from "react-icons/io";
 import { useUserStore } from "@stores";
 
 export default function Card({
@@ -195,10 +195,10 @@ export default function Card({
       <div
         ref={cardRef}
         style={{ touchAction: "pan-y" }}
-        className={`relative rounded-xl p-4 transition-transform duration-200 ease-out ${
+        className={`relative rounded-xl p-3 pt-4 text-left transition-transform duration-200 ease-out ${
           type === "todo"
-            ? `border-2 ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
-            : "cursor-pointer border border-gray-300 bg-white hover:border-gray-400"
+            ? `border-1 border-gray-300 shadow-sm ${isCompleted ? "border-gray-300 bg-gray-100" : "border-gray-200 bg-white"}`
+            : "cursor-pointer border-1 border-gray-300 bg-white shadow-sm hover:border-gray-400"
         }`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -219,20 +219,22 @@ export default function Card({
       >
         <div>
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className={`text-lg font-medium ${colors.title}`}>{title}</h3>
+            <div className="flex flex-1 items-center">
+              <h3 className={`text-md font-medium ${colors.title}`}>{title}</h3>
             </div>
-            <div className="flex items-center gap-3">
-              <span className={`rounded-full px-3 py-1 text-sm ${colors.tag}`}>
+            <div className="flex flex-col items-end gap-2">
+              <span
+                className={`rounded-xl px-3 py-1 text-sm font-medium ${colors.tag}`}
+              >
                 {hasOrder ? "순서 있음" : "체크리스트"}
               </span>
               {subTodos.length > 0 && (
                 <button
                   onClick={handleToggle}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
+                  className={`flex items-center justify-center rounded-full transition-all duration-200 hover:opacity-80`}
                 >
-                  <HiChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                  <IoIosArrowDown
+                    className={`text-primary font-sm text-lg transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
                   />
                 </button>
               )}
