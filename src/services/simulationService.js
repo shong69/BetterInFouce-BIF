@@ -2,6 +2,30 @@ import axios from "axios";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api`;
 
+export default function mapBackendToFrontend(backendData) {
+  if (!Array.isArray(backendData)) {
+    return [];
+  }
+
+  return backendData.map(function (simulation) {
+    const title = simulation?.title || "제목 없음";
+    const description = simulation?.description || "설명 없음";
+    const id = simulation?.simulation_id || simulation?.id || 0;
+    const category = simulation?.category || getCategoryFromTitle(title);
+    const isActive = simulation?.isActive || false;
+
+    return {
+      id: id,
+      title: title,
+      description: description,
+      category: category,
+      isActive: isActive,
+      createdAt: simulation?.created_at || new Date().toISOString(),
+      updatedAt: simulation?.updated_at || new Date().toISOString(),
+    };
+  });
+}
+
 const ttsState = {
   isPlaying: false,
   currentAudio: null,
@@ -85,30 +109,6 @@ const ttsManager = {
     });
   },
 };
-
-export default function mapBackendToFrontend(backendData) {
-  if (!Array.isArray(backendData)) {
-    return [];
-  }
-
-  return backendData.map(function (simulation) {
-    const title = simulation?.title || "제목 없음";
-    const description = simulation?.description || "설명 없음";
-    const id = simulation?.simulation_id || simulation?.id || 0;
-    const category = simulation?.category || getCategoryFromTitle(title);
-    const isActive = simulation?.isActive || false;
-
-    return {
-      id: id,
-      title: title,
-      description: description,
-      category: category,
-      isActive: isActive,
-      createdAt: simulation?.created_at || new Date().toISOString(),
-      updatedAt: simulation?.updated_at || new Date().toISOString(),
-    };
-  });
-}
 
 function getCategoryFromTitle(title) {
   if (!title || typeof title !== "string" || title.trim() === "") {
