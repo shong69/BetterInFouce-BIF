@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useToastStore } from "@stores/toastStore";
 import notificationService from "@services/notificationService";
 
+const INITIAL_NOTIFICATION_SHOWN_KEY = "initial-notification-shown";
+
 export default function NotificationPermissionHandler() {
   const { showInfo, showWarning, showError } = useToastStore();
   const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
@@ -10,31 +12,60 @@ export default function NotificationPermissionHandler() {
     const initializeNotifications = async () => {
       if (hasRequestedPermission) return;
 
-      if (!notificationService.isSupported) {
+      const hasShownInitialNotification = localStorage.getItem(
+        INITIAL_NOTIFICATION_SHOWN_KEY,
+      );
+      if (hasShownInitialNotification) {
+        setHasRequestedPermission(true);
         return;
       }
 
-      try {
+      if (!("Notification" in window)) {
+        setHasRequestedPermission(true);
+        return;
+      }
+
+      if (!("serviceWorker" in navigator)) {
+        setHasRequestedPermission(true);
+        return;
+      }
+
+      if (Notification.permission === "granted") {
         const registration = await notificationService.registerServiceWorker();
-
-        const hasPermission =
-          await notificationService.requestNotificationPermission();
-
-        if (hasPermission) {
-          if (registration) {
-            await notificationService.subscribeToWebPush().catch(() => {});
-          }
-        } else {
-          showWarning(
-            "알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.",
-          );
+        if (registration) {
+          await notificationService.subscribeToWebPush().catch((error) => {
+            throw error;
+          });
         }
 
         setHasRequestedPermission(true);
-      } catch {
-        showError("알림 설정 중 오류가 발생했습니다.");
-        setHasRequestedPermission(true);
+        return;
       }
+
+      if (Notification.permission === "denied") {
+        setHasRequestedPermission(true);
+        return;
+      }
+
+      if (Notification.permission === "default") {
+        const registration = await notificationService.registerServiceWorker();
+
+        const permission = await Notification.requestPermission();
+
+        if (permission === "granted") {
+          if (registration) {
+            await notificationService.subscribeToWebPush();
+            showInfo("알림이 설정되었습니다! 🎉");
+          }
+          localStorage.setItem(INITIAL_NOTIFICATION_SHOWN_KEY, "true");
+        } else if (permission === "denied") {
+          localStorage.setItem(INITIAL_NOTIFICATION_SHOWN_KEY, "true");
+        } else {
+          localStorage.setItem(INITIAL_NOTIFICATION_SHOWN_KEY, "true");
+        }
+      }
+
+      setHasRequestedPermission(true);
     };
 
     const timer = setTimeout(initializeNotifications, 2000);
