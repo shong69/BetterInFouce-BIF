@@ -158,3 +158,8 @@ springdoc:
     display-request-duration: true
     filter: true
   paths-to-match: /**
+
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
