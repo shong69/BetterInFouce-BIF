@@ -48,36 +48,36 @@ export default function TabBar() {
   ];
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-gray-100 bg-white shadow-lg">
-      <div className="flex justify-around">
-        {tabs.map(function (tab) {
-          const isActive = tab.isActive(currentPath);
+    <div className="fixed bottom-4 left-1/2 z-40 flex w-full -translate-x-1/2 transform justify-center">
+      <div className="w-full max-w-4xl px-4">
+        <div className="rounded-full border border-gray-200/50 bg-white/90 px-8 py-1.5 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            {tabs.map(function (tab) {
+              const isActive = tab.isActive(currentPath);
+              const IconComponent = tab.icon;
 
-          const IconComponent = tab.icon;
-
-          return (
-            <IconBox
-              key={tab.path}
-              to={tab.path}
-              icon={
-                <IconComponent
-                  size={30}
-                  className={`${
-                    isActive
-                      ? "text-primary"
-                      : "text-gray-400 group-hover:text-gray-600"
-                  }`}
+              return (
+                <IconBox
+                  key={tab.path}
+                  to={tab.path}
+                  icon={
+                    <IconComponent
+                      size={28}
+                      className={`${
+                        isActive
+                          ? "text-primary"
+                          : "text-gray-400 group-hover:text-gray-600"
+                      }`}
+                    />
+                  }
+                  title=""
+                  titleStyle={`${isActive ? "text-primary font-medium" : ""}`}
+                  isActive={isActive}
                 />
-              }
-              title={tab.title}
-              titleStyle={`${
-                isActive
-                  ? "text-primary font-bold"
-                  : "text-gray-400 group-hover:text-gray-600"
-              }`}
-            />
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

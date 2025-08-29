@@ -3,9 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import TabButton from "@components/ui/TabButton";
 import PrimaryButton from "@components/ui/PrimaryButton";
-import BackButton from "@components/ui/BackButton";
 
 import { HiPlus, HiX } from "react-icons/hi";
 
@@ -22,16 +20,6 @@ const REPEAT_FREQUENCY = {
   WEEKLY: "WEEKLY",
 };
 
-const REPEAT_DAYS = {
-  MONDAY: "MONDAY",
-  TUESDAY: "TUESDAY",
-  WEDNESDAY: "WEDNESDAY",
-  THURSDAY: "THURSDAY",
-  FRIDAY: "FRIDAY",
-  SATURDAY: "SATURDAY",
-  SUNDAY: "SUNDAY",
-};
-
 const NOTIFICATION_OPTIONS = [
   { label: "정각", value: 0 },
   { label: "5분 전", value: 5 },
@@ -42,26 +30,21 @@ const NOTIFICATION_OPTIONS = [
 ];
 
 const WEEK_DAYS = [
-  { label: "월", value: REPEAT_DAYS.MONDAY },
-  { label: "화", value: REPEAT_DAYS.TUESDAY },
-  { label: "수", value: REPEAT_DAYS.WEDNESDAY },
-  { label: "목", value: REPEAT_DAYS.THURSDAY },
-  { label: "금", value: REPEAT_DAYS.FRIDAY },
-  { label: "토", value: REPEAT_DAYS.SATURDAY },
-  { label: "일", value: REPEAT_DAYS.SUNDAY },
+  { label: "월", value: "MONDAY" },
+  { label: "화", value: "TUESDAY" },
+  { label: "수", value: "WEDNESDAY" },
+  { label: "목", value: "THURSDAY" },
+  { label: "금", value: "FRIDAY" },
+  { label: "토", value: "SATURDAY" },
+  { label: "일", value: "SUNDAY" },
 ];
 
-const DEBOUNCE_DELAY = 300;
 const MAX_SUBTODOS = 5;
 const MAX_TITLE_LENGTH = 255;
 
 export default function EditTodo() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const returnTab = new URLSearchParams(window.location.search).get(
-    "returnTab",
-  );
-
   const { showSuccess, showError } = useToastStore();
   const { showLoading, hideLoading } = useLoadingStore();
 
@@ -89,7 +72,7 @@ export default function EditTodo() {
 
   function isRecentSave() {
     const now = Date.now();
-    if (now - lastSaveTime < DEBOUNCE_DELAY) {
+    if (now - lastSaveTime < 300) {
       return true;
     }
     setLastSaveTime(now);
@@ -357,13 +340,13 @@ export default function EditTodo() {
     }
   }
 
-  const handleNotificationToggle = () => {
+  function handleNotificationToggle() {
     setFormData((prev) => ({
       ...prev,
       notificationEnabled: !prev.notificationEnabled,
       notificationTime: !prev.notificationEnabled ? 0 : prev.notificationTime,
     }));
-  };
+  }
 
   function handleNotificationTimeChange(e) {
     const time = parseInt(e.target.value, 10);
@@ -482,7 +465,7 @@ export default function EditTodo() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen pb-10">
         <Header />
         <div className="mx-auto max-w-md px-4 pt-4">
           <div className="mt-4 animate-pulse space-y-4">
@@ -500,35 +483,35 @@ export default function EditTodo() {
     <div className="h-screen">
       <Header />
 
-      <div className="mx-auto max-w-4xl p-6 pb-36 md:pb-40">
-        <div className="mb-6 ml-[-6px]">
-          <BackButton
-            onClick={() => {
-              if (returnTab) {
-                navigate(`/?tab=${returnTab}`);
-              } else {
-                navigate(-1);
-              }
-            }}
-          />
+      <div className="mx-auto max-w-4xl p-6 pb-15 md:pb-15">
+        <div className="mb-6">
+          <h2 className="text-md mb-3 text-black">유형</h2>
+          <div className="flex overflow-hidden rounded-xl shadow-sm">
+            <button
+              onClick={() => handleTypeChange("routine")}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                formData.type === TODO_TYPES.ROUTINE
+                  ? "bg-light-orange text-black"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              루틴
+            </button>
+            <button
+              onClick={() => handleTypeChange("task")}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                formData.type === TODO_TYPES.TASK
+                  ? "bg-light-orange text-black"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              할 일
+            </button>
+          </div>
         </div>
 
         <div className="mb-6">
-          <h2 className="text-md mb-3 text-gray-800">유형</h2>
-          <TabButton
-            activeTab={
-              formData.type === TODO_TYPES.ROUTINE ? "routine" : "task"
-            }
-            setActiveTab={handleTypeChange}
-            leftTitle="루틴"
-            rightTitle="할 일"
-            leftValue="routine"
-            rightValue="task"
-          />
-        </div>
-
-        <div className="mb-6">
-          <h2 className="text-md mb-3 text-gray-800">할 일</h2>
+          <h2 className="text-md mb-3 text-black">할 일</h2>
           <div className="space-y-2">
             <input
               type="text"
@@ -538,20 +521,20 @@ export default function EditTodo() {
               className={`focus:ring-opacity-50 w-full rounded-lg border p-3 text-base transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 validation.title.isValid
                   ? "border-gray-200 focus:border-gray-300"
-                  : "border-red-500 focus:border-red-300"
+                  : "border-warning focus:border-red-300"
               }`}
               maxLength={MAX_TITLE_LENGTH}
             />
             <div className="flex justify-between text-xs">
               <div>
                 {!validation.title.isValid && (
-                  <span className="text-red-500">
+                  <span className="text-warning">
                     {validation.title.message}
                   </span>
                 )}
               </div>
               <span
-                className={`${formData.title.length > MAX_TITLE_LENGTH * 0.9 ? "text-orange-500" : "text-gray-400"}`}
+                className={`${formData.title.length > MAX_TITLE_LENGTH * 0.9 ? "text-orange" : "text-gray-400"}`}
               >
                 {formData.title.length}/{MAX_TITLE_LENGTH}
               </span>
@@ -561,14 +544,14 @@ export default function EditTodo() {
 
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-md text-gray-800">세부 할 일</h2>
+            <h2 className="text-md text-black">세부 할 일</h2>
             <button
               onClick={handleAddSubTodo}
               disabled={formData.subTodos.length >= MAX_SUBTODOS}
               className={`flex items-center gap-1 rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
                 formData.subTodos.length >= MAX_SUBTODOS
                   ? "cursor-not-allowed bg-gray-100 text-gray-400"
-                  : "bg-toggle text-white hover:bg-blue-200"
+                  : "bg-black text-white hover:bg-blue-200"
               }`}
             >
               <HiPlus size={16} />
@@ -576,7 +559,7 @@ export default function EditTodo() {
             </button>
           </div>
 
-          <div className="space-y-3 rounded-xl bg-white py-2">
+          <div className="space-y-3 rounded-xl py-2">
             {formData.subTodos.length === 0 ? (
               <p className="py-4 text-center text-sm text-gray-400">
                 세부 할일을 추가해보세요
@@ -587,7 +570,7 @@ export default function EditTodo() {
                   key={subTodo.subTodoId}
                   className="flex items-center gap-4"
                 >
-                  <span className="bg-secondary flex h-7 w-7 min-w-[1.75rem] items-center justify-center rounded-full border text-xs font-medium text-white">
+                  <span className="bg-light-orange flex h-7 w-7 min-w-[1.75rem] items-center justify-center rounded-full text-xs font-medium text-black">
                     {index + 1}
                   </span>
                   <input
@@ -599,7 +582,7 @@ export default function EditTodo() {
                   />
                   <button
                     onClick={() => handleRemoveSubTodo(index)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-red-500"
+                    className="hover:text-warning flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100"
                   >
                     <HiX size={16} />
                   </button>
@@ -608,7 +591,7 @@ export default function EditTodo() {
             )}
 
             {!validation.subTodos.isValid && (
-              <p className="text-sm text-red-500">
+              <p className="text-warning text-sm">
                 {validation.subTodos.message}
               </p>
             )}
@@ -617,24 +600,34 @@ export default function EditTodo() {
 
         {formData.type === TODO_TYPES.ROUTINE && (
           <div className="mb-6">
-            <h2 className="text-md mb-3 text-gray-800">반복</h2>
-            <div className="space-y-4 rounded-xl bg-white">
-              <TabButton
-                activeTab={
-                  formData.repeatFrequency === REPEAT_FREQUENCY.DAILY
-                    ? "daily"
-                    : "weekly"
-                }
-                setActiveTab={handleRepeatFrequencyChange}
-                leftTitle="매일"
-                rightTitle="매주"
-                leftValue="daily"
-                rightValue="weekly"
-              />
+            <h2 className="text-md mb-3 text-black">반복</h2>
+            <div className="space-y-4 rounded-xl">
+              <div className="flex overflow-hidden rounded-xl shadow-sm">
+                <button
+                  onClick={() => handleRepeatFrequencyChange("daily")}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    formData.repeatFrequency === REPEAT_FREQUENCY.DAILY
+                      ? "bg-light-orange text-black"
+                      : "bg-white text-black hover:bg-gray-50"
+                  }`}
+                >
+                  매일
+                </button>
+                <button
+                  onClick={() => handleRepeatFrequencyChange("weekly")}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    formData.repeatFrequency === REPEAT_FREQUENCY.WEEKLY
+                      ? "bg-light-orange text-black"
+                      : "bg-white text-black hover:bg-gray-50"
+                  }`}
+                >
+                  매주
+                </button>
+              </div>
 
               {formData.repeatFrequency === REPEAT_FREQUENCY.WEEKLY && (
                 <div>
-                  <h3 className="mb-2 text-sm text-gray-600">반복 요일</h3>
+                  <h3 className="mb-2 text-sm text-black">반복 요일</h3>
                   <div className="flex flex-wrap justify-around gap-2">
                     {WEEK_DAYS.map((day) => (
                       <button
@@ -642,8 +635,8 @@ export default function EditTodo() {
                         onClick={() => handleDayToggle(day.value)}
                         className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                           formData.repeatDays.includes(day.value)
-                            ? "bg-toggle text-white"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-light-orange text-black"
+                            : "bg-white text-black hover:bg-gray-200"
                         }`}
                       >
                         {day.label}
@@ -658,7 +651,7 @@ export default function EditTodo() {
 
         {formData.type === TODO_TYPES.TASK && (
           <div className="mb-6">
-            <h2 className="text-md mb-3 text-gray-800">날짜</h2>
+            <h2 className="text-md mb-3 text-black">날짜</h2>
             <div className="space-y-2">
               <input
                 type="date"
@@ -667,11 +660,11 @@ export default function EditTodo() {
                 className={`focus:ring-opacity-50 w-full rounded-lg border p-3 text-base focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                   validation.dueDate.isValid
                     ? "border-gray-200 focus:border-gray-300"
-                    : "border-red-500 focus:border-red-300"
+                    : "border-warning focus:border-red-300"
                 }`}
               />
               {!validation.dueDate.isValid && (
-                <p className="text-sm text-red-500">
+                <p className="text-warning text-sm">
                   {validation.dueDate.message}
                 </p>
               )}
@@ -680,7 +673,7 @@ export default function EditTodo() {
         )}
 
         <div className="mb-6">
-          <h2 className="text-md mb-3 text-gray-800">시간</h2>
+          <h2 className="text-md mb-3 text-black">시간</h2>
           <div className="space-y-2">
             <input
               ref={timeInputRef}
@@ -690,11 +683,11 @@ export default function EditTodo() {
               className={`focus:ring-opacity-50 w-full rounded-lg border p-3 text-base focus:border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 validation.dueTime.isValid
                   ? "border-gray-200"
-                  : "border-red-500 focus:border-red-300"
+                  : "border-warning focus:border-red-300"
               }`}
             />
             {!validation.dueTime.isValid && (
-              <p className="text-sm text-red-500">
+              <p className="text-warning text-sm">
                 {validation.dueTime.message}
               </p>
             )}
@@ -703,7 +696,7 @@ export default function EditTodo() {
 
         <div className="mb-6">
           <label className="mb-3 flex cursor-pointer items-center gap-2">
-            <h2 className="text-md text-gray-800">알림 설정</h2>
+            <h2 className="text-md text-black">알림 설정</h2>
             <div className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -715,7 +708,7 @@ export default function EditTodo() {
           </label>
 
           {formData.notificationEnabled && (
-            <div className="rounded-xl bg-white">
+            <div className="rounded-xl">
               <label className="block">
                 <select
                   value={formData.notificationTime}
@@ -734,17 +727,15 @@ export default function EditTodo() {
         </div>
       </div>
 
-      <div className="fixed right-0 bottom-25 left-0 bg-gradient-to-t from-white via-white to-transparent px-4 pt-6">
+      <div className="fixed right-0 bottom-4 left-0 px-4 pt-6">
         <div className="max-full mx-auto px-2">
           <PrimaryButton
-            title="저장"
+            title="할 일 수정하기"
             onClick={handleSave}
             disabled={!isFormValid || !isFormChanged}
           />
         </div>
       </div>
-
-      <TabBar />
     </div>
   );
 }

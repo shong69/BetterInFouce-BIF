@@ -1,12 +1,10 @@
 import { create } from "zustand";
+import { formatDateToYMD } from "@utils/dateUtils";
 
 export const useTodoStore = create((set) => ({
-  selectedDate: new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+  selectedDate: formatDateToYMD(
+    new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })),
   ),
-  currentTodo: null,
 
   setSelectedDate: (date) => set({ selectedDate: date }),
-  setCurrentTodo: (todo) => set({ currentTodo: todo }),
-  clearCurrentTodo: () => set({ currentTodo: null }),
 }));
