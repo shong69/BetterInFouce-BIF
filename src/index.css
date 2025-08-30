@@ -4,11 +4,11 @@
 @plugin "@tailwindcss/forms";
 
 @theme {
-  --color-primary: #0b8c07;
+  --color-primary: #4caf50;
   --color-warning: #ef4444;
   --color-secondary: #8fcd00;
   --color-toggle: #76c500;
-  --color-gradient-yellow: #ffe100;
+  --color-gradient-yellow: #fffb7d;
   --color-gray-medium: #cacaca;
 
   --font-sans:
@@ -19,4 +19,19 @@
   --font-display: "Pretendard Variable", "Pretendard", sans-serif;
 
   --text-tiny: 0.6rem;
+}
+
+body {
+  background: radial-gradient(
+    circle 500px at 50% -15%,
+    #eafc5f,
+    #fbffda,
+    #f7f7f7
+  );
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
 }
