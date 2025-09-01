@@ -1,27 +1,19 @@
 package com.sage.bif.diary.event.model;
 
-import com.sage.bif.common.event.model.BaseEvent;
-import com.sage.bif.diary.entity.Diary;
 import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
 
 @Getter
-public class DiaryCreatedEvent extends BaseEvent {
-
-    private final Diary diary;
-
-    public DiaryCreatedEvent(Object source, Diary diary) {
+public class DiaryCreatedEvent extends ApplicationEvent {
+    
+    private final Long bifId;
+    private final String content;
+    private final Long diaryId;
+    
+    public DiaryCreatedEvent(Object source, Long bifId, String content, Long diaryId) {
         super(source);
-        this.diary = diary;
+        this.bifId = bifId;
+        this.content = content;
+        this.diaryId = diaryId;
     }
-
-    public DiaryCreatedEvent(Object source, Diary diary, String correlationId) {
-        super(source, correlationId);
-        this.diary = diary;
-    }
-
-    @Override
-    public String getEventType() {
-        return "DIARY_CREATED";
-    }
-
 }

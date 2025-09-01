@@ -3,7 +3,7 @@ package com.sage.bif.diary.event.listener;
 import com.sage.bif.diary.event.model.DiaryCreatedEvent;
 import com.sage.bif.diary.event.model.DiaryUpdatedEvent;
 import com.sage.bif.diary.event.model.DiaryDeletedEvent;
-import com.sage.bif.stats.event.model.StatsUpdatedEvent;
+import com.sage.bif.stats.event.model.StatsUpdateEvent;
 import com.sage.bif.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +23,13 @@ public class DiaryEventListener {
 
     @EventListener
     public void handleDiaryCreated(DiaryCreatedEvent event) {
-        log.info("Diary created: {} - User: {} - Emotion: {} - EventId: {}",
-                event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getEmotion(), event.getEventId());
+        log.info("Diary created: {} - User: {} - Content length: {}",
+                event.getDiaryId(), event.getBifId(), event.getContent().length());
 
         try {
-            invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
+            invalidateAllDiaryCache(event.getBifId());
 
-            publishStatsEvent(event.getDiary().getUser().getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
+            publishStatsEvent(event.getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
 
         } catch (Exception e) {
             log.error("Error in handleDiaryCreated: {}", e.getMessage(), e);
@@ -38,8 +38,8 @@ public class DiaryEventListener {
 
     @EventListener
     public void handleDiaryUpdated(DiaryUpdatedEvent event) {
-        log.info("Diary updated: {} - User: {} - EventId: {}",
-                event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getEventId());
+        log.info("Diary updated: {} - User: {} - Content length: {}",
+                event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getContent().length());
 
         try {
             invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
@@ -57,8 +57,8 @@ public class DiaryEventListener {
 
     @EventListener
     public void handleDiaryDeleted(DiaryDeletedEvent event) {
-        log.info("Diary deleted: {} - User: {} - Emotion: {} - EventId: {}",
-                event.getDiaryId(), event.getUserId(), event.getEmotion(), event.getEventId());
+        log.info("Diary deleted: {} - User: {} - Emotion: {}",
+                event.getDiaryId(), event.getUserId(), event.getEmotion());
 
         try {
             invalidateAllDiaryCache(event.getUserId());
@@ -87,8 +87,8 @@ public class DiaryEventListener {
 
 
     private void publishStatsEvent(Long userId, String updateType, String updateReason) {
-        StatsUpdatedEvent statsEvent = new StatsUpdatedEvent(
-                this, null, userId, updateType, updateReason
+        StatsUpdateEvent statsEvent = new StatsUpdateEvent(
+                this, userId, "", StatsUpdateEvent.EventType.valueOf(updateType)
         );
         eventPublisher.publishEvent(statsEvent);
         log.info("Stats update event published: User={}, Type={}", userId, updateType);
