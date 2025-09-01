@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors  ;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
