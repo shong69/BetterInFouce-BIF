@@ -21,6 +21,16 @@
   --text-tiny: 0.6rem;
 }
 
+.bg-radial-gradient {
+  background: radial-gradient(
+    ellipse 90% 80% at center 15%,
+    #f5f8c7,
+    #fbffda,
+    #fdfdfd,
+    #ffffff
+  );
+}
+
 body {
   background: radial-gradient(
     circle 500px at 50% -15%,
