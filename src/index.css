@@ -4,7 +4,7 @@
 @plugin "@tailwindcss/forms";
 
 @theme {
-  --color-primary: #0b8c07;
+  --color-primary: #4caf50;
   --color-warning: #ef4444;
   --color-secondary: #8fcd00;
   --color-toggle: #76c500;
@@ -19,4 +19,14 @@
   --font-display: "Pretendard Variable", "Pretendard", sans-serif;
 
   --text-tiny: 0.6rem;
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(
+    ellipse 90% 80% at center 15%,
+    #f5f8c7,
+    #fbffda,
+    #fdfdfd,
+    #ffffff
+  );
 }
