@@ -31,7 +31,6 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
 
   const stats = getStats();
 
-  // 모달이 열릴 때 스토어 초기화
   useEffect(() => {
     if (isOpen) {
       initialize();
