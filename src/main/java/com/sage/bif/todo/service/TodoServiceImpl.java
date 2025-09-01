@@ -13,12 +13,14 @@ import com.sage.bif.todo.dto.response.AiTaskParseResponse;
 import com.sage.bif.todo.dto.response.TodoListResponse;
 import com.sage.bif.todo.dto.response.TodoUpdatePageResponse;
 import com.sage.bif.todo.entity.SubTodo;
+import com.sage.bif.todo.entity.SubTodoCompletion;
 import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
 import com.sage.bif.todo.exception.*;
 import com.sage.bif.todo.repository.RoutineCompletionRepository;
+import com.sage.bif.todo.repository.SubTodoCompletionRepository;
 import com.sage.bif.todo.repository.SubTodoRepository;
 import com.sage.bif.todo.repository.TodoRepository;
 import com.sage.bif.user.entity.Bif;
@@ -37,10 +39,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TodoServiceImpl implements TodoService {
 
+    private static final String TIMEZONE_ASIA_SEOUL = "Asia/Seoul";
+    private static final int DEFAULT_SORT_ORDER = 0;
+    private static final int SORT_ORDER_BASE = 1;
+
     private final BifRepository bifRepository;
     private final TodoRepository todoRepository;
     private final SubTodoRepository subTodoRepository;
     private final RoutineCompletionRepository routineCompletionRepository;
+    private final SubTodoCompletionRepository subTodoCompletionRepository;
 
     private final AiServiceClient aiServiceClient;
     private final ObjectMapper objectMapper;
@@ -101,10 +108,28 @@ public class TodoServiceImpl implements TodoService {
     @Override
     @Transactional(readOnly = true)
     public TodoUpdatePageResponse getTodoDetail(Long bifId, Long todoId) {
+        LocalDate viewDate = LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
+        return getTodoDetailInternal(bifId, todoId, viewDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TodoUpdatePageResponse getTodoDetail(Long bifId, Long todoId, LocalDate viewDate) {
+        return getTodoDetailInternal(bifId, todoId, viewDate);
+    }
+
+    private TodoUpdatePageResponse getTodoDetailInternal(Long bifId, Long todoId, LocalDate viewDate) {
         Todo todo = todoRepository.findTodoDetailsById(bifId, todoId)
                 .orElseThrow(() -> new TodoNotFoundException(todoId));
 
         validateUserPermission(todo, bifId);
+
+        if (todo.getType() == TodoTypes.ROUTINE) {
+            boolean isCompletedOnDate = isRoutineCompletedToday(todo, viewDate);
+            List<SubTodoCompletion> subTodoCompletions = subTodoCompletionRepository
+                    .findByTodoIdAndCompletionDate(todoId, viewDate);
+            return TodoUpdatePageResponse.from(todo, isCompletedOnDate, subTodoCompletions);
+        }
 
         return TodoUpdatePageResponse.from(todo);
     }
@@ -153,43 +178,66 @@ public class TodoServiceImpl implements TodoService {
     @Override
     @Transactional
     public TodoListResponse completeTodo(Long bifId, Long todoId) {
+        LocalDate completionDate = LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
+        return completeTodoInternal(bifId, todoId, completionDate);
+    }
+
+    @Override
+    @Transactional
+    public TodoListResponse completeTodo(Long bifId, Long todoId, LocalDate completionDate) {
+        return completeTodoInternal(bifId, todoId, completionDate);
+    }
+
+    private TodoListResponse completeTodoInternal(Long bifId, Long todoId, LocalDate completionDate) {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoNotFoundException(todoId));
-
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-            routineCompletionRepository.insertIgnoreCompletion(todoId, today);
-
-            return TodoListResponse.from(todo, true);
+            routineCompletionRepository.insertIgnoreCompletion(todoId, completionDate);
+            boolean isCompleted = true;
+            return TodoListResponse.from(todo, isCompleted);
         } else {
             todo.setIsCompleted(true);
-            todo.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+            todo.setCompletedAt(LocalDateTime.now(ZoneId.of(TIMEZONE_ASIA_SEOUL)));
             todo.setLastNotificationSentAt(null);
 
-            return TodoListResponse.from(todo, false);
+            Todo savedTodo = todoRepository.save(todo);
+
+            boolean isCompleted = false;
+            return TodoListResponse.from(savedTodo, isCompleted);
         }
     }
 
     @Override
     @Transactional
     public TodoListResponse uncompleteTodo(Long bifId, Long todoId) {
+        LocalDate targetDate = LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
+        return uncompleteTodoInternal(bifId, todoId, targetDate);
+    }
+
+    @Override
+    @Transactional
+    public TodoListResponse uncompleteTodo(Long bifId, Long todoId, LocalDate targetDate) {
+        return uncompleteTodoInternal(bifId, todoId, targetDate);
+    }
+
+    private TodoListResponse uncompleteTodoInternal(Long bifId, Long todoId, LocalDate targetDate) {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoNotFoundException(todoId));
-
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-            routineCompletionRepository.deleteCompletion(todoId, today);
+            routineCompletionRepository.deleteCompletion(todoId, targetDate);
 
-            return TodoListResponse.from(todo, false);
+            boolean isCompleted = false;
+            return TodoListResponse.from(todo, isCompleted);
         } else {
             todo.setIsCompleted(false);
             todo.setCompletedAt(null);
 
-            return TodoListResponse.from(todo, false);
+            boolean isCompleted = false;
+            return TodoListResponse.from(todo, isCompleted);
         }
     }
 
@@ -228,53 +276,85 @@ public class TodoServiceImpl implements TodoService {
     }
 
     private void updateSubTodos(Todo todo, List<SubTodoUpdateRequest> requestSubTodos) {
-        List<SubTodo> existingSubTodos = todo.getSubTodos() != null ?
-                todo.getSubTodos().stream()
-                        .filter(subTodo -> !subTodo.getIsDeleted())
-                        .collect(Collectors.toList()) :
-                new ArrayList<>();
+        List<SubTodo> existingSubTodos = getExistingSubTodos(todo);
 
         if (requestSubTodos == null || requestSubTodos.isEmpty()) {
             existingSubTodos.forEach(subTodo -> subTodo.setIsDeleted(true));
             return;
         }
 
-        boolean isSequenceMode = requestSubTodos.stream()
-                .anyMatch(s -> s.getSortOrder() != null && s.getSortOrder() > 0);
+        boolean isSequenceMode = isSequenceMode(requestSubTodos);
+        Map<Long, SubTodo> existingSubTodoMap = createExistingSubTodoMap(existingSubTodos);
+        Set<Long> requestSubTodoIds = getRequestSubTodoIds(requestSubTodos);
+        
+        List<SubTodo> newSubTodos = processSubTodoUpdates(todo, requestSubTodos, isSequenceMode, existingSubTodoMap);
+        markRemovedSubTodosAsDeleted(existingSubTodos, requestSubTodoIds);
+        saveNewSubTodos(todo, newSubTodos);
+    }
 
-        Map<Long, SubTodo> existingSubTodoMap = existingSubTodos.stream()
+    private List<SubTodo> getExistingSubTodos(Todo todo) {
+        return todo.getSubTodos() != null ?
+                new ArrayList<>(todo.getSubTodos().stream()
+                        .filter(subTodo -> !subTodo.getIsDeleted())
+                        .toList()) :
+                new ArrayList<>();
+    }
+
+    private boolean isSequenceMode(List<SubTodoUpdateRequest> requestSubTodos) {
+        return requestSubTodos.stream()
+                .anyMatch(s -> s.getSortOrder() != null && s.getSortOrder() > DEFAULT_SORT_ORDER);
+    }
+
+    private Map<Long, SubTodo> createExistingSubTodoMap(List<SubTodo> existingSubTodos) {
+        return existingSubTodos.stream()
                 .collect(Collectors.toMap(SubTodo::getSubTodoId, Function.identity()));
+    }
 
-        Set<Long> requestSubTodoIds = requestSubTodos.stream()
+    private Set<Long> getRequestSubTodoIds(List<SubTodoUpdateRequest> requestSubTodos) {
+        return requestSubTodos.stream()
                 .map(SubTodoUpdateRequest::getSubTodoId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
 
+    private List<SubTodo> processSubTodoUpdates(Todo todo, List<SubTodoUpdateRequest> requestSubTodos, 
+                                               boolean isSequenceMode, Map<Long, SubTodo> existingSubTodoMap) {
         List<SubTodo> newSubTodos = new ArrayList<>();
 
         for (SubTodoUpdateRequest requestSubTodo : requestSubTodos) {
             Long subTodoId = requestSubTodo.getSubTodoId();
 
             if (subTodoId != null && existingSubTodoMap.containsKey(subTodoId)) {
-                SubTodo existingSubTodo = existingSubTodoMap.get(subTodoId);
-                existingSubTodo.setTitle(requestSubTodo.getTitle());
-                existingSubTodo.setSortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : 0);
+                updateExistingSubTodo(existingSubTodoMap.get(subTodoId), requestSubTodo, isSequenceMode);
             } else {
-                SubTodo newSubTodo = SubTodo.builder()
-                        .todo(todo)
-                        .title(requestSubTodo.getTitle())
-                        .sortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : 0)
-                        .isCompleted(false)
-                        .isDeleted(false)
-                        .build();
-                newSubTodos.add(newSubTodo);
+                newSubTodos.add(createNewSubTodo(todo, requestSubTodo, isSequenceMode));
             }
         }
+        return newSubTodos;
+    }
 
+    private void updateExistingSubTodo(SubTodo existingSubTodo, SubTodoUpdateRequest requestSubTodo, boolean isSequenceMode) {
+        existingSubTodo.setTitle(requestSubTodo.getTitle());
+        existingSubTodo.setSortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : DEFAULT_SORT_ORDER);
+    }
+
+    private SubTodo createNewSubTodo(Todo todo, SubTodoUpdateRequest requestSubTodo, boolean isSequenceMode) {
+        return SubTodo.builder()
+                .todo(todo)
+                .title(requestSubTodo.getTitle())
+                .sortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : DEFAULT_SORT_ORDER)
+                .isCompleted(false)
+                .isDeleted(false)
+                .build();
+    }
+
+    private void markRemovedSubTodosAsDeleted(List<SubTodo> existingSubTodos, Set<Long> requestSubTodoIds) {
         existingSubTodos.stream()
                 .filter(subTodo -> !requestSubTodoIds.contains(subTodo.getSubTodoId()))
                 .forEach(subTodo -> subTodo.setIsDeleted(true));
+    }
 
+    private void saveNewSubTodos(Todo todo, List<SubTodo> newSubTodos) {
         if (!newSubTodos.isEmpty()) {
             subTodoRepository.saveAll(newSubTodos);
             if (todo.getSubTodos() == null) {
@@ -388,7 +468,7 @@ public class TodoServiceImpl implements TodoService {
         for (int i = 0; i < parsedData.getSubTasks().size(); i++) {
             String taskTitle = parsedData.getSubTasks().get(i);
             if (taskTitle != null && !taskTitle.trim().isEmpty()) {
-                int sortOrder = hasOrder ? i + 1 : 0;
+                int sortOrder = hasOrder ? i + SORT_ORDER_BASE : DEFAULT_SORT_ORDER;
 
                 SubTodo subTodo = SubTodo.builder()
                         .todo(todo)

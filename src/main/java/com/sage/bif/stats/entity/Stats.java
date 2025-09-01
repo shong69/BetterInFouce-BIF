@@ -41,6 +41,9 @@ public class Stats {
     @Column(name = "top_keywords", columnDefinition = "TEXT")
     private String topKeywords;
 
+    @Column(name = "ai_emotion_score", columnDefinition = "DECIMAL(3,2)")
+    private Double aiEmotionScore;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
