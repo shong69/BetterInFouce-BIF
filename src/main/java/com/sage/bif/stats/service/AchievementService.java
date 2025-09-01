@@ -15,19 +15,32 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AchievementService {
 
+    // 업적 코드 상수
+    private static final String ACHIEVEMENT_FIRST_DIARY = "FIRST_DIARY";
+    private static final String ACHIEVEMENT_DIARY_STREAK_3 = "DIARY_STREAK_3";
+    private static final String ACHIEVEMENT_DIARY_STREAK_7 = "DIARY_STREAK_7";
+    private static final String ACHIEVEMENT_DIARY_STREAK_30 = "DIARY_STREAK_30";
+    private static final String ACHIEVEMENT_EMOTION_VARIETY = "EMOTION_VARIETY";
+    private static final String ACHIEVEMENT_KEYWORD_MASTER = "KEYWORD_MASTER";
+    private static final String ACHIEVEMENT_GUARDIAN_CONNECTION = "GUARDIAN_CONNECTION";
+    private static final String ACHIEVEMENT_MONTHLY_COMPLETE = "MONTHLY_COMPLETE";
+
+    // 레벨 타이틀 상수
+    private static final String LEVEL_TITLE_EMOTION_EXPLORER = "감정 탐험가";
+
     private static final Map<String, Integer> ACHIEVEMENT_POINTS = Map.of(
-            "FIRST_DIARY", 10,
-            "DIARY_STREAK_3", 20,
-            "DIARY_STREAK_7", 50,
-            "DIARY_STREAK_30", 100,
-            "EMOTION_VARIETY", 30,
-            "KEYWORD_MASTER", 25,
-            "GUARDIAN_CONNECTION", 40,
-            "MONTHLY_COMPLETE", 60
+            ACHIEVEMENT_FIRST_DIARY, 10,
+            ACHIEVEMENT_DIARY_STREAK_3, 20,
+            ACHIEVEMENT_DIARY_STREAK_7, 50,
+            ACHIEVEMENT_DIARY_STREAK_30, 100,
+            ACHIEVEMENT_EMOTION_VARIETY, 30,
+            ACHIEVEMENT_KEYWORD_MASTER, 25,
+            ACHIEVEMENT_GUARDIAN_CONNECTION, 40,
+            ACHIEVEMENT_MONTHLY_COMPLETE, 60
     );
 
     private static final Map<Integer, String> LEVEL_TITLES = Map.of(
-            1, "감정 탐험가",
+            1, LEVEL_TITLE_EMOTION_EXPLORER,
             2, "일기 작가",
             3, "감정 마스터",
             4, "마음의 치유사",
@@ -41,49 +54,49 @@ public class AchievementService {
             int totalPoints = 0;
 
             if (diaryCount == 1) {
-                int points = ACHIEVEMENT_POINTS.get("FIRST_DIARY");
-                achievements.add(createAchievement("FIRST_DIARY", "첫 번째 일기", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_FIRST_DIARY);
+                achievements.add(createAchievement(ACHIEVEMENT_FIRST_DIARY, "첫 번째 일기", 
                     "첫 번째 일기를 작성했습니다!", points));
                 totalPoints += points;
             }
 
             if (streakCount >= 3) {
-                int points = ACHIEVEMENT_POINTS.get("DIARY_STREAK_3");
-                achievements.add(createAchievement("DIARY_STREAK_3", "3일 연속 기록", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_DIARY_STREAK_3);
+                achievements.add(createAchievement(ACHIEVEMENT_DIARY_STREAK_3, "3일 연속 기록", 
                     "3일 연속으로 일기를 작성했습니다!", points));
                 totalPoints += points;
             }
 
             if (streakCount >= 7) {
-                int points = ACHIEVEMENT_POINTS.get("DIARY_STREAK_7");
-                achievements.add(createAchievement("DIARY_STREAK_7", "일주일 연속 기록", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_DIARY_STREAK_7);
+                achievements.add(createAchievement(ACHIEVEMENT_DIARY_STREAK_7, "일주일 연속 기록", 
                     "7일 연속으로 일기를 작성했습니다!", points));
                 totalPoints += points;
             }
 
             if (streakCount >= 30) {
-                int points = ACHIEVEMENT_POINTS.get("DIARY_STREAK_30");
-                achievements.add(createAchievement("DIARY_STREAK_30", "한 달 연속 기록", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_DIARY_STREAK_30);
+                achievements.add(createAchievement(ACHIEVEMENT_DIARY_STREAK_30, "한 달 연속 기록", 
                     "30일 연속으로 일기를 작성했습니다!", points));
                 totalPoints += points;
             }
 
             if (emotions.size() >= 4) {
-                int points = ACHIEVEMENT_POINTS.get("EMOTION_VARIETY");
-                achievements.add(createAchievement("EMOTION_VARIETY", "감정 다양성", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_EMOTION_VARIETY);
+                achievements.add(createAchievement(ACHIEVEMENT_EMOTION_VARIETY, "감정 다양성", 
                     "다양한 감정을 표현했습니다!", points));
                 totalPoints += points;
             }
 
             if (keywords.size() >= 5) {
-                int points = ACHIEVEMENT_POINTS.get("KEYWORD_MASTER");
-                achievements.add(createAchievement("KEYWORD_MASTER", "키워드 마스터", 
+                int points = ACHIEVEMENT_POINTS.get(ACHIEVEMENT_KEYWORD_MASTER);
+                achievements.add(createAchievement(ACHIEVEMENT_KEYWORD_MASTER, "키워드 마스터", 
                     "많은 키워드를 사용했습니다!", points));
                 totalPoints += points;
             }
 
             int currentLevel = calculateLevel(totalPoints);
-            String levelTitle = LEVEL_TITLES.getOrDefault(currentLevel, "감정 탐험가");
+            String levelTitle = LEVEL_TITLES.getOrDefault(currentLevel, LEVEL_TITLE_EMOTION_EXPLORER);
             String nextMilestone = calculateNextMilestone(totalPoints);
 
             return AchievementResult.builder()
@@ -113,14 +126,14 @@ public class AchievementService {
 
     private String getAchievementIcon(String code) {
         return switch (code) {
-            case "FIRST_DIARY" -> "📝";
-            case "DIARY_STREAK_3" -> "🔥";
-            case "DIARY_STREAK_7" -> "🌟";
-            case "DIARY_STREAK_30" -> "🏆";
-            case "EMOTION_VARIETY" -> "🌈";
-            case "KEYWORD_MASTER" -> "🔑";
-            case "GUARDIAN_CONNECTION" -> "👥";
-            case "MONTHLY_COMPLETE" -> "📅";
+            case ACHIEVEMENT_FIRST_DIARY -> "📝";
+            case ACHIEVEMENT_DIARY_STREAK_3 -> "🔥";
+            case ACHIEVEMENT_DIARY_STREAK_7 -> "🌟";
+            case ACHIEVEMENT_DIARY_STREAK_30 -> "🏆";
+            case ACHIEVEMENT_EMOTION_VARIETY -> "🌈";
+            case ACHIEVEMENT_KEYWORD_MASTER -> "🔑";
+            case ACHIEVEMENT_GUARDIAN_CONNECTION -> "👥";
+            case ACHIEVEMENT_MONTHLY_COMPLETE -> "📅";
             default -> "🎯";
         };
     }
@@ -145,13 +158,14 @@ public class AchievementService {
         return AchievementResult.builder()
                 .totalPoints(0)
                 .currentLevel(1)
-                .levelTitle("감정 탐험가")
+                .levelTitle(LEVEL_TITLE_EMOTION_EXPLORER)
                 .recentAchievements(new ArrayList<>())
                 .streakCount(0)
                 .nextMilestone("10점 달성하여 첫 업적 획득")
                 .build();
     }
 
+    @lombok.Getter
     public static class AchievementResult {
         private int totalPoints;
         private int currentLevel;
@@ -165,7 +179,7 @@ public class AchievementService {
         }
 
         public static class Builder {
-            private AchievementResult result = new AchievementResult();
+            private final AchievementResult result = new AchievementResult();
 
             public Builder totalPoints(int totalPoints) {
                 result.totalPoints = totalPoints;
@@ -202,14 +216,10 @@ public class AchievementService {
             }
         }
 
-        public int getTotalPoints() { return totalPoints; }
-        public int getCurrentLevel() { return currentLevel; }
-        public String getLevelTitle() { return levelTitle; }
-        public List<Achievement> getRecentAchievements() { return recentAchievements; }
-        public int getStreakCount() { return streakCount; }
-        public String getNextMilestone() { return nextMilestone; }
+        // Lombok @Getter로 대체됨
     }
 
+    @lombok.Getter
     public static class Achievement {
         private String name;
         private String description;
@@ -222,7 +232,7 @@ public class AchievementService {
         }
 
         public static class Builder {
-            private Achievement achievement = new Achievement();
+            private final Achievement achievement = new Achievement();
 
             public Builder name(String name) {
                 achievement.name = name;
@@ -254,10 +264,6 @@ public class AchievementService {
             }
         }
 
-        public String getName() { return name; }
-        public String getDescription() { return description; }
-        public int getPoints() { return points; }
-        public String getIcon() { return icon; }
-        public String getEarnedAt() { return earnedAt; }
+        // Lombok @Getter로 대체됨
     }
 }

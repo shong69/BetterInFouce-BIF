@@ -66,6 +66,7 @@ public class StatsResponse {
         private String keyword;
         private Integer count;
         private Integer rank;
+        private Double normalizedValue;
     }
 
     @Data

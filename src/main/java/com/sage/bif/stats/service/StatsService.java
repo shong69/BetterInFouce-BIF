@@ -18,4 +18,6 @@ public interface StatsService {
     void updateStatsWithKeywords(Long bifId, String diaryContent);
 
     void updateRealTimeStats(Long bifId);
+
+    void forceRegenerateStats(Long bifId);
 }

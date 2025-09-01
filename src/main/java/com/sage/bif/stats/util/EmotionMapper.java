@@ -31,14 +31,4 @@ public class EmotionMapper {
         return statsEmotion;
     }
 
-    public static Emotion mapStatsEmotionToDiary(final EmotionType statsEmotion) {
-        for (final Map.Entry<Emotion, EmotionType> entry : DIARY_TO_STATS_MAP.entrySet()) {
-            if (entry.getValue() == statsEmotion) {
-                return entry.getKey();
-            }
-        }
-        log.warn("Unknown stats emotion: {}, mapping to NEUTRAL", statsEmotion);
-        return Emotion.NEUTRAL;
-    }
-
 }

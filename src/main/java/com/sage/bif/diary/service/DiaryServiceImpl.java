@@ -177,7 +177,7 @@ public class DiaryServiceImpl implements DiaryService {
         
         AiFeedback feedback = aiFeedbackService.createAiFeedback(savedDiary);
 
-        DiaryCreatedEvent event = new DiaryCreatedEvent(this, savedDiary);
+        DiaryCreatedEvent event = new DiaryCreatedEvent(this, bifId, savedDiary.getContent(), savedDiary.getId());
         eventPublisher.publishEvent(event);
 
         return DiaryResponse.builder()

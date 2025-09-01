@@ -44,18 +44,6 @@ public class Stats {
     @Column(name = "ai_emotion_score", columnDefinition = "DECIMAL(3,2)")
     private Double aiEmotionScore;
 
-    @Column(name = "character_name", length = 100)
-    private String characterName;
-
-    @Column(name = "character_message", columnDefinition = "TEXT")
-    private String characterMessage;
-
-    @Column(name = "achievement_points", columnDefinition = "INTEGER DEFAULT 0")
-    private Integer achievementPoints;
-
-    @Column(name = "streak_count", columnDefinition = "INTEGER DEFAULT 0")
-    private Integer streakCount;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

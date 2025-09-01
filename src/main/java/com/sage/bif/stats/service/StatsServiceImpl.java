@@ -6,6 +6,7 @@ import com.sage.bif.stats.dto.response.GuardianStatsResponse;
 import com.sage.bif.stats.dto.response.StatsResponse;
 import com.sage.bif.stats.entity.EmotionType;
 import com.sage.bif.stats.entity.Stats;
+import com.sage.bif.stats.exception.StatsProcessingException;
 import com.sage.bif.stats.repository.StatsRepository;
 import com.sage.bif.diary.repository.DiaryRepository;
 import com.sage.bif.diary.model.Emotion;
@@ -17,18 +18,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.persistence.EntityManager;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import java.util.LinkedHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class StatsServiceImpl implements StatsService {
+public class StatsServiceImpl implements StatsService, ApplicationContextAware {
+    
+
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String NO_ADVICE_MSG = "BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
@@ -38,7 +45,18 @@ public class StatsServiceImpl implements StatsService {
     private final BifRepository bifRepository;
     private final AiEmotionAnalysisService aiEmotionAnalysisService;
     private final AchievementService achievementService;
+    private final KeywordAccumulationService keywordAccumulationService;
     private final ObjectMapper objectMapper;
+    private ApplicationContext applicationContext;
+    
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+    
+    // 상수 정의
+    private static final String KEYWORD_KEY = "keyword";
+    private static final String NORMALIZED_VALUE_KEY = "normalizedValue";
     private final EntityManager entityManager;
 
     @Override
@@ -47,7 +65,7 @@ public class StatsServiceImpl implements StatsService {
         try {
             log.info("BIF ID {}의 월별 통계 조회 시작", bifId);
             
-            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
 
             if (existingStats.isEmpty()) {
@@ -69,7 +87,8 @@ public class StatsServiceImpl implements StatsService {
         log.info("보호자가 BIF ID {}의 통계를 조회합니다.", bifId);
 
         try {
-            final StatsResponse bifStats = getMonthlyStats(bifId);
+
+            final StatsResponse bifStats = applicationContext.getBean(StatsServiceImpl.class).getMonthlyStats(bifId);
             final String bifNickname = getBifNickname(bifId);
             final String advice = bifStats.getGuardianAdviceText();
             final String guardianJoinDate = getGuardianJoinDateByBifId(bifId);
@@ -84,7 +103,7 @@ public class StatsServiceImpl implements StatsService {
 
         } catch (Exception e) {
             log.error("보호자 통계 조회 중 오류 발생 - BIF ID: {}", bifId, e);
-            throw new RuntimeException("보호자 통계 조회 실패", e);
+            throw new StatsProcessingException("보호자 통계 조회 실패", e);
         }
     }
 
@@ -106,19 +125,39 @@ public class StatsServiceImpl implements StatsService {
         log.info("BIF ID {}의 키워드 기반 통계 업데이트 시작", bifId);
         
         try {
-            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
             
             if (existingStats.isPresent()) {
                 final Stats stats = existingStats.get();
+                
+                // AI 감정 분석 수행
                 final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
                 
+                // AI 감정 분석 결과 업데이트
                 stats.setAiEmotionScore(analysis.getEmotionScore());
-                stats.setCharacterName(analysis.getCharacterName());
-                stats.setCharacterMessage(analysis.getCharacterMessage());
                 
+                // 키워드 누적 업데이트
+                keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
+                
+                // 실시간 감정 통계 업데이트
+                final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
+                stats.setEmotionCounts(objectMapper.writeValueAsString(emotionCounts));
+                
+                // AI 기반 통계 텍스트 및 보호자 조언 업데이트
+                stats.setEmotionStatisticsText(generateStatisticsText(emotionCounts));
+                stats.setGuardianAdviceText(generateGuardianAdvice(emotionCounts));
+                
+                // 업데이트된 통계 저장
                 statsRepository.save(stats);
-                log.info("BIF ID {}의 AI 감정 분석 결과 업데이트 완료", bifId);
+                
+                // 캐시 무효화 코드 제거
+                
+                log.info("BIF ID {}의 AI 감정 분석 결과 및 통계 완전 업데이트 완료", bifId);
+            } else {
+                // 통계가 없으면 새로 생성
+                log.info("BIF ID {}의 통계 데이터가 없어 새로 생성합니다.", bifId);
+                generateAndSaveMonthlyStats(bifId, currentYearMonth);
             }
         } catch (Exception e) {
             log.error("키워드 기반 통계 업데이트 중 오류 발생 - bifId: {}", bifId, e);
@@ -143,34 +182,31 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public void generateMonthlyStatsAsync(final Long bifId, final LocalDateTime yearMonth) {
         try {
-            generateMonthlyStats(bifId, yearMonth);
+            applicationContext.getBean(StatsServiceImpl.class).generateMonthlyStats(bifId, yearMonth);
         } catch (Exception e) {
             log.error("비동기 통계 생성 중 오류 발생 - bifId: {}, yearMonth: {}", bifId, yearMonth, e);
         }
     }
 
+
+    
     private StatsResponse generateAndSaveMonthlyStats(Long bifId, LocalDateTime yearMonth) {
         try {
             final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, yearMonth);
-            
-            final List<String> keywords = extractKeywordsFromDiaries(bifId, yearMonth);
-            final int streakCount = calculateStreakCount(bifId);
-            
+
+            final Map<String, Integer> keywordFrequency = buildKeywordFrequencyMap(bifId, yearMonth);
+
             final AiEmotionAnalysisService.EmotionAnalysisResult aiAnalysis = 
                     aiEmotionAnalysisService.analyzeEmotionFromText(""); // 빈 텍스트로 기본 분석
-            
+
             final Stats stats = Stats.builder()
                     .bifId(bifId)
                     .yearMonth(yearMonth)
                     .emotionStatisticsText(generateStatisticsText(emotionCounts))
                     .guardianAdviceText(generateGuardianAdvice(emotionCounts))
                     .emotionCounts(objectMapper.writeValueAsString(emotionCounts))
-                    .topKeywords(objectMapper.writeValueAsString(keywords))
+                    .topKeywords(objectMapper.writeValueAsString(keywordFrequency))
                     .aiEmotionScore(aiAnalysis.getEmotionScore())
-                    .characterName(aiAnalysis.getCharacterName())
-                    .characterMessage(aiAnalysis.getCharacterMessage())
-                    .achievementPoints(0)
-                    .streakCount(streakCount)
                     .build();
 
             final Stats savedStats = statsRepository.save(stats);
@@ -206,32 +242,197 @@ public class StatsServiceImpl implements StatsService {
         return emotionCounts;
     }
 
-    private List<String> extractKeywordsFromDiaries(Long bifId, LocalDateTime yearMonth) {
-        try {
-            final LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-            final LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
-                    .withHour(23).withMinute(59).withSecond(59);
 
-            final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
-            
-            if (monthlyDiaries.isEmpty()) {
-                return List.of("일상", "생활", "하루");
-            }
 
-            final Set<String> keywords = new HashSet<>();
-            for (Diary diary : monthlyDiaries) {
-                if (diary.getContent() != null) {
-                    final AiEmotionAnalysisService.EmotionAnalysisResult analysis = 
-                            aiEmotionAnalysisService.analyzeEmotionFromText(diary.getContent());
-                    keywords.addAll(analysis.getKeywords());
+    private List<String> validateKeywords(String content, List<String> aiKeywords) {
+        final List<String> validatedKeywords = new ArrayList<>();
+        final String lowerContent = content.toLowerCase();
+        
+        for (String keyword : aiKeywords) {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                final String trimmedKeyword = keyword.trim();
+                // 키워드가 실제 일기 내용에 포함되어 있는지 확인
+                if (lowerContent.contains(trimmedKeyword.toLowerCase())) {
+                    validatedKeywords.add(trimmedKeyword);
+                } else {
+                    log.debug("키워드 '{}'가 일기 내용에 포함되지 않음", trimmedKeyword);
                 }
             }
+        }
+        
+        return validatedKeywords;
+    }
 
-            return keywords.stream().limit(5).collect(Collectors.toList());
+
+
+    private void extractKeywordsFromContent(String content, Set<String> fallbackKeywords) {
+        // 의미 있는 명사 위주 키워드만 추출
+        final String[] meaningfulKeywords = {
+            "회의", "미팅", "프로젝트", "업무", "일", "직장", "회사",
+            "가족", "친구", "동료", "사람",
+            "학교", "대학교", "수업", "공부", "시험", "과제",
+            "운동", "헬스", "등산", "조깅", "수영",
+            "음식", "요리", "맛집", "카페", "레스토랑",
+            "여행", "휴가", "출장", "여행지", "관광",
+            "영화", "드라마", "음악", "책", "독서", "게임",
+            "취미", "관심사", "새로운", "도전"
+        };
+        
+        for (String keyword : meaningfulKeywords) {
+            if (content.contains(keyword)) {
+                fallbackKeywords.add(keyword);
+                break; // 한 일기당 의미 있는 키워드 1개만 추가
+            }
+        }
+        
+        // 장소 관련 키워드 (구체적인 장소명)
+        if (content.contains("역") || content.contains("역사")) {
+            fallbackKeywords.add("교통");
+        }
+        if (content.contains("집") || content.contains("집에")) {
+            fallbackKeywords.add("집");
+        }
+        if (content.contains("회사") || content.contains("직장")) {
+            fallbackKeywords.add("직장");
+        }
+    }
+
+    private List<String> extractFallbackKeywords(List<Diary> diaries) {
+        final Set<String> fallbackKeywords = new HashSet<>();
+        
+        for (Diary diary : diaries) {
+            if (diary.getContent() != null && !diary.getContent().trim().isEmpty()) {
+                final String content = diary.getContent().trim();
+                extractKeywordsFromContent(content, fallbackKeywords);
+            }
+        }
+        
+        final List<String> result = fallbackKeywords.stream().limit(5).toList();
+        log.info("의미 있는 Fallback 키워드 추출: {}", result);
+        return result;
+    }
+
+    private Map<String, Integer> analyzeMonthlyDiariesForKeywords(Long bifId, LocalDateTime yearMonth) {
+        final LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        final LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
+                .withHour(23).withMinute(59).withSecond(59);
+
+        final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
+        log.info("월간 일기 개수: {}", monthlyDiaries.size());
+        
+        if (monthlyDiaries.isEmpty()) {
+            log.info("월간 일기가 없음 - 빈 맵 반환");
+            return new HashMap<>();
+        }
+
+        final Map<String, Integer> keywordFrequency = new HashMap<>();
+        for (Diary diary : monthlyDiaries) {
+            if (diary.getContent() != null && !diary.getContent().trim().isEmpty()) {
+                processDiaryKeywords(diary, keywordFrequency);
+            } else {
+                log.warn("일기 ID {}의 내용이 비어있음", diary.getId());
+            }
+        }
+        
+        log.info("최종 키워드 빈도수: {}", keywordFrequency);
+        
+        final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(5)
+                .collect(LinkedHashMap::new,
+                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
+                        LinkedHashMap::putAll);
+        
+        log.info("TOP 5 키워드 빈도수: {}", top5Keywords);
+        
+        // 키워드가 추출되었으면 데이터베이스에 저장
+        if (!top5Keywords.isEmpty()) {
+            saveKeywordsToDatabase(bifId, yearMonth, top5Keywords);
+        }
+        
+        return top5Keywords;
+    }
+
+    private Map<String, Integer> buildKeywordFrequencyMap(Long bifId, LocalDateTime yearMonth) {
+        try {
+            log.info("=== 키워드 빈도수 맵 생성 시작 - BIF ID: {}, 월: {} ===", bifId, yearMonth.getMonthValue());
+
+            // 기존 누적된 키워드 먼저 확인
+            final Map<String, Integer> accumulatedKeywords = keywordAccumulationService.getKeywordFrequency(bifId, yearMonth);
+            if (!accumulatedKeywords.isEmpty()) {
+                log.info("누적된 키워드 사용: {}", accumulatedKeywords);
+                return accumulatedKeywords;
+            }
+
+            // 누적된 키워드가 없으면 월간 일기에서 새로 분석
+            return analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
             
         } catch (Exception e) {
-            log.error("키워드 추출 중 오류 발생", e);
-            return List.of("일상", "생활", "하루");
+            log.error("키워드 빈도수 맵 생성 중 오류 발생 - bifId: {}", bifId, e);
+            return new HashMap<>();
+        }
+    }
+
+    private void saveKeywordsToDatabase(Long bifId, LocalDateTime yearMonth, Map<String, Integer> top5Keywords) {
+        try {
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, yearMonth);
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                stats.setTopKeywords(objectMapper.writeValueAsString(top5Keywords));
+                statsRepository.save(stats);
+                log.info("BIF ID {}의 키워드 데이터베이스 저장 완료: {}", bifId, top5Keywords);
+            }
+        } catch (Exception e) {
+            log.error("키워드 데이터베이스 저장 실패: {}", e.getMessage());
+        }
+    }
+
+    private List<String> extractAiKeywords(Diary diary, String content) {
+        List<String> extractedKeywords = new ArrayList<>();
+        try {
+            final AiEmotionAnalysisService.EmotionAnalysisResult analysis = 
+                    aiEmotionAnalysisService.analyzeEmotionFromText(content);
+            
+            if (analysis.getKeywords() != null && !analysis.getKeywords().isEmpty()) {
+                // AI가 반환한 키워드가 실제 일기 내용에 포함되어 있는지 검증
+                final List<String> validatedKeywords = validateKeywords(content, analysis.getKeywords());
+                extractedKeywords.addAll(validatedKeywords);
+                log.info("일기 ID {}에서 AI 키워드 추출 성공: {}", diary.getId(), validatedKeywords);
+            } else {
+                log.warn("일기 ID {}에서 AI 키워드 추출 실패 - 빈 결과", diary.getId());
+            }
+        } catch (Exception e) {
+            log.warn("일기 ID {}에서 AI 키워드 추출 중 오류: {}", diary.getId(), e.getMessage());
+        }
+        return extractedKeywords;
+    }
+
+    private void processDiaryKeywords(Diary diary, Map<String, Integer> keywordFrequency) {
+        try {
+            final String content = diary.getContent().trim();
+            log.info("일기 ID {} 분석 - 내용: {}", diary.getId(), content.substring(0, Math.min(100, content.length())));
+            
+            // AI 키워드 추출 시도
+            List<String> extractedKeywords = extractAiKeywords(diary, content);
+            
+            // AI 키워드가 없으면 fallback 사용
+            if (extractedKeywords.isEmpty()) {
+                log.info("일기 ID {}에서 fallback 키워드 사용", diary.getId());
+                final List<String> fallbackKeywords = extractFallbackKeywords(List.of(diary));
+                extractedKeywords.addAll(fallbackKeywords);
+            }
+            
+            // 추출된 키워드를 빈도수에 추가
+            for (String keyword : extractedKeywords) {
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    keywordFrequency.put(keyword, keywordFrequency.getOrDefault(keyword, 0) + 1);
+                    log.info("키워드 '{}' 빈도수 증가: {}", keyword, keywordFrequency.get(keyword));
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("일기 ID {}의 키워드 분석 실패: {}", diary.getId(), e.getMessage());
         }
     }
 
@@ -245,7 +446,7 @@ public class StatsServiceImpl implements StatsService {
             if (monthlyDiaries.isEmpty()) return 0;
             
             return monthlyDiaries.size();
-            
+
         } catch (Exception e) {
             log.error("연속 기록 수 계산 중 오류 발생", e);
             return 0;
@@ -253,43 +454,11 @@ public class StatsServiceImpl implements StatsService {
     }
 
     private String generateStatisticsText(Map<EmotionType, Integer> emotionCounts) {
-        final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
-        
-        if (total == 0) {
-            return "이번 달에는 작성된 일기가 없습니다. 첫 번째 일기를 작성해보세요!";
-        }
-
-        final EmotionType dominantEmotion = emotionCounts.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(EmotionType.OKAY);
-
-        final double dominantRatio = (double) emotionCounts.get(dominantEmotion) / total * 100;
-
-        return String.format("이번 달에는 %s한 감정이 %.1f%%로 가장 많이 나타났습니다. %s", 
-                dominantEmotion.getKoreanName(), dominantRatio, 
-                dominantEmotion.isPositive() ? "긍정적인 감정을 많이 느끼셨네요!" : 
-                dominantEmotion.isNegative() ? "힘든 일이 있었나요? 내일은 더 나아질 거예요." : 
-                "감정이 비교적 안정적으로 유지되었습니다.");
+        return aiEmotionAnalysisService.generateStatisticsTextWithAI(emotionCounts);
     }
 
     private String generateGuardianAdvice(Map<EmotionType, Integer> emotionCounts) {
-        final int total = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
-        
-        if (total == 0) {
-            return NO_ADVICE_MSG;
-        }
-
-        final double positiveRatio = (emotionCounts.get(EmotionType.GOOD) + emotionCounts.get(EmotionType.GREAT)) / (double) total * 100;
-        final double negativeRatio = (emotionCounts.get(EmotionType.ANGRY) + emotionCounts.get(EmotionType.DOWN)) / (double) total * 100;
-
-        if (positiveRatio > 60.0) {
-            return "BIF가 매우 긍정적인 감정을 많이 느끼고 있습니다. 이런 좋은 기분을 유지할 수 있도록 지지해주세요.";
-        } else if (negativeRatio > 40.0) {
-            return "BIF가 부정적인 감정을 많이 경험하고 있습니다. 따뜻한 관심과 대화를 통해 도움을 주세요.";
-        } else {
-            return "BIF가 균형잡힌 감정 상태를 유지하고 있습니다. 이런 안정적인 상태를 지지해주세요.";
-        }
+        return aiEmotionAnalysisService.generateGuardianAdviceWithAI(emotionCounts);
     }
 
     private void saveEmotionCountsToStats(Long bifId, LocalDateTime yearMonth, Map<EmotionType, Integer> emotionCounts) {
@@ -323,21 +492,21 @@ public class StatsServiceImpl implements StatsService {
 
     private StatsResponse buildEmptyStatsResponse(Long bifId, String nickname, String joinDate, 
                                                 int totalDiaryCount, String connectionCode) {
-        return StatsResponse.builder()
-                .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
+            return StatsResponse.builder()
+                    .statisticsText("통계 데이터를 생성 중입니다. 잠시 후 다시 조회해주세요.")
                 .guardianAdviceText(NO_ADVICE_MSG)
-                .emotionRatio(Collections.emptyList())
-                .topKeywords(Collections.emptyList())
-                .monthlyChange(Collections.emptyList())
-                .bifId(bifId)
-                .nickname(nickname)
-                .joinDate(joinDate)
-                .totalDiaryCount(totalDiaryCount)
-                .connectionCode(connectionCode)
+                    .emotionRatio(Collections.emptyList())
+                    .topKeywords(Collections.emptyList())
+                    .monthlyChange(Collections.emptyList())
+                    .bifId(bifId)
+                    .nickname(nickname)
+                    .joinDate(joinDate)
+                    .totalDiaryCount(totalDiaryCount)
+                    .connectionCode(connectionCode)
                 .characterInfo(createDefaultCharacterInfo())
                 .achievementInfo(createDefaultAchievementInfo())
                 .emotionTrends(Collections.emptyList())
-                .build();
+                    .build();
     }
 
     private StatsResponse.CharacterInfo createDefaultCharacterInfo() {
@@ -437,7 +606,7 @@ public class StatsServiceImpl implements StatsService {
             final List<StatsResponse.MonthlyChange> monthlyChange = getMonthlyChange(bifId, yearMonth);
             final ProfileMeta meta = loadProfileMeta(bifId);
 
-            final StatsResponse.CharacterInfo characterInfo = createCharacterInfo(statsData);
+            final StatsResponse.CharacterInfo characterInfo = createCharacterInfo();
             final StatsResponse.AchievementInfo achievementInfo = createAchievementInfo(bifId, emotionCounts, topKeywords);
             final List<StatsResponse.EmotionTrend> emotionTrends = createEmotionTrends(bifId, yearMonth);
 
@@ -447,7 +616,7 @@ public class StatsServiceImpl implements StatsService {
                     .emotionRatio(emotionRatio)
                     .topKeywords(topKeywords)
                     .monthlyChange(monthlyChange)
-                    .bifId(bifId)
+                        .bifId(bifId)
                     .nickname(meta.nickname)
                     .joinDate(meta.joinDate)
                     .totalDiaryCount(meta.totalDiaryCount)
@@ -459,49 +628,22 @@ public class StatsServiceImpl implements StatsService {
 
         } catch (Exception e) {
             log.error("통계 응답 생성 중 오류 발생", e);
-            throw new RuntimeException("통계 응답 생성 실패", e);
+            throw new StatsProcessingException("통계 응답 생성 실패", e);
         }
     }
 
-    private StatsResponse.CharacterInfo createCharacterInfo(Stats statsData) {
+    private StatsResponse.CharacterInfo createCharacterInfo() {
+        // 프론트엔드에서 처리할 캐릭터 정보는 단순하게 반환
         return StatsResponse.CharacterInfo.builder()
-                .name(statsData.getCharacterName() != null ? statsData.getCharacterName() : "현명한 거북이")
-                .message(statsData.getCharacterMessage() != null ? statsData.getCharacterMessage() : "오늘 하루도 수고하셨어요! 🐢")
-                .emoji(getCharacterEmoji(statsData.getCharacterName()))
-                .mood(determineMood(statsData.getAiEmotionScore()))
-                .advice(generateCharacterAdvice(statsData.getAiEmotionScore()))
+                .name("현명한 거북이")
+                .message("오늘 하루도 수고하셨어요! 🐢")
+                .emoji("🐢")
+                .mood("평온")
+                .advice("내일은 더 좋은 하루가 될 거예요!")
                 .build();
     }
 
-    private String getCharacterEmoji(String characterName) {
-        if (characterName == null) return "🐢";
-        return switch (characterName) {
-            case "행복한 토끼" -> "🐰";
-            case "즐거운 강아지" -> "🐕";
-            case "현명한 거북이" -> "🐢";
-            case "걱정 많은 고양이" -> "🐱";
-            case "화난 호랑이" -> "🐯";
-            default -> "🐢";
-        };
-    }
-
-    private String determineMood(Double aiEmotionScore) {
-        if (aiEmotionScore == null) return "평온";
-        if (aiEmotionScore >= 1.5) return "매우 행복";
-        if (aiEmotionScore >= 0.5) return "기쁨";
-        if (aiEmotionScore >= -0.5) return "평온";
-        if (aiEmotionScore >= -1.5) return "우울";
-        return "화남";
-    }
-
-    private String generateCharacterAdvice(Double aiEmotionScore) {
-        if (aiEmotionScore == null) return "오늘 하루도 수고하셨어요!";
-        if (aiEmotionScore >= 1.5) return "이런 좋은 기분을 계속 유지해보세요! 🎉";
-        if (aiEmotionScore >= 0.5) return "조금 더 긍정적인 마음가짐으로 하루를 보내보세요! 😊";
-        if (aiEmotionScore >= -0.5) return "내일은 더 좋은 하루가 될 거예요! 🐢";
-        if (aiEmotionScore >= -1.5) return "내일은 더 나아질 거예요! 🐱";
-        return "힘내세요! 내일은 분명 좋아질 거예요! 🐯";
-    }
+    // 캐릭터 관련 메서드들 제거 - 프론트엔드에서 처리
 
     private StatsResponse.AchievementInfo createAchievementInfo(Long bifId, Map<EmotionType, Integer> emotionCounts, 
                                                                List<StatsResponse.KeywordData> topKeywords) {
@@ -511,10 +653,10 @@ public class StatsServiceImpl implements StatsService {
             final List<String> emotions = emotionCounts.entrySet().stream()
                     .filter(entry -> entry.getValue() > 0)
                     .map(entry -> entry.getKey().name())
-                    .collect(Collectors.toList());
+                    .toList();
             final List<String> keywords = topKeywords.stream()
                     .map(StatsResponse.KeywordData::getKeyword)
-                    .collect(Collectors.toList());
+                    .toList();
 
             final AchievementService.AchievementResult achievementResult = 
                     achievementService.calculateAchievements(bifId, diaryCount, streakCount, emotions, keywords);
@@ -543,7 +685,7 @@ public class StatsServiceImpl implements StatsService {
                         .icon(achievement.getIcon())
                         .earnedAt(achievement.getEarnedAt())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<StatsResponse.EmotionTrend> createEmotionTrends(Long bifId, LocalDateTime yearMonth) {
@@ -565,7 +707,7 @@ public class StatsServiceImpl implements StatsService {
 
                 final List<Diary> dayDiaries = monthlyDiaries.stream()
                         .filter(diary -> !diary.getCreatedAt().isBefore(dayStart) && !diary.getCreatedAt().isAfter(dayEnd))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 if (!dayDiaries.isEmpty()) {
                     final double averageScore = dayDiaries.stream()
@@ -578,7 +720,7 @@ public class StatsServiceImpl implements StatsService {
 
                     final EmotionType dominantEmotion = EmotionType.fromScore(averageScore);
                     final String trend = determineTrend(averageScore);
-                    final String description = generateTrendDescription(dominantEmotion, averageScore);
+                    final String description = generateTrendDescription(averageScore);
 
                     trends.add(StatsResponse.EmotionTrend.builder()
                             .date(dayStart.format(DateTimeFormatter.ofPattern("MM-dd")))
@@ -604,7 +746,7 @@ public class StatsServiceImpl implements StatsService {
         return "하락";
     }
 
-    private String generateTrendDescription(EmotionType dominantEmotion, double averageScore) {
+    private String generateTrendDescription(double averageScore) {
         if (averageScore >= 1.5) return "매우 긍정적인 하루";
         if (averageScore >= 0.5) return "긍정적인 하루";
         if (averageScore >= -0.5) return "평온한 하루";
@@ -672,20 +814,20 @@ public class StatsServiceImpl implements StatsService {
 
     private Map<EmotionType, Integer> processEmotionCountsFromRaw(Map<String, Integer> rawCounts) {
         final Map<EmotionType, Integer> emotionCounts = new EnumMap<>(EmotionType.class);
-        for (EmotionType emotion : EmotionType.values()) {
-            emotionCounts.put(emotion, 0);
-        }
-        
-        for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
-            try {
-                final EmotionType emotionType = mapDbeaverEmotionToStatsEmotion(entry.getKey());
-                emotionCounts.put(emotionType, entry.getValue());
-            } catch (IllegalArgumentException e) {
-                log.warn("알 수 없는 감정 타입: {}", entry.getKey());
+            for (EmotionType emotion : EmotionType.values()) {
+                emotionCounts.put(emotion, 0);
             }
-        }
-        
-        return emotionCounts;
+            
+            for (Map.Entry<String, Integer> entry : rawCounts.entrySet()) {
+                try {
+                final EmotionType emotionType = mapDbeaverEmotionToStatsEmotion(entry.getKey());
+                    emotionCounts.put(emotionType, entry.getValue());
+                } catch (IllegalArgumentException e) {
+                log.warn("알 수 없는 감정 타입: {}", entry.getKey());
+                }
+            }
+            
+            return emotionCounts;
     }
 
     private EmotionType mapDbeaverEmotionToStatsEmotion(String dbeaverEmotion) {
@@ -714,36 +856,94 @@ public class StatsServiceImpl implements StatsService {
         
         try {
             final String cleanedJson = unwrapIfQuoted(json.trim());
+            
+            // 새로운 키워드 저장 방식 (Map<String, Integer>) 확인
+            if (cleanedJson.startsWith("{")) {
+                final Map<String, Integer> keywordCounts = objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
+                return convertKeywordMapToList(keywordCounts);
+            }
+            
+            // 기존 방식 (List<Map<String, Object>>) 지원
             return objectMapper.readValue(cleanedJson, new TypeReference<>() {});
+            
         } catch (Exception e) {
             log.error("키워드 JSON 파싱 실패: {}", json, e);
             return createDefaultTopKeywords();
         }
     }
 
-    private List<Map<String, Object>> createDefaultTopKeywords() {
-        final List<Map<String, Object>> defaultKeywords = new ArrayList<>();
-        final String[] defaultWords = {"가족", "직장", "친구", "휴식", "건강"};
-
-        for (int i = 0; i < defaultWords.length; i++) {
-            final Map<String, Object> keywordData = new HashMap<>();
-            keywordData.put("keyword", defaultWords[i]);
-            keywordData.put("count", 0);
-            keywordData.put("rank", i + 1);
-            defaultKeywords.add(keywordData);
+    private List<Map<String, Object>> convertKeywordMapToList(Map<String, Integer> keywordCounts) {
+        final List<Map<String, Object>> keywordList = new ArrayList<>();
+        
+        if (keywordCounts == null || keywordCounts.isEmpty()) {
+            log.info("키워드 데이터가 비어있음 - 빈 리스트 반환");
+            return keywordList;
         }
+        
+        log.info("원본 키워드 빈도수: {}", keywordCounts);
+        
+        // 빈도수 기준으로 정렬하여 Top5 추출
+        final List<Map.Entry<String, Integer>> sortedKeywords = keywordCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(5)
+                .toList();
+        
+        log.info("정렬된 키워드 Top5: {}", sortedKeywords);
+        
+        // 최대 빈도수 계산 (정규화를 위해)
+        final int maxCount = sortedKeywords.stream()
+                .mapToInt(Map.Entry::getValue)
+                .max()
+                .orElse(1);
+        
+        for (int i = 0; i < sortedKeywords.size(); i++) {
+            final Map.Entry<String, Integer> entry = sortedKeywords.get(i);
+            final Map<String, Object> keywordData = new HashMap<>();
+            keywordData.put(KEYWORD_KEY, entry.getKey());
+            keywordData.put("count", entry.getValue());
+            keywordData.put("rank", i + 1);
+            // 정규화된 값 추가 (0.0 ~ 1.0 범위) - 프론트엔드 그래프 높이용
+            keywordData.put(NORMALIZED_VALUE_KEY, maxCount > 0 ? (double) entry.getValue() / maxCount : 0.0);
+            keywordList.add(keywordData);
+            
+            log.info("키워드 데이터 생성: keyword={}, count={}, rank={}, normalizedValue={}", 
+                    entry.getKey(), entry.getValue(), i + 1, 
+                    maxCount > 0 ? (double) entry.getValue() / maxCount : 0.0);
+        }
+        
+        log.info("최종 키워드 리스트: {}", keywordList);
+        return keywordList;
+    }
 
-        return defaultKeywords;
+    private List<Map<String, Object>> createDefaultTopKeywords() {
+        // 기본 키워드 제거 - 실제 일기 내용 기반으로만 키워드 생성
+        return new ArrayList<>();
     }
 
     private List<StatsResponse.KeywordData> createKeywordDataList(List<Map<String, Object>> topKeywordsData) {
         return topKeywordsData.stream()
-                .map(keyword -> StatsResponse.KeywordData.builder()
-                        .keyword((String) keyword.get("keyword"))
-                        .count((Integer) keyword.get("count"))
-                        .rank((Integer) keyword.get("rank"))
-                        .build())
-                .collect(Collectors.toList());
+                .filter(keyword -> {
+                    String keywordText = (String) keyword.get(KEYWORD_KEY);
+                    return keywordText != null && !keywordText.trim().isEmpty();
+                })
+                .map(keyword -> {
+                    String keywordText = (String) keyword.get(KEYWORD_KEY);
+                    Integer count = (Integer) keyword.get("count");
+                    Integer rank = (Integer) keyword.get("rank");
+                    
+                    // 정규화된 값이 있으면 사용, 없으면 기본값
+                    Double normalizedValue = keyword.get(NORMALIZED_VALUE_KEY) != null ? 
+                            (Double) keyword.get(NORMALIZED_VALUE_KEY) : 0.0;
+                    
+                    return StatsResponse.KeywordData.builder()
+                            .keyword(keywordText)
+                            .count(count != null ? count : 0)
+                            .rank(rank != null ? rank : 1)
+                            .normalizedValue(normalizedValue)
+                            .build();
+                })
+                .toList();
     }
 
     private List<StatsResponse.MonthlyChange> getMonthlyChange(Long bifId, LocalDateTime yearMonth) {
@@ -870,5 +1070,80 @@ public class StatsServiceImpl implements StatsService {
             return result;
         }
         return trimmed;
+    }
+
+    /**
+     * 잘못된 키워드 데이터를 강제로 정리
+     */
+    public void forceCleanupInvalidKeywords(Long bifId) {
+        log.info("=== BIF ID {}의 잘못된 키워드 데이터 강제 정리 시작 ===", bifId);
+        
+        try {
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                
+                if (stats.getTopKeywords() != null && stats.getTopKeywords().contains("일상")) {
+                    log.warn("잘못된 키워드 데이터 발견 - 강제로 초기화");
+                    stats.setTopKeywords("{}"); // 빈 맵으로 초기화
+                    statsRepository.save(stats);
+                    
+                    // 캐시 무효화 코드 제거
+                    
+                    log.info("잘못된 키워드 데이터 정리 완료");
+                } else {
+                    log.info("정리할 잘못된 데이터가 없음");
+                }
+            } else {
+                log.info("통계 데이터가 없음");
+            }
+        } catch (Exception e) {
+            log.error("키워드 데이터 정리 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+
+    /**
+     * 강제로 통계 데이터를 재생성하고 캐시를 무효화
+     */
+    public void forceRegenerateStats(Long bifId) {
+        log.info("=== BIF ID {}의 통계 데이터 강제 재생성 시작 ===", bifId);
+        
+        try {
+            // 1. 캐시 관련 코드 제거
+            log.info("캐시 무효화 코드 제거됨");
+            
+            // 2. 현재 월의 통계 데이터 삭제
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                statsRepository.delete(stats);
+                log.info("기존 통계 데이터 삭제 완료");
+            }
+            
+            // 3. 새로운 통계 데이터 생성
+            final List<Diary> monthlyDiaries = diaryRepository.findByUserId(bifId);
+            if (!monthlyDiaries.isEmpty()) {
+                // 가장 최근 일기로 통계 업데이트
+                final Diary latestDiary = monthlyDiaries.stream()
+                        .max(Comparator.comparing(Diary::getCreatedAt))
+                        .orElse(monthlyDiaries.get(0));
+                
+                updateStatsWithKeywords(bifId, latestDiary.getContent());
+                log.info("새로운 통계 데이터 생성 완료");
+            } else {
+                log.info("월간 일기가 없음 - 기본 통계 생성");
+                generateAndSaveMonthlyStats(bifId, currentYearMonth);
+            }
+            
+            // 4. 캐시 관련 코드 제거
+            log.info("통계 데이터 강제 재생성 완료");
+            
+        } catch (Exception e) {
+            log.error("통계 데이터 강제 재생성 중 오류 발생 - bifId: {}", bifId, e);
+        }
     }
 }
