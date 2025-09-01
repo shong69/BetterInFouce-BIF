@@ -17,10 +17,7 @@ import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
-import com.sage.bif.todo.exception.AiResponseParsingException;
-import com.sage.bif.todo.exception.TodoNotFoundException;
-import com.sage.bif.todo.exception.UnauthorizedTodoAccessException;
-import com.sage.bif.todo.exception.UserNotFoundException;
+import com.sage.bif.todo.exception.*;
 import com.sage.bif.todo.repository.RoutineCompletionRepository;
 import com.sage.bif.todo.repository.SubTodoRepository;
 import com.sage.bif.todo.repository.TodoRepository;
@@ -30,9 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -86,6 +81,12 @@ public class TodoServiceImpl implements TodoService {
         List<Todo> todoList = todoRepository.findTodoWithSubTodosByBifIdAndDate(bifId, date);
 
         return todoList.stream()
+                .filter(todo -> {
+                    if (todo.getType() == TodoTypes.ROUTINE) {
+                        return isValidDayForRoutine(todo, date);
+                    }
+                    return true;
+                })
                 .map(todo -> {
                     if (todo.getType() == TodoTypes.ROUTINE) {
                         boolean isCompletedToday = isRoutineCompletedToday(todo, date);
@@ -111,14 +112,23 @@ public class TodoServiceImpl implements TodoService {
     @Override
     @Transactional
     public TodoListResponse updateTodo(Long bifId, Long todoId, TodoUpdateRequest request) {
+        if (request.getSubTodos() != null && request.getSubTodos().size() < 2) {
+            throw new SubTodoCountInsufficientException();
+        }
+
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoNotFoundException(todoId));
 
         validateUserPermission(todo, bifId);
 
-        updateTodoBasicInfo(todo, request);
+        boolean timeChanged = hasTimeChanged(todo, request);
 
+        updateTodoBasicInfo(todo, request);
         updateSubTodos(todo, request.getSubTodos());
+
+        if (timeChanged) {
+            todo.setLastNotificationSentAt(null);
+        }
 
         return TodoListResponse.from(todo);
     }
@@ -149,13 +159,14 @@ public class TodoServiceImpl implements TodoService {
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
             routineCompletionRepository.insertIgnoreCompletion(todoId, today);
 
             return TodoListResponse.from(todo, true);
         } else {
             todo.setIsCompleted(true);
-            todo.setCompletedAt(LocalDateTime.now());
+            todo.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+            todo.setLastNotificationSentAt(null);
 
             return TodoListResponse.from(todo, false);
         }
@@ -170,7 +181,7 @@ public class TodoServiceImpl implements TodoService {
         validateUserPermission(todo, bifId);
 
         if (todo.getType() == TodoTypes.ROUTINE) {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
             routineCompletionRepository.deleteCompletion(todoId, today);
 
             return TodoListResponse.from(todo, false);
@@ -220,13 +231,16 @@ public class TodoServiceImpl implements TodoService {
         List<SubTodo> existingSubTodos = todo.getSubTodos() != null ?
                 todo.getSubTodos().stream()
                         .filter(subTodo -> !subTodo.getIsDeleted())
-                        .toList() :
-                Collections.emptyList();
+                        .collect(Collectors.toList()) :
+                new ArrayList<>();
 
         if (requestSubTodos == null || requestSubTodos.isEmpty()) {
             existingSubTodos.forEach(subTodo -> subTodo.setIsDeleted(true));
             return;
         }
+
+        boolean isSequenceMode = requestSubTodos.stream()
+                .anyMatch(s -> s.getSortOrder() != null && s.getSortOrder() > 0);
 
         Map<Long, SubTodo> existingSubTodoMap = existingSubTodos.stream()
                 .collect(Collectors.toMap(SubTodo::getSubTodoId, Function.identity()));
@@ -244,12 +258,12 @@ public class TodoServiceImpl implements TodoService {
             if (subTodoId != null && existingSubTodoMap.containsKey(subTodoId)) {
                 SubTodo existingSubTodo = existingSubTodoMap.get(subTodoId);
                 existingSubTodo.setTitle(requestSubTodo.getTitle());
-                existingSubTodo.setSortOrder(requestSubTodo.getSortOrder());
+                existingSubTodo.setSortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : 0);
             } else {
                 SubTodo newSubTodo = SubTodo.builder()
                         .todo(todo)
                         .title(requestSubTodo.getTitle())
-                        .sortOrder(requestSubTodo.getSortOrder())
+                        .sortOrder(isSequenceMode ? requestSubTodo.getSortOrder() : 0)
                         .isCompleted(false)
                         .isDeleted(false)
                         .build();
@@ -302,11 +316,13 @@ public class TodoServiceImpl implements TodoService {
     }
 
     private Todo createTodoFromParsedData(Bif bif, String userInput, AiTaskParseResponse parsedData) {
+        TodoTypes todoType = safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK);
+
         Todo.TodoBuilder builder = Todo.builder()
                 .bifUser(bif)
                 .userInput(userInput)
                 .title(parsedData.getTitle() != null ? parsedData.getTitle() : "제목 없음")
-                .type(safeParseEnum(parsedData.getType(), TodoTypes.class, TodoTypes.TASK))
+                .type(todoType)
                 .dueDate(parseDate(parsedData.getDate()))
                 .dueTime(parseTime(parsedData.getTime()));
 
@@ -323,7 +339,13 @@ public class TodoServiceImpl implements TodoService {
 
             if (!repeatDays.isEmpty()) {
                 builder.repeatDays(repeatDays);
+            } else if (todoType == TodoTypes.ROUTINE) {
+                builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY,
+                        RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
             }
+        } else if (todoType == TodoTypes.ROUTINE) {
+            builder.repeatDays(List.of(RepeatDays.MONDAY, RepeatDays.TUESDAY, RepeatDays.WEDNESDAY,
+                    RepeatDays.THURSDAY, RepeatDays.FRIDAY, RepeatDays.SATURDAY, RepeatDays.SUNDAY));
         }
 
         return builder.build();
@@ -389,6 +411,36 @@ public class TodoServiceImpl implements TodoService {
         return routineCompletionRepository
                 .findByTodo_TodoIdAndCompletionDate(todo.getTodoId(), date)
                 .isPresent();
+    }
+
+    private boolean hasTimeChanged(Todo existingTodo, TodoUpdateRequest request) {
+        return !Objects.equals(existingTodo.getDueDate(), request.getDueDate()) ||
+                !Objects.equals(existingTodo.getDueTime(), request.getDueTime()) ||
+                !Objects.equals(existingTodo.getNotificationTime(), request.getNotificationTime()) ||
+                !Objects.equals(existingTodo.getNotificationEnabled(), request.getNotificationEnabled());
+    }
+
+    private boolean isValidDayForRoutine(Todo todo, LocalDate date) {
+        if (todo.getRepeatDays() == null || todo.getRepeatDays().isEmpty()) {
+            return false;
+        }
+
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        RepeatDays targetDay = convertToRepeatDay(dayOfWeek);
+
+        return todo.getRepeatDays().contains(targetDay);
+    }
+
+    private RepeatDays convertToRepeatDay(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> RepeatDays.MONDAY;
+            case TUESDAY -> RepeatDays.TUESDAY;
+            case WEDNESDAY -> RepeatDays.WEDNESDAY;
+            case THURSDAY -> RepeatDays.THURSDAY;
+            case FRIDAY -> RepeatDays.FRIDAY;
+            case SATURDAY -> RepeatDays.SATURDAY;
+            case SUNDAY -> RepeatDays.SUNDAY;
+        };
     }
 
 }

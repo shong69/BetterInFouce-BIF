@@ -50,7 +50,7 @@ public class TodoUpdatePageResponse {
                             .build())
                     .collect(Collectors.toList());
 
-            hasOrder = subTodoInfos.stream().anyMatch(subTodo -> subTodo.getSortOrder() > 0);
+            hasOrder = !subTodoInfos.isEmpty() && subTodoInfos.stream().allMatch(subTodo -> subTodo.getSortOrder() > 0);
         }
 
         return TodoUpdatePageResponse.builder()

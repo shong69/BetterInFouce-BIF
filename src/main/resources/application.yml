@@ -28,6 +28,11 @@ jwt:
   access-expiration: 900000
   refresh-expiration: 604800000
 
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
+
 springdoc:
   packages-to-scan: com.sage.bif
   default-consumes-media-type: application/json
@@ -35,3 +40,18 @@ springdoc:
   swagger-ui:
     operations-sorter: method
     tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true

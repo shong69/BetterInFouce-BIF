@@ -20,14 +20,6 @@ public class StatsUpdatedEvent extends BaseEvent {
         this.updateReason = updateReason;
     }
 
-    public StatsUpdatedEvent(final Object source, final Stats stats, final Long userId, final String updateType, final String updateReason, final String correlationId) {
-        super(source, correlationId);
-        this.stats = stats;
-        this.userId = userId;
-        this.updateType = updateType;
-        this.updateReason = updateReason;
-    }
-
     @Override
     public String getEventType() {
         return "STATS_UPDATED";

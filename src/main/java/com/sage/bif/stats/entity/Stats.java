@@ -26,7 +26,7 @@ public class Stats {
     @Column(name = "bif_id", nullable = false)
     private Long bifId;
 
-    @Column(name = "`year_month`", nullable = false)
+    @Column(name = "stats_year_month", nullable = false)
     private LocalDateTime yearMonth;
 
     @Column(name = "emotion_statistics_text", columnDefinition = "TEXT", nullable = false)
@@ -35,10 +35,10 @@ public class Stats {
     @Column(name = "guardian_advice_text", columnDefinition = "TEXT", nullable = false)
     private String guardianAdviceText;
 
-    @Column(name = "emotion_counts", columnDefinition = "JSON")
+    @Column(name = "emotion_counts", columnDefinition = "TEXT")
     private String emotionCounts;
 
-    @Column(name = "top_keywords", columnDefinition = "JSON")
+    @Column(name = "top_keywords", columnDefinition = "TEXT")
     private String topKeywords;
 
     @CreatedDate

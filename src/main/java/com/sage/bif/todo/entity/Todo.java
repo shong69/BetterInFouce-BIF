@@ -70,6 +70,9 @@ public class Todo {
     @Builder.Default
     private Integer notificationTime = 0;
 
+    @Column
+    private LocalDateTime lastNotificationSentAt;
+
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
     @Builder.Default
     private Boolean isCompleted = false;

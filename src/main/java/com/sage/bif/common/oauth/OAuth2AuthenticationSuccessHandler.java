@@ -7,6 +7,7 @@ import com.sage.bif.user.service.BifService;
 import com.sage.bif.user.service.GuardianService;
 import com.sage.bif.user.service.LoginLogService;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -49,6 +50,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+
+        clearAllExistingCookies(response);
 
         String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         Map<String, Object> attributes = ((OAuth2User) authentication.getPrincipal()).getAttributes();
@@ -199,6 +202,16 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Origin", frontendUrl);
+    }
+
+    private void clearAllExistingCookies(HttpServletResponse response) {
+        String[] cookiesToClear = { "accessToken", "refreshToken", AUTHENTICATED_USER_TOKEN_NAME };
+        for (String cookieName : cookiesToClear) {
+            Cookie cookie = new Cookie(cookieName, null);
+            cookie.setMaxAge(0);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+        }
     }
 
 }
