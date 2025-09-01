@@ -113,9 +113,15 @@ export default function GuardianProfile() {
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
         <Header />
-        <div className="flex-1 bg-white">
+        <div
+          className="flex-1"
+          style={{
+            background:
+              "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
+          }}
+        >
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
-            <div className="mb-6 rounded-lg bg-white p-4">
+            <div className="mb-6 rounded-lg p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
               </div>
@@ -168,7 +174,7 @@ export default function GuardianProfile() {
             </div>
 
             <div className="mb-20">
-              <div className="mb-6 rounded-lg bg-white p-4">
+              <div className="mb-6 rounded-lg p-4">
                 <div className="ml-4 flex items-center">
                   <IoPencil className="mr-2 h-6 w-6 text-blue-500" />
                   <h2 className="text-lg font-bold text-gray-800">

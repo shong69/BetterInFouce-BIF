@@ -365,9 +365,15 @@ export default function BifProfile() {
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
         <Header />
-        <div className="flex-1 bg-white">
+        <div
+          className="flex-1"
+          style={{
+            background:
+              "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
+          }}
+        >
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
-            <div className="mb-6 rounded-lg bg-white p-4">
+            <div className="mb-6 rounded-lg p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
 
@@ -442,7 +448,7 @@ export default function BifProfile() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-white p-4">
+            <div className="rounded-lg p-4">
               <div className="space-y-6">
                 <div className="flex items-center">
                   <IoStatsChart className="mr-2 h-6 w-6 text-blue-500" />
@@ -530,7 +536,7 @@ export default function BifProfile() {
                       </div>
                     </div>
 
-                    <div className="mb-16 rounded-lg bg-white p-1">
+                    <div className="mb-16 rounded-lg p-1">
                       <div className="flex w-full justify-start">
                         <div className="flex max-w-full items-start gap-2">
                           <img
@@ -538,13 +544,19 @@ export default function BifProfile() {
                             alt="현명한 거북이"
                             className="h-7 w-7"
                           />
-                          <div className="w-full max-w-full rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+                          <div
+                            className="w-full max-w-full rounded-2xl rounded-tl-md px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
+                            style={{
+                              background:
+                                "linear-gradient(180deg, #F7E6FF 0%, #DAEAF8 100%)",
+                            }}
+                          >
                             <div className="mb-2 flex items-center gap-2">
                               <span className="text-sm font-semibold text-gray-800">
                                 현명한 거북이
                               </span>
                             </div>
-                            <span className="block text-sm text-gray-800">
+                            <span className="block text-sm text-gray-600">
                               {stats?.statisticsText ||
                                 "아직 작성된 일기가 없습니다. 첫 번째 일기를 작성해보세요!"}
                             </span>

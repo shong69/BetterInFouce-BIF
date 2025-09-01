@@ -1,10 +1,10 @@
-import { GoTasklist } from "react-icons/go";
-import { VscSettings } from "react-icons/vsc";
 import { PiBookOpenText } from "react-icons/pi";
 import { IoBook } from "react-icons/io5";
-import IconBox from "@components/ui/IconBox";
+import { BiBarChartAlt2 } from "react-icons/bi";
+import { BsFileText } from "react-icons/bs";
 import { useLocation } from "react-router-dom";
 import { useUserStore } from "@stores";
+import { Link } from "react-router-dom";
 
 export default function TabBar() {
   const location = useLocation();
@@ -16,7 +16,6 @@ export default function TabBar() {
       ? {
           path: "/guardian-stats",
           icon: IoBook,
-          title: "통계 보기",
           isActive: function (path) {
             return path === "/guardian-stats";
           },
@@ -24,23 +23,20 @@ export default function TabBar() {
       : {
           path: "/diaries",
           icon: PiBookOpenText,
-          title: "감정 일기",
           isActive: function (path) {
             return path === "/diaries" || path.startsWith("/diaries");
           },
         },
     {
       path: "/",
-      icon: GoTasklist,
-      title: "할 일",
+      icon: BsFileText,
       isActive: function (path) {
         return path === "/" || path.startsWith("/todo");
       },
     },
     {
       path: "/simulations",
-      icon: VscSettings,
-      title: "시뮬레이션",
+      icon: BiBarChartAlt2,
       isActive: function (path) {
         return path === "/simulations" || path.startsWith("/simulation");
       },
@@ -48,36 +44,31 @@ export default function TabBar() {
   ];
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-gray-100 bg-white shadow-lg">
-      <div className="flex justify-around">
-        {tabs.map(function (tab) {
-          const isActive = tab.isActive(currentPath);
+    <div className="fixed right-0 bottom-0 left-0 z-40 p-4">
+      <div className="mx-auto max-w-md">
+        <div className="flex overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg">
+          {tabs.map(function (tab, index) {
+            const isActive = tab.isActive(currentPath);
+            const IconComponent = tab.icon;
 
-          const IconComponent = tab.icon;
-
-          return (
-            <IconBox
-              key={tab.path}
-              to={tab.path}
-              icon={
+            return (
+              <Link
+                key={tab.path}
+                to={tab.path}
+                className={`flex flex-1 items-center justify-center py-4 transition-all duration-300 hover:bg-gray-50 ${
+                  index === 0 ? "rounded-l-2xl" : ""
+                } ${index === tabs.length - 1 ? "rounded-r-2xl" : ""}`}
+              >
                 <IconComponent
-                  size={30}
-                  className={`${
-                    isActive
-                      ? "text-primary"
-                      : "text-gray-400 group-hover:text-gray-600"
+                  size={20}
+                  className={`transition-colors duration-200 ${
+                    isActive ? "text-green-500" : "text-gray-400"
                   }`}
                 />
-              }
-              title={tab.title}
-              titleStyle={`${
-                isActive
-                  ? "text-primary font-bold"
-                  : "text-gray-400 group-hover:text-gray-600"
-              }`}
-            />
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
