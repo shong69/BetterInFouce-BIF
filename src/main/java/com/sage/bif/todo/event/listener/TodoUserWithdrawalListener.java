@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class TodoUserWithdrawalListener {
 
