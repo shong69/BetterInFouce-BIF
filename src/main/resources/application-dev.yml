@@ -102,6 +102,9 @@ spring:
       content-safety:
         endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
         api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
+      speech-service:
+        endpoint: ${AZURE_OPENAI_SPEECH_SERVICE_ENDPOINT}
+        api-key: ${AZURE_OPENAI_SPEECH_SERVICE_API_KEY}
 
   devtools:
     restart:

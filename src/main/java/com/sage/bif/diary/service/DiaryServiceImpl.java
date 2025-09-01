@@ -53,7 +53,7 @@ public class DiaryServiceImpl implements DiaryService {
 
     @Override
     public MonthlySummaryResponse getMonthlySummary(Long bifId, MonthlySummaryRequest request) {
-
+        MonthlySummaryResponse response=null;
         String cacheKey = String.format("monthly_summary:%d:%d:%d", 
         bifId, request.getYear(), request.getMonth());
 
@@ -61,29 +61,27 @@ public class DiaryServiceImpl implements DiaryService {
 
         if(cached.isPresent()){
             try {
-                MonthlySummaryResponse response = objectMapper.convertValue(cached.get(), MonthlySummaryResponse.class);
-
-                if (response != null &&
-                    response.getYear() == request.getYear() &&
-                    response.getMonth() == request.getMonth() &&
-                    response.getDailyEmotions() != null) {
-                    return response;
-                } else {
-                    log.warn("캐시된 데이터 유효X -Key:{}", cacheKey);
-                    redisService.delete(cacheKey);
-                }
+                response = objectMapper.convertValue(cached.get(), MonthlySummaryResponse.class);
             } catch (Exception e) {
                 log.warn("캐시된 월간 요약 데이터 변환 실패 -Key:{}, Error:{}", cacheKey, e.getMessage());
                 redisService.delete(cacheKey);
+                response = null;
             }
         }
-        MonthlySummaryResponse response = getMonthlySummaryFromDatabase(bifId, request);
-        try {
-            redisService.set(cacheKey, response, Duration.ofHours(1));
-            log.info("월간 요약 데이터 캐시 저장 완료: {}",cacheKey);
-        } catch (Exception e) {
-            log.error("월간 요약 데이터 캐시 저장 실패 - Key:{}, Error:{}", cacheKey, e.getMessage());
+        if(response == null){
+            response = getMonthlySummaryFromDatabase(bifId, request);
+            if(!response.getDailyEmotions().isEmpty()){
+                try {
+                    redisService.set(cacheKey, response, Duration.ofHours(1));
+                    log.info("월간 요약 데이터 캐시 저장 완료: {}",cacheKey);
+                } catch (Exception e) {
+                    log.error("월간 요약 데이터 캐시 저장 실패 - Key:{}, Error:{}", cacheKey, e.getMessage());
+                }
+            }
+
         }
+        boolean canWriteToday = diaryRepository.existsByUserIdAndDate(bifId,LocalDate.now())==0;
+        response.setCanWriteToday(canWriteToday);
         return response;
     }
 
@@ -94,15 +92,11 @@ public class DiaryServiceImpl implements DiaryService {
 
         List<Diary> diaries = diaryRepository.findByUserIdAndDateBetween(bifId,start,end);
 
-        LocalDate today = LocalDate.now();
-        boolean canWriteToday = diaryRepository.existsByUserIdAndDate(bifId, today)==0;
-
         if(diaries.isEmpty()){
             return MonthlySummaryResponse.builder()
                     .year(request.getYear())
                     .month(request.getMonth())
                     .dailyEmotions(new HashMap<>())
-                    .canWriteToday(canWriteToday)
                     .build();
         }
         Map<LocalDate, MonthlySummaryResponse.DailyInfo> dailyInfos = diaries.stream()
@@ -118,7 +112,6 @@ public class DiaryServiceImpl implements DiaryService {
                 .year(request.getYear())
                 .month(request.getMonth())
                 .dailyEmotions(dailyInfos)
-                .canWriteToday(canWriteToday)
                 .build();
     }
 

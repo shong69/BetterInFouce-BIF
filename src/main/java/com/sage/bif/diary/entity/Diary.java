@@ -1,5 +1,6 @@
 package com.sage.bif.diary.entity;
 
+import com.sage.bif.diary.entity.converter.DiaryContentEncryptConverter;
 import com.sage.bif.user.entity.Bif;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +42,7 @@ public class Diary {
     private Emotion emotion;
 
     @Column(columnDefinition = "TEXT", nullable = false, length = 800)
+    @Convert(converter = DiaryContentEncryptConverter.class)
     private String content;
 
     @Column(name="created_at", nullable = false)
