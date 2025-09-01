@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PageHeader from "@components/common/PageHeader";
+import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import DateBox from "@components/ui/DateBox";
 import DiaryCalendar from "./components/DiaryCalendar";
 import { useDiaryStore } from "@stores";
 import { EMOTIONS } from "@constants/emotions";
@@ -81,12 +80,9 @@ export default function Diary() {
   };
 
   return (
-    <div className="bg-radial-gradient min-h-screen">
-      <PageHeader title="감정일기" />
+    <div className="min-h-screen">
+      <Header showTodoButton={false} />
       <div className="mx-auto max-w-4xl p-2 sm:p-4">
-        <div className="mb-1 px-2 sm:px-0">
-          <DateBox />
-        </div>
         <div className="mx-3 mb-6 rounded-lg border-1 border-gray-300 shadow-sm sm:mb-8">
           <section className="starry-bg relative overflow-hidden rounded-lg bg-gray-800 px-6 py-4 text-center">
             <div className="relative z-10">

@@ -1,10 +1,10 @@
+import { GoTasklist } from "react-icons/go";
+import { VscSettings } from "react-icons/vsc";
 import { PiBookOpenText } from "react-icons/pi";
 import { IoBook } from "react-icons/io5";
-import { BiBarChartAlt2 } from "react-icons/bi";
-import { BsFileText } from "react-icons/bs";
+import IconBox from "@components/ui/IconBox";
 import { useLocation } from "react-router-dom";
 import { useUserStore } from "@stores";
-import { Link } from "react-router-dom";
 
 export default function TabBar() {
   const location = useLocation();
@@ -16,6 +16,7 @@ export default function TabBar() {
       ? {
           path: "/guardian-stats",
           icon: IoBook,
+          title: "통계 보기",
           isActive: function (path) {
             return path === "/guardian-stats";
           },
@@ -23,20 +24,23 @@ export default function TabBar() {
       : {
           path: "/diaries",
           icon: PiBookOpenText,
+          title: "감정 일기",
           isActive: function (path) {
             return path === "/diaries" || path.startsWith("/diaries");
           },
         },
     {
       path: "/",
-      icon: BsFileText,
+      icon: GoTasklist,
+      title: "할 일",
       isActive: function (path) {
         return path === "/" || path.startsWith("/todo");
       },
     },
     {
       path: "/simulations",
-      icon: BiBarChartAlt2,
+      icon: VscSettings,
+      title: "시뮬레이션",
       isActive: function (path) {
         return path === "/simulations" || path.startsWith("/simulation");
       },
@@ -44,30 +48,35 @@ export default function TabBar() {
   ];
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-40 p-4">
-      <div className="mx-auto max-w-md">
-        <div className="flex overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg">
-          {tabs.map(function (tab, index) {
-            const isActive = tab.isActive(currentPath);
-            const IconComponent = tab.icon;
+    <div className="fixed bottom-4 left-1/2 z-40 flex w-full -translate-x-1/2 transform justify-center">
+      <div className="w-full max-w-4xl px-4">
+        <div className="rounded-full border border-gray-200/50 bg-white/90 px-8 py-1.5 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            {tabs.map(function (tab) {
+              const isActive = tab.isActive(currentPath);
+              const IconComponent = tab.icon;
 
-            return (
-              <Link
-                key={tab.path}
-                to={tab.path}
-                className={`flex flex-1 items-center justify-center py-4 transition-all duration-300 hover:bg-gray-50 ${
-                  index === 0 ? "rounded-l-2xl" : ""
-                } ${index === tabs.length - 1 ? "rounded-r-2xl" : ""}`}
-              >
-                <IconComponent
-                  size={20}
-                  className={`transition-colors duration-200 ${
-                    isActive ? "text-green-500" : "text-gray-400"
-                  }`}
+              return (
+                <IconBox
+                  key={tab.path}
+                  to={tab.path}
+                  icon={
+                    <IconComponent
+                      size={28}
+                      className={`${
+                        isActive
+                          ? "text-primary"
+                          : "text-gray-400 group-hover:text-gray-600"
+                      }`}
+                    />
+                  }
+                  title=""
+                  titleStyle={`${isActive ? "text-primary font-medium" : ""}`}
+                  isActive={isActive}
                 />
-              </Link>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ export default function BackButton({ title = "뒤로가기", onClick }) {
   return (
     <button
       onClick={handleClick}
-      className="text-black-600 flex items-center text-[20px] font-bold transition-colors hover:text-gray-900"
+      className="text-black-600 flex items-center text-lg font-bold transition-colors hover:text-gray-900"
     >
       <HiChevronLeft size={20} />
       <span className="mr-2">{title}</span>
