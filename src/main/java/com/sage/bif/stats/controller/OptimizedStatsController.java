@@ -1,7 +1,7 @@
 package com.sage.bif.stats.controller;
 
-import com.sage.bif.stats.dto.response.OptimizedStatsResponse;
-import com.sage.bif.stats.dto.response.StatsResponse;
+import com.sage.bif.stats.dto.OptimizedStatsResponse;
+import com.sage.bif.stats.dto.StatsResponse;
 import com.sage.bif.stats.service.StatsService;
 import com.sage.bif.stats.service.StatsResponseOptimizer;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +25,7 @@ public class OptimizedStatsController {
         try {
             log.info("BIF ID {}의 최적화된 월별 통계 조회 시작", bifId);
             
-            // 기존 서비스에서 데이터 조회
             final var originalResponse = statsService.getMonthlyStats(bifId);
-            
-            // 응답 최적화
             final var optimizedResponse = responseOptimizer.optimizeStatsResponse(originalResponse);
             
             log.info("BIF ID {}의 최적화된 월별 통계 조회 완료", bifId);
@@ -46,10 +43,8 @@ public class OptimizedStatsController {
         try {
             log.info("BIF ID {}의 최적화된 보호자 통계 조회 시작", bifId);
             
-            // 기존 서비스에서 데이터 조회 (보호자용)
             final var originalResponse = statsService.getGuardianStats(bifId);
             
-            // 보호자 통계를 최적화된 형태로 변환
             final var optimizedResponse = OptimizedStatsResponse.builder()
                     .bifId(bifId)
                     .nickname(originalResponse.getBifNickname())
@@ -96,4 +91,5 @@ public class OptimizedStatsController {
                         .build())
                 .toList();
     }
+
 }

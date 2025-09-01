@@ -1,4 +1,4 @@
-package com.sage.bif.stats.dto.response;
+package com.sage.bif.stats.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

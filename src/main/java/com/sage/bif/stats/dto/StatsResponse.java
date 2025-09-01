@@ -1,4 +1,4 @@
-package com.sage.bif.stats.dto.response;
+package com.sage.bif.stats.dto;
 
 import com.sage.bif.stats.entity.EmotionType;
 import lombok.AllArgsConstructor;
@@ -117,4 +117,5 @@ public class StatsResponse {
         private String trend;
         private String description;
     }
+    
 }

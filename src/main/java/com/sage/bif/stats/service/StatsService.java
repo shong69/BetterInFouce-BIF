@@ -1,7 +1,7 @@
 package com.sage.bif.stats.service;
 
-import com.sage.bif.stats.dto.response.StatsResponse;
-import com.sage.bif.stats.dto.response.GuardianStatsResponse;
+import com.sage.bif.stats.dto.StatsResponse;
+import com.sage.bif.stats.dto.GuardianStatsResponse;
 
 import java.time.LocalDateTime;
 
@@ -20,4 +20,5 @@ public interface StatsService {
     void updateRealTimeStats(Long bifId);
 
     void forceRegenerateStats(Long bifId);
+
 }

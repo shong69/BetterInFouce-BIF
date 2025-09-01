@@ -32,19 +32,15 @@ public class KeywordAccumulationService {
                 final Stats stats = existingStats.get();
                 final Map<String, Integer> currentKeywords = parseKeywordsFromStats(stats.getTopKeywords());
                 
-                // 새 키워드와 기존 키워드 통합
                 final Map<String, Integer> updatedKeywords = mergeKeywords(currentKeywords, newKeywords);
                 
-                // Top5 키워드 추출 및 정렬
                 final List<String> top5Keywords = extractTop5Keywords(updatedKeywords);
                 
-                // 통계 업데이트 - 키워드 맵을 JSON으로 저장
                 stats.setTopKeywords(objectMapper.writeValueAsString(updatedKeywords));
                 statsRepository.save(stats);
                 
                 log.info("BIF ID {}의 키워드 누적 업데이트 완료. Top5: {}", bifId, top5Keywords);
             } else {
-                // 통계가 없으면 새로 생성
                 final Map<String, Integer> initialKeywords = new HashMap<>();
                 for (String keyword : newKeywords) {
                     if (keyword != null && !keyword.trim().isEmpty()) {
@@ -66,8 +62,6 @@ public class KeywordAccumulationService {
             log.error("키워드 누적 업데이트 중 오류 발생 - bifId: {}", bifId, e);
         }
     }
-
-
 
     public Map<String, Integer> getKeywordFrequency(Long bifId, LocalDateTime yearMonth) {
         try {
@@ -116,12 +110,10 @@ public class KeywordAccumulationService {
         }
 
         try {
-            // 기존 키워드가 맵 형태인 경우 (권장)
             if (keywordsJson.startsWith("{")) {
                 return objectMapper.readValue(keywordsJson, new TypeReference<>() {});
             }
             
-            // 기존 키워드가 단순 리스트 형태인 경우 (이전 버전 호환성)
             if (keywordsJson.startsWith("[")) {
                 List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<>() {});
                 Map<String, Integer> keywordCounts = new HashMap<>();
@@ -143,8 +135,5 @@ public class KeywordAccumulationService {
         final LocalDateTime now = LocalDateTime.now();
         return LocalDateTime.of(now.getYear(), now.getMonth(), 1, 0, 0, 0);
     }
-
-
-
 
 }

@@ -1,7 +1,7 @@
 package com.sage.bif.stats.service;
 
-import com.sage.bif.stats.dto.response.StatsResponse;
-import com.sage.bif.stats.dto.response.OptimizedStatsResponse;
+import com.sage.bif.stats.dto.StatsResponse;
+import com.sage.bif.stats.dto.OptimizedStatsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -146,4 +146,5 @@ public class StatsResponseOptimizer {
                 .guardianAdviceText("")
                 .build();
     }
+
 }

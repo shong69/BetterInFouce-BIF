@@ -1,4 +1,4 @@
-package com.sage.bif.stats.dto.response;
+package com.sage.bif.stats.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -185,4 +185,5 @@ public class OptimizedStatsResponse {
         @JsonProperty("desc")
         private String description;
     }
+
 }

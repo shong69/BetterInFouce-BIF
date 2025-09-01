@@ -154,7 +154,6 @@ public class AiEmotionAnalysisService {
             AiRequest request = new AiRequest(prompt);
             String response = aiClient.generate(request).getContent();
             
-            // AI 응답에서 키워드 추출
             String[] keywords = response.split(",");
             List<String> extractedKeywords = new java.util.ArrayList<>();
             
@@ -165,7 +164,6 @@ public class AiEmotionAnalysisService {
                 }
             }
             
-            // 빈 키워드일 때 기본값 제거
             if (extractedKeywords.isEmpty()) {
                 return new ArrayList<>();
             }
@@ -178,7 +176,6 @@ public class AiEmotionAnalysisService {
         }
     }
 
-    // 캐릭터 메시지 생성 메서드 제거
 
     private List<String> extractKeywordsFallback(String content) {
         if (content == null || content.trim().isEmpty()) {
@@ -213,7 +210,6 @@ public class AiEmotionAnalysisService {
             return "이번 달에는 작성된 일기가 없습니다. 첫 번째 일기를 작성해보세요!";
         }
 
-        // 월 초반(1-3일)인지 확인
         final int currentDay = java.time.LocalDate.now().getDayOfMonth();
         final boolean isEarlyMonth = currentDay <= 3;
         
@@ -247,7 +243,6 @@ public class AiEmotionAnalysisService {
             return "사용자의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
         }
 
-        // 월 초반(1-3일)인지 확인
         final int currentDay = java.time.LocalDate.now().getDayOfMonth();
         final boolean isEarlyMonth = currentDay <= 3;
         
@@ -311,13 +306,12 @@ public class AiEmotionAnalysisService {
         return Math.max(-2.0, Math.min(2.0, score));
     }
 
-    // 캐릭터 관련 메서드 제거
 
     private EmotionAnalysisResult createDefaultAnalysisResult() {
         return EmotionAnalysisResult.builder()
                 .emotionScore(0.0)
                 .dominantEmotion(EmotionType.OKAY)
-                .keywords(new ArrayList<>()) // 기본 키워드 제거
+                .keywords(new ArrayList<>())
                 .confidence(0.5)
                 .build();
     }
@@ -351,8 +345,6 @@ public class AiEmotionAnalysisService {
                 return this;
             }
 
-            // 캐릭터 관련 메서드 제거
-
             public Builder confidence(double confidence) {
                 result.confidence = confidence;
                 return this;
@@ -363,6 +355,6 @@ public class AiEmotionAnalysisService {
             }
         }
 
-        // Lombok @Getter로 대체됨
     }
+
 }

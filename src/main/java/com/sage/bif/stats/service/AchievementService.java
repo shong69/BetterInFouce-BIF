@@ -15,7 +15,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AchievementService {
 
-    // 업적 코드 상수
     private static final String ACHIEVEMENT_FIRST_DIARY = "FIRST_DIARY";
     private static final String ACHIEVEMENT_DIARY_STREAK_3 = "DIARY_STREAK_3";
     private static final String ACHIEVEMENT_DIARY_STREAK_7 = "DIARY_STREAK_7";
@@ -25,7 +24,6 @@ public class AchievementService {
     private static final String ACHIEVEMENT_GUARDIAN_CONNECTION = "GUARDIAN_CONNECTION";
     private static final String ACHIEVEMENT_MONTHLY_COMPLETE = "MONTHLY_COMPLETE";
 
-    // 레벨 타이틀 상수
     private static final String LEVEL_TITLE_EMOTION_EXPLORER = "감정 탐험가";
 
     private static final Map<String, Integer> ACHIEVEMENT_POINTS = Map.of(
@@ -216,7 +214,6 @@ public class AchievementService {
             }
         }
 
-        // Lombok @Getter로 대체됨
     }
 
     @lombok.Getter
@@ -264,6 +261,6 @@ public class AchievementService {
             }
         }
 
-        // Lombok @Getter로 대체됨
     }
+
 }

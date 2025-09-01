@@ -1,8 +1,8 @@
 package com.sage.bif.stats.controller;
 
 import com.sage.bif.common.dto.ApiResponse;
-import com.sage.bif.stats.dto.response.GuardianStatsResponse;
-import com.sage.bif.stats.dto.response.StatsResponse;
+import com.sage.bif.stats.dto.GuardianStatsResponse;
+import com.sage.bif.stats.dto.StatsResponse;
 import com.sage.bif.stats.service.StatsService;
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.jwt.JwtTokenProvider;
@@ -54,14 +54,12 @@ public class StatsController {
         return customUserDetails;
     }
 
-    // BIF 권한 검증 메서드
     private void validateBifRole(CustomUserDetails userDetails) {
         if (userDetails.getRole() != JwtTokenProvider.UserRole.BIF) {
             throw new IllegalArgumentException(ERROR_BIF_ONLY);
         }
     }
 
-    // 보호자 권한 검증 메서드
     private void validateGuardianRole(CustomUserDetails userDetails) {
         if (userDetails.getRole() != JwtTokenProvider.UserRole.GUARDIAN) {
             throw new IllegalArgumentException(ERROR_GUARDIAN_ONLY);
@@ -195,7 +193,6 @@ public class StatsController {
 
             log.info("=== 키워드 디버깅 시작 - BIF ID: {} ===", bifId);
             
-            // 현재 월의 통계 데이터 조회
             final LocalDateTime currentYearMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
             final Optional<Stats> stats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
             
@@ -212,7 +209,6 @@ public class StatsController {
                 debugInfo.put("statsExists", false);
             }
             
-            // 현재 월의 일기 개수 조회
             final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(
                 bifId, 
                 currentYearMonth, 
@@ -247,4 +243,5 @@ public class StatsController {
                     .body(ApiResponse.error("키워드 디버깅 중 오류가 발생했습니다."));
         }
     }
+
 }

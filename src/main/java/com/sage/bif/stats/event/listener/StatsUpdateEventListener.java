@@ -31,7 +31,6 @@ public class StatsUpdateEventListener {
             switch (event.getEventType()) {
                 case DIARY_CREATED:
                     log.info("일기 생성으로 인한 통계 업데이트 - BIF ID: {}", event.getBifId());
-                    // 일기 생성 시에는 이미 DiaryCreatedEventListener에서 처리됨
                     break;
                     
                 case DIARY_UPDATED:
@@ -99,4 +98,5 @@ public class StatsUpdateEventListener {
             log.error("일기 삭제 통계 갱신 중 오류 발생 - BIF ID: {}", bifId, e);
         }
     }
+
 }

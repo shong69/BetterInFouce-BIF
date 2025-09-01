@@ -22,4 +22,5 @@ public class StatsUpdateEvent extends ApplicationEvent {
         this.content = content;
         this.eventType = eventType;
     }
+
 }

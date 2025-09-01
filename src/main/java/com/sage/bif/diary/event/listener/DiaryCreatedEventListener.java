@@ -22,7 +22,6 @@ public class DiaryCreatedEventListener {
             log.info("일기 생성 이벤트 처리 시작 - BIF ID: {}, 일기 내용 길이: {}", 
                     event.getBifId(), event.getContent().length());
             
-            // 키워드 기반 통계 업데이트 (AI 분석 포함)
             statsService.updateStatsWithKeywords(event.getBifId(), event.getContent());
             
             log.info("일기 생성 이벤트 처리 완료 - BIF ID: {}", event.getBifId());

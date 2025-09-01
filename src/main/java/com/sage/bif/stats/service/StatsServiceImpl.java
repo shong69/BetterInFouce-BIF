@@ -2,8 +2,8 @@ package com.sage.bif.stats.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sage.bif.stats.dto.response.GuardianStatsResponse;
-import com.sage.bif.stats.dto.response.StatsResponse;
+import com.sage.bif.stats.dto.GuardianStatsResponse;
+import com.sage.bif.stats.dto.StatsResponse;
 import com.sage.bif.stats.entity.EmotionType;
 import com.sage.bif.stats.entity.Stats;
 import com.sage.bif.stats.exception.StatsProcessingException;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.persistence.EntityManager;
 
 import java.time.LocalDateTime;
@@ -34,7 +33,7 @@ import java.util.LinkedHashMap;
 @RequiredArgsConstructor
 @Transactional
 public class StatsServiceImpl implements StatsService, ApplicationContextAware {
-    
+
 
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
@@ -54,7 +53,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         this.applicationContext = applicationContext;
     }
     
-    // 상수 정의
     private static final String KEYWORD_KEY = "keyword";
     private static final String NORMALIZED_VALUE_KEY = "normalizedValue";
     private final EntityManager entityManager;
@@ -131,28 +129,20 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             if (existingStats.isPresent()) {
                 final Stats stats = existingStats.get();
                 
-                // AI 감정 분석 수행
                 final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
                 
-                // AI 감정 분석 결과 업데이트
                 stats.setAiEmotionScore(analysis.getEmotionScore());
                 
-                // 키워드 누적 업데이트
                 keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
                 
-                // 실시간 감정 통계 업데이트
                 final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
                 stats.setEmotionCounts(objectMapper.writeValueAsString(emotionCounts));
                 
-                // AI 기반 통계 텍스트 및 보호자 조언 업데이트
                 stats.setEmotionStatisticsText(generateStatisticsText(emotionCounts));
                 stats.setGuardianAdviceText(generateGuardianAdvice(emotionCounts));
                 
-                // 업데이트된 통계 저장
                 statsRepository.save(stats);
-                
-                // 캐시 무효화 코드 제거
-                
+
                 log.info("BIF ID {}의 AI 감정 분석 결과 및 통계 완전 업데이트 완료", bifId);
             } else {
                 // 통계가 없으면 새로 생성
@@ -197,7 +187,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             final Map<String, Integer> keywordFrequency = buildKeywordFrequencyMap(bifId, yearMonth);
 
             final AiEmotionAnalysisService.EmotionAnalysisResult aiAnalysis = 
-                    aiEmotionAnalysisService.analyzeEmotionFromText(""); // 빈 텍스트로 기본 분석
+                    aiEmotionAnalysisService.analyzeEmotionFromText("");
 
             final Stats stats = Stats.builder()
                     .bifId(bifId)
@@ -266,7 +256,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
 
     private void extractKeywordsFromContent(String content, Set<String> fallbackKeywords) {
-        // 의미 있는 명사 위주 키워드만 추출
         final String[] meaningfulKeywords = {
             "회의", "미팅", "프로젝트", "업무", "일", "직장", "회사",
             "가족", "친구", "동료", "사람",
@@ -281,11 +270,10 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         for (String keyword : meaningfulKeywords) {
             if (content.contains(keyword)) {
                 fallbackKeywords.add(keyword);
-                break; // 한 일기당 의미 있는 키워드 1개만 추가
+                break;
             }
         }
         
-        // 장소 관련 키워드 (구체적인 장소명)
         if (content.contains("역") || content.contains("역사")) {
             fallbackKeywords.add("교통");
         }
@@ -367,7 +355,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
             // 누적된 키워드가 없으면 월간 일기에서 새로 분석
             return analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
-            
+
         } catch (Exception e) {
             log.error("키워드 빈도수 맵 생성 중 오류 발생 - bifId: {}", bifId, e);
             return new HashMap<>();
@@ -413,24 +401,21 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             final String content = diary.getContent().trim();
             log.info("일기 ID {} 분석 - 내용: {}", diary.getId(), content.substring(0, Math.min(100, content.length())));
             
-            // AI 키워드 추출 시도
             List<String> extractedKeywords = extractAiKeywords(diary, content);
             
-            // AI 키워드가 없으면 fallback 사용
             if (extractedKeywords.isEmpty()) {
                 log.info("일기 ID {}에서 fallback 키워드 사용", diary.getId());
                 final List<String> fallbackKeywords = extractFallbackKeywords(List.of(diary));
                 extractedKeywords.addAll(fallbackKeywords);
             }
             
-            // 추출된 키워드를 빈도수에 추가
             for (String keyword : extractedKeywords) {
                 if (keyword != null && !keyword.trim().isEmpty()) {
                     keywordFrequency.put(keyword, keywordFrequency.getOrDefault(keyword, 0) + 1);
                     log.info("키워드 '{}' 빈도수 증가: {}", keyword, keywordFrequency.get(keyword));
                 }
             }
-            
+
         } catch (Exception e) {
             log.error("일기 ID {}의 키워드 분석 실패: {}", diary.getId(), e.getMessage());
         }
@@ -643,9 +628,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 .build();
     }
 
-    // 캐릭터 관련 메서드들 제거 - 프론트엔드에서 처리
-
-    private StatsResponse.AchievementInfo createAchievementInfo(Long bifId, Map<EmotionType, Integer> emotionCounts, 
+    private StatsResponse.AchievementInfo createAchievementInfo(Long bifId, Map<EmotionType, Integer> emotionCounts,
                                                                List<StatsResponse.KeywordData> topKeywords) {
         try {
             final int diaryCount = emotionCounts.values().stream().mapToInt(Integer::intValue).sum();
@@ -857,13 +840,11 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         try {
             final String cleanedJson = unwrapIfQuoted(json.trim());
             
-            // 새로운 키워드 저장 방식 (Map<String, Integer>) 확인
             if (cleanedJson.startsWith("{")) {
                 final Map<String, Integer> keywordCounts = objectMapper.readValue(cleanedJson, new TypeReference<Map<String, Integer>>() {});
                 return convertKeywordMapToList(keywordCounts);
             }
             
-            // 기존 방식 (List<Map<String, Object>>) 지원
             return objectMapper.readValue(cleanedJson, new TypeReference<>() {});
             
         } catch (Exception e) {
@@ -882,7 +863,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         
         log.info("원본 키워드 빈도수: {}", keywordCounts);
         
-        // 빈도수 기준으로 정렬하여 Top5 추출
         final List<Map.Entry<String, Integer>> sortedKeywords = keywordCounts.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
@@ -891,7 +871,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         
         log.info("정렬된 키워드 Top5: {}", sortedKeywords);
         
-        // 최대 빈도수 계산 (정규화를 위해)
         final int maxCount = sortedKeywords.stream()
                 .mapToInt(Map.Entry::getValue)
                 .max()
@@ -903,7 +882,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             keywordData.put(KEYWORD_KEY, entry.getKey());
             keywordData.put("count", entry.getValue());
             keywordData.put("rank", i + 1);
-            // 정규화된 값 추가 (0.0 ~ 1.0 범위) - 프론트엔드 그래프 높이용
             keywordData.put(NORMALIZED_VALUE_KEY, maxCount > 0 ? (double) entry.getValue() / maxCount : 0.0);
             keywordList.add(keywordData);
             
@@ -917,7 +895,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
 
     private List<Map<String, Object>> createDefaultTopKeywords() {
-        // 기본 키워드 제거 - 실제 일기 내용 기반으로만 키워드 생성
         return new ArrayList<>();
     }
 
@@ -932,8 +909,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                     Integer count = (Integer) keyword.get("count");
                     Integer rank = (Integer) keyword.get("rank");
                     
-                    // 정규화된 값이 있으면 사용, 없으면 기본값
-                    Double normalizedValue = keyword.get(NORMALIZED_VALUE_KEY) != null ? 
+                    Double normalizedValue = keyword.get(NORMALIZED_VALUE_KEY) != null ?
                             (Double) keyword.get(NORMALIZED_VALUE_KEY) : 0.0;
                     
                     return StatsResponse.KeywordData.builder()
@@ -1072,9 +1048,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return trimmed;
     }
 
-    /**
-     * 잘못된 키워드 데이터를 강제로 정리
-     */
     public void forceCleanupInvalidKeywords(Long bifId) {
         log.info("=== BIF ID {}의 잘못된 키워드 데이터 강제 정리 시작 ===", bifId);
         
@@ -1090,8 +1063,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                     stats.setTopKeywords("{}"); // 빈 맵으로 초기화
                     statsRepository.save(stats);
                     
-                    // 캐시 무효화 코드 제거
-                    
                     log.info("잘못된 키워드 데이터 정리 완료");
                 } else {
                     log.info("정리할 잘못된 데이터가 없음");
@@ -1104,17 +1075,12 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    /**
-     * 강제로 통계 데이터를 재생성하고 캐시를 무효화
-     */
     public void forceRegenerateStats(Long bifId) {
         log.info("=== BIF ID {}의 통계 데이터 강제 재생성 시작 ===", bifId);
         
         try {
-            // 1. 캐시 관련 코드 제거
             log.info("캐시 무효화 코드 제거됨");
             
-            // 2. 현재 월의 통계 데이터 삭제
             final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
             
@@ -1124,10 +1090,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 log.info("기존 통계 데이터 삭제 완료");
             }
             
-            // 3. 새로운 통계 데이터 생성
             final List<Diary> monthlyDiaries = diaryRepository.findByUserId(bifId);
             if (!monthlyDiaries.isEmpty()) {
-                // 가장 최근 일기로 통계 업데이트
                 final Diary latestDiary = monthlyDiaries.stream()
                         .max(Comparator.comparing(Diary::getCreatedAt))
                         .orElse(monthlyDiaries.get(0));
@@ -1139,11 +1103,11 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 generateAndSaveMonthlyStats(bifId, currentYearMonth);
             }
             
-            // 4. 캐시 관련 코드 제거
             log.info("통계 데이터 강제 재생성 완료");
             
         } catch (Exception e) {
             log.error("통계 데이터 강제 재생성 중 오류 발생 - bifId: {}", bifId, e);
         }
     }
+
 }

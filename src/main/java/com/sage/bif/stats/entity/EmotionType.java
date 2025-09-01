@@ -40,4 +40,5 @@ public enum EmotionType {
         if (score >= -1.5) return DOWN;
         return ANGRY;
     }
+
 }
