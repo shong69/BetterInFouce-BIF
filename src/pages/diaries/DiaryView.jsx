@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import BackButton from "@components/ui/BackButton";
 import EditButton from "@components/ui/EditButton";
 import DeleteButton from "@components/ui/DeleteButton";
-import DateBox from "@components/ui/DateBox";
 import Modal from "@components/ui/Modal";
+
+import { HiOutlineTrash } from "react-icons/hi";
 
 import ErrorPageManager from "@pages/errors/ErrorPage";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { formatDate } from "@utils/dateUtils";
-import { EMOTIONS } from "@constants/emotions";
+import { getEmotionInfo } from "@utils/emotionUtils";
 import logo2 from "@assets/logo2.png";
 
 export default function DiaryView() {
@@ -164,7 +164,7 @@ export default function DiaryView() {
         title: "현명한 거북이",
         titleColor: "text-gray-800",
         contentColor: "text-gray-700",
-        titleWeight: "font-medium",
+        titleWeight: "font-semibold",
         contentWeight: "font-medium",
       };
 
@@ -187,7 +187,7 @@ export default function DiaryView() {
         return {
           ...baseConfig,
           content: currentDiary.aiFeedback,
-          bgGradient: "from-[#C1EFFF] to-[#F2F7FB]",
+          bgGradient: "from-[#DAEAF8] to-[#F7E6FF]",
         };
       }
 
@@ -238,52 +238,36 @@ export default function DiaryView() {
   if (!currentDiary) {
     return (
       <>
-        <Header />
-        <div className="mx-auto max-w-2xl p-4 sm:p-4">
-          <DateBox />
-          <div className="mb-4">
-            <BackButton
-              onClick={() => {
-                navigate("/diaries");
-              }}
-            />
-          </div>
-        </div>
+        <Header showTodoButton={false} />
+        <div className="mx-auto max-w-2xl p-4 sm:p-4" />
         <TabBar />
       </>
     );
   }
 
   return (
-    <>
-      <Header />
-      <div className="mx-auto max-w-2xl p-4 sm:p-4">
-        <DateBox />
-        <div className="mb-4">
-          <BackButton
-            onClick={() => {
-              navigate("/diaries");
-            }}
-          />
-        </div>
+    <div className="min-h-screen">
+      <Header showTodoButton={false} />
+      <div className="mx-auto max-w-2xl p-4 pt-0 sm:p-4">
         <div className="mb-2 flex items-end justify-between">
           <div className="mx-4 text-sm font-semibold">
             {formatDate(currentDiary.createdAt)}의 일기
           </div>
-          <div className="mr-4">
+          <div className="mr-4 flex items-center">
+            <div
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionInfo(currentDiary.emotion).bgColor}`}
+            >
+              {getEmotionInfo(currentDiary.emotion).name}
+            </div>
             <img
-              src={
-                EMOTIONS.find((e) => {
-                  return e.id === currentDiary.emotion;
-                })?.icon
-              }
+              src={getEmotionInfo(currentDiary.emotion).icon}
               alt="emotion"
               className="h-8 w-8 drop-shadow-md sm:h-10 sm:w-10"
             />
           </div>
         </div>
         <div className="mb-8 px-2 sm:mb-10 sm:px-0">
-          <div className="min-h-[10vh] w-full p-3 text-sm sm:min-h-[30vh] sm:p-4 sm:text-base">
+          <div className="text-medium min-h-[15vh] w-full p-3 sm:min-h-[30vh] sm:p-4 sm:text-base">
             <p className="leading-relaxed font-medium whitespace-pre-wrap text-[#4A4A4A]">
               {currentDiary.content}
             </p>
@@ -296,9 +280,11 @@ export default function DiaryView() {
           </div>
         </div>
         <div className="mt-4 px-2 sm:mt-4 sm:px-0">
-          <div className="mb-[78px] flex justify-end gap-2 sm:mb-[78px]">
-            <EditButton onClick={handleEdit} />
-            <DeleteButton onClick={handleDelete} />
+          <div className="mt-12 border-t border-gray-500 pt-4">
+            <div className="mb-[78px] flex h-8 items-center justify-end gap-2 sm:mb-[78px]">
+              <EditButton onClick={handleEdit} />
+              <DeleteButton onClick={handleDelete} />
+            </div>
           </div>
         </div>
       </div>
@@ -309,17 +295,25 @@ export default function DiaryView() {
         onClose={handleDeleteCancel}
         primaryButtonText="삭제"
         secondaryButtonText="취소"
+        primaryButtonColor="bg-warning hover:bg-red-600"
         onPrimaryClick={handleDeleteConfirm}
         onSecondaryClick={handleDeleteCancel}
-        children={
-          <div className="text-center">
-            <h2 className="mb-2 text-lg font-semibold">
-              일기를 삭제하시겠습니까?
-            </h2>
-            <div className="text-sm">삭제된 일기는 복구할 수 없습니다.</div>
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="bg-warning flex h-16 w-16 items-center justify-center rounded-full">
+              <HiOutlineTrash className="text-white" size={32} />
+            </div>
           </div>
-        }
-      />
-    </>
+          <h3 className="mb-2 text-xl font-bold text-black">
+            일기를 삭제하시겠습니까?
+          </h3>
+          <p className="mb-1 text-sm text-black">
+            삭제된 일기는 복구할 수 없습니다.
+          </p>
+          <p className="text-sm text-black">정말로 진행하시겠어요?</p>
+        </div>
+      </Modal>
+    </div>
   );
 }

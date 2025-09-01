@@ -56,7 +56,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="min-h-screen text-black">
       <BrowserRouter>
         <Routes>
           <Route
@@ -193,7 +193,7 @@ function App() {
 
         <AppContent />
       </BrowserRouter>
-    </>
+    </div>
   );
 }
 

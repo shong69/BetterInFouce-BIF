@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import BackButton from "@components/ui/BackButton";
 import SecondaryButton from "@components/ui/SecondaryButton";
 
 import { createTodoByAi } from "@services/todoService";
@@ -16,9 +15,6 @@ export default function CreateTodo() {
   const [showValidation, setShowValidation] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
 
-  const returnTab = new URLSearchParams(window.location.search).get(
-    "returnTab",
-  );
   const { showSuccess, showError } = useToastStore();
   const {
     showLoading,
@@ -105,23 +101,7 @@ export default function CreateTodo() {
     <div className="min-h-screen pb-20">
       <Header />
 
-      <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
-        <div className="mb-4 ml-[-7px] px-2 sm:px-0">
-          <BackButton
-            onClick={() => {
-              if (returnTab) {
-                navigate(`/?tab=${returnTab}`);
-              } else {
-                navigate(-1);
-              }
-            }}
-          />
-        </div>
-
-        <div className="mb-6 px-2 sm:px-0">
-          <h1 className="text-lg text-gray-800">할 일</h1>
-        </div>
-
+      <div className="mx-auto max-w-4xl p-2 sm:p-4">
         <div className="space-y-6 px-2 sm:px-0">
           <div>
             <label htmlFor="todo-input" className="sr-only">
@@ -139,7 +119,7 @@ export default function CreateTodo() {
                   : "border-gray-300 focus:border-gray-400"
               }`}
               style={{
-                minHeight: "200px",
+                minHeight: "300px",
                 lineHeight: "1.5",
               }}
               disabled={globalLoading}
@@ -166,10 +146,10 @@ export default function CreateTodo() {
             </div>
           )}
 
-          <div className="fixed right-0 bottom-35 left-0 px-2 sm:px-0">
+          <div className="fixed right-0 bottom-30 left-0 px-2 sm:px-0">
             <div className="mx-auto max-w-4xl px-4">
               <SecondaryButton
-                title={globalLoading ? "생성 중..." : "AI 작업 생성"}
+                title={globalLoading ? "생성 중..." : "할 일 만들기"}
                 onClick={handleSubmit}
                 disabled={globalLoading || !userInput.trim()}
               />

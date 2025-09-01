@@ -109,8 +109,8 @@ export default function LoginInviteCode() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col">
-        <div className="flex flex-1 items-center justify-center px-6">
+      <div className="min-h-screen px-6 py-8">
+        <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
           <div className="flex w-full max-w-sm flex-col items-center space-y-8">
             <div className="flex justify-center">
               <Logo />
@@ -159,8 +159,10 @@ export default function LoginInviteCode() {
               </div>
             </div>
           </div>
+          <div className="mt-30">
+            <Footer />
+          </div>
         </div>
-        <Footer />
       </div>
     </>
   );

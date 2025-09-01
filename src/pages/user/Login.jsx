@@ -2,7 +2,8 @@ import Logo from "@components/ui/LoginLogo";
 import Footer from "@components/common/Footer";
 
 export default function Login() {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
   function handleGoogleLogin() {
     window.location.href = `${API_BASE_URL}/api/oauth2/authorization/google`;
@@ -16,8 +17,8 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col">
-        <div className="flex flex-1 items-center justify-center px-6">
+      <div className="min-h-screen px-6 py-8">
+        <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
           <div className="flex w-full max-w-sm flex-col items-center space-y-8">
             <div className="flex justify-center">
               <Logo />
@@ -90,9 +91,10 @@ export default function Login() {
               로그인 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.
             </p>
           </div>
+          <div className="mt-16">
+            <Footer />
+          </div>
         </div>
-
-        <Footer />
       </div>
     </>
   );
