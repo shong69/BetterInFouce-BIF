@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: prod
+    active: dev
   application:
     name: bif
 
@@ -50,3 +50,4 @@ management:
       enabled: true
     db:
       enabled: true
+

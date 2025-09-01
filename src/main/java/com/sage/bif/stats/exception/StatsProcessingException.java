@@ -1,11 +1,13 @@
 package com.sage.bif.stats.exception;
 
 public class StatsProcessingException extends RuntimeException {
-    public StatsProcessingException(final String message) {
+    
+    public StatsProcessingException(String message) {
         super(message);
     }
-
-    public StatsProcessingException(final String message, final Throwable cause) {
+    
+    public StatsProcessingException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors  ;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Component
+@Component("diaryUserWithdrawalListener")
 @RequiredArgsConstructor
 public class UserWithdrawalListener {
     
@@ -25,7 +25,7 @@ public class UserWithdrawalListener {
     private final AiFeedbackRepository aiFeedbackRepository;
     private final RedisService redisService;
     
-    @Async
+
     @EventListener
     @Transactional
     public void handleUserWithdrawal(UserWithdrawalEvent event) {
