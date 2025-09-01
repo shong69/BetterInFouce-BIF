@@ -56,7 +56,7 @@ function App() {
   }
 
   return (
-    <div className="bg-gradient-radial min-h-screen text-black">
+    <div className="min-h-screen text-black">
       <BrowserRouter>
         <Routes>
           <Route
