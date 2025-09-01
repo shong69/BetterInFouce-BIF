@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Component
+@Component("diaryUserWithdrawalListener")
 @RequiredArgsConstructor
 public class UserWithdrawalListener {
     
@@ -25,7 +25,7 @@ public class UserWithdrawalListener {
     private final AiFeedbackRepository aiFeedbackRepository;
     private final RedisService redisService;
     
-    @Async
+
     @EventListener
     @Transactional
     public void handleUserWithdrawal(UserWithdrawalEvent event) {

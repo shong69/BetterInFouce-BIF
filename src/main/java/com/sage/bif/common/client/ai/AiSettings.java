@@ -17,7 +17,7 @@ public class AiSettings {
                     "감정을 인정하고 긍정적인 관점을 제시하며, '책상 정리하기'와 같이 구체적이고 즉시 실천 가능한 행동을 부드럽게 제안하세요."+
                     "사용자의 감정 상태를 절대 단정적으로 진단하거나, 의학적·심리적 조언을 제공하지 마세요. 오직 칭찬과 격려와 위로, 그리고 실천 가능한 조언에만 집중하세요.")
             .temperature(0.5)
-            .maxTokens(300)
+            .maxTokens(200)
             .build();
 
     public static final AiChatSettings TODO_CREATION = AiChatSettings.builder()
