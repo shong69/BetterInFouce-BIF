@@ -3,7 +3,7 @@ export default function Modal({
   onClose,
   children,
   icon,
-  iconBgColor = "bg-gray-200", // ✅ 기본 배경색 추가
+  iconBgColor = "bg-gray-200",
   primaryButtonText,
   secondaryButtonText,
   primaryButtonColor = "bg-secondary",
