@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
   application:
     name: bif
 
@@ -27,11 +27,6 @@ server:
 jwt:
   access-expiration: 900000
   refresh-expiration: 604800000
-
-vapid:
-  public-key: ${VAPID_PUBLIC_KEY}
-  private-key: ${VAPID_PRIVATE_KEY}
-  subject: ${VAPID_SUBJECT}
 
 springdoc:
   packages-to-scan: com.sage.bif
