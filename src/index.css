@@ -24,27 +24,13 @@
   --text-tiny: 0.6rem;
 }
 
-.bg-gradient-radial {
-  background: linear-gradient(
-    to bottom,
-    #f5fcaa 0%,
-    #fbffda 25%,
-    #f7f7f7 50%,
-    #f0f0f0 100%
-  );
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
-}
-
 html,
 body {
-  background: linear-gradient(
-    to bottom,
-    #f5fcaa 0%,
-    #fbffda 25%,
-    #f7f7f7 50%,
-    #f0f0f0 100%
+  background: radial-gradient(
+    circle 500px at 50% -15%,
+    #eafc5f,
+    #fbffda,
+    #f7f7f7
   );
   background-repeat: no-repeat;
   background-size: cover;
@@ -52,8 +38,4 @@ body {
   min-height: 100vh;
   overscroll-behavior: none;
   overflow-x: hidden;
-}
-
-html {
-  overscroll-behavior-y: none;
 }

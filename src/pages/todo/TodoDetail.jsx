@@ -4,9 +4,10 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Modal from "@components/ui/Modal";
+import EditButton from "@components/ui/EditButton";
+import DeleteButton from "@components/ui/DeleteButton";
 
 import { IoCheckmark } from "react-icons/io5";
-import { MdEdit } from "react-icons/md";
 import { FaCircle, FaCheckCircle } from "react-icons/fa";
 import { HiOutlineTrash } from "react-icons/hi";
 
@@ -440,21 +441,8 @@ export default function TodoDetail() {
 
   const rightActions = (
     <>
-      <button
-        onClick={handleEditTodo}
-        className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-      >
-        <MdEdit className="h-4 w-4" />
-        수정
-      </button>
-
-      <button
-        onClick={handleDeleteTodo}
-        className="bg-warning flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
-      >
-        <HiOutlineTrash className="h-4 w-4" />
-        삭제
-      </button>
+      <EditButton onClick={handleEditTodo} />
+      <DeleteButton onClick={handleDeleteTodo} />
     </>
   );
 

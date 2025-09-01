@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import DateBox from "@components/ui/DateBox";
 import Modal from "@components/ui/Modal";
-import SecondaryButton from "@components/ui/SecondaryButton";
-import BackButton from "@components/ui/BackButton";
+import RecordButton from "@components/ui/RecordButton";
+import PrimaryButton from "@components/ui/PrimaryButton";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
-import { EMOTIONS } from "@constants/emotions";
+import { getEmotionInfo } from "@utils/emotionUtils";
 import { formatDate } from "@utils/dateUtils";
+import { getSttToken, speechRecognitionService } from "@services/diaryService";
+import { HiArrowLeft, HiPencilAlt } from "react-icons/hi";
 
 export default function DiaryEdit() {
   const { id } = useParams();
@@ -17,9 +18,12 @@ export default function DiaryEdit() {
   const location = useLocation();
 
   const [content, setContent] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [interimText, setInterimText] = useState("");
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
+  const recognizerRef = useRef(null);
 
   const { updateDiary, fetchDiary } = useDiaryStore();
   const { showSuccess, showError } = useToastStore();
@@ -45,6 +49,109 @@ export default function DiaryEdit() {
     }
   }, [id, location.state, fetchDiary, showError, navigate]);
 
+  const toggleRecording = async () => {
+    if (isRecording) {
+      handleStopRecording();
+    } else {
+      await handleStartRecording();
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const { token, region } = await getSttToken();
+
+      const recognizer = await speechRecognitionService.createRecognizer(
+        token,
+        region,
+      );
+      recognizerRef.current = recognizer;
+
+      const callbacks = {
+        onRecognizing: (text) => {
+          setInterimText(text);
+        },
+        onRecognized: (text) => {
+          const cleanedText = text.replace(/\.$/, "").trim();
+          setContent((prev) => {
+            const newText = prev ? `${prev} ${cleanedText}` : cleanedText;
+            return newText;
+          });
+          setInterimText("");
+        },
+        onCanceled: async (reason, errorDetails) => {
+          if (errorDetails && errorDetails.includes("authorization")) {
+            try {
+              showSuccess("토큰을 갱신하고 있습니다...");
+              await handleTokenExpiredAndRestart();
+            } catch {
+              showError("토큰 갱신에 실패했습니다.");
+              setIsRecording(false);
+            }
+          } else if (errorDetails) {
+            showError(`음성 인식 오류: ${errorDetails}`);
+            setIsRecording(false);
+          } else {
+            setIsRecording(false);
+          }
+        },
+      };
+
+      speechRecognitionService.setupRecognizer(recognizer, callbacks);
+
+      speechRecognitionService.startRecognition(
+        recognizer,
+        () => {
+          setIsRecording(true);
+          showSuccess("음성 인식을 시작합니다.");
+        },
+        () => {
+          showError("음성 인식 시작에 실패했습니다.");
+          setIsRecording(false);
+        },
+      );
+    } catch (error) {
+      if (error.name === "NotAllowedError") {
+        showError("브라우저 설정에서 마이크 권한을 허용해주세요.");
+      } else if (error.name === "NotFoundError") {
+        showError(
+          "마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.",
+        );
+      } else {
+        showError("음성 인식을 시작할 수 없습니다. 다시 시도해주세요.");
+      }
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (recognizerRef.current) {
+      speechRecognitionService.stopRecognition(
+        recognizerRef.current,
+        () => {
+          speechRecognitionService.closeRecognizer(recognizerRef.current);
+          recognizerRef.current = null;
+          setIsRecording(false);
+          showSuccess("음성 인식이 중단되었습니다.");
+        },
+        () => {
+          showError("음성 인식 중단에 실패했습니다.");
+          setIsRecording(false);
+        },
+      );
+    }
+  };
+
+  const handleTokenExpiredAndRestart = async () => {
+    if (recognizerRef.current) {
+      speechRecognitionService.closeRecognizer(recognizerRef.current);
+      recognizerRef.current = null;
+    }
+
+    await handleStartRecording();
+  };
+
   useEffect(() => {
     function handleBeforeUnload(event) {
       if (content.trim() && content !== originalContent) {
@@ -61,13 +168,13 @@ export default function DiaryEdit() {
     };
   }, [content, originalContent]);
 
-  const handleBack = () => {
-    if (content.trim() && content !== originalContent) {
-      setShowExitModal(true);
-    } else {
-      navigate(`/diaries/${id}`);
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (recognizerRef.current) {
+        speechRecognitionService.closeRecognizer(recognizerRef.current);
+      }
+    };
+  }, []);
 
   const handleExitConfirm = () => {
     setShowExitModal(false);
@@ -112,13 +219,8 @@ export default function DiaryEdit() {
   if (!location.state?.diaryData && !content) {
     return (
       <>
-        <Header />
-        <div className="mx-auto max-w-2xl p-4 sm:p-4">
-          <DateBox />
-          <div className="mb-2">
-            <BackButton onClick={handleBack} />
-          </div>
-        </div>
+        <Header showTodoButton={false} />
+        <div className="mx-auto max-w-2xl p-4 sm:p-4" />
         <TabBar />
       </>
     );
@@ -131,43 +233,41 @@ export default function DiaryEdit() {
   };
 
   return (
-    <>
-      <Header />
+    <div className="min-h-screen">
+      <Header showTodoButton={false} />
       <div className="mx-auto mb-24 max-w-2xl p-4 sm:p-4">
-        <DateBox />
-        <div className="mb-2">
-          <BackButton onClick={handleBack} />
-        </div>
         <div className="flex items-center justify-between">
           <div className="mx-4 mb-2 text-sm font-semibold">
             {formatDate(diaryData.createdAt)}의 일기
           </div>
-          <div className="mr-4">
+          <div className="mr-4 flex items-center">
+            <div
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionInfo(diaryData.emotion).bgColor}`}
+            >
+              {getEmotionInfo(diaryData.emotion).name}
+            </div>
             <img
-              src={
-                EMOTIONS.find((e) => {
-                  return e.id === diaryData.emotion;
-                })?.icon
-              }
+              src={getEmotionInfo(diaryData.emotion).icon}
               alt="emotion"
               className="mb-1 h-8 w-8 sm:h-10 sm:w-10"
             />
           </div>
         </div>
-        <div className="mb-8 px-2 sm:mb-10 sm:px-0">
+        <div className="mb-10 px-2 sm:mb-10 sm:px-0">
           <textarea
             id="diary-content"
-            value={content}
+            value={content + (interimText ? ` ${interimText}` : "")}
             onChange={(e) => {
               setContent(e.target.value);
             }}
             placeholder="오늘 하루는 어땠나요?"
-            className="h-[50vh] w-full resize-none rounded-lg border border-gray-300 p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:h-[60vh] sm:p-4 sm:text-base"
+            className="text-medium h-[50vh] w-full resize-none rounded-xl border border-gray-300 p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:h-[60vh] sm:p-4 sm:text-base"
           />
         </div>
 
-        <div className="px-2 sm:px-0">
-          <SecondaryButton onClick={handleSave} title={"일기 수정"} />
+        <div className="mb-4 px-2 sm:px-0">
+          <RecordButton isRecording={isRecording} onClick={toggleRecording} />
+          <PrimaryButton onClick={handleSave} title={"일기 수정하기"} />
         </div>
       </div>
       <TabBar />
@@ -175,36 +275,51 @@ export default function DiaryEdit() {
       <Modal
         isOpen={showExitModal}
         onClose={handleExitCancel}
-        primaryButtonText="확인"
+        primaryButtonText="나가기"
         secondaryButtonText="취소"
+        primaryButtonColor="bg-black"
         onPrimaryClick={handleExitConfirm}
         onSecondaryClick={handleExitCancel}
-        children={
-          <div className="text-center">
-            <h2 className="mb-2 text-lg font-semibold">정말 나가시겠습니까?</h2>
-            <div className="text-sm">저장하지 않은 수정사항이 있습니다.</div>
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black">
+              <HiArrowLeft className="h-12 w-12 text-white" />
+            </div>
           </div>
-        }
-      />
+          <h3 className="mb-2 text-xl font-bold text-black">
+            정말 나가시겠습니까?
+          </h3>
+          <p className="mb-1 text-sm text-black">
+            저장하지 않은 수정사항이 있습니다.
+          </p>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={showSaveModal}
         onClose={handleSaveCancel}
         primaryButtonText="수정"
         secondaryButtonText="취소"
+        primaryButtonColor="bg-primary"
         onPrimaryClick={handleSaveConfirm}
         onSecondaryClick={handleSaveCancel}
-        children={
-          <div className="text-center">
-            <h2 className="mb-2 text-lg font-semibold">
-              일기를 수정하시겠습니까?
-            </h2>
-            <div className="text-sm">
-              수정된 내용으로 일기가 업데이트됩니다.
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="bg-primary flex h-16 w-16 items-center justify-center rounded-full">
+              <HiPencilAlt className="text-white" size={32} />
             </div>
           </div>
-        }
-      />
-    </>
+          <h3 className="mb-2 text-xl font-bold text-black">
+            일기를 수정하시겠습니까?
+          </h3>
+          <p className="mb-1 text-sm text-black">
+            수정된 내용으로 일기가 <br />
+            업데이트됩니다.
+          </p>
+        </div>
+      </Modal>
+    </div>
   );
 }

@@ -207,7 +207,7 @@ export default function Todo() {
 
       <div className="mb-4 flex w-full justify-center">
         <div className="w-full max-w-4xl px-4">
-          <div className="rounded-2xl bg-white/90 p-4 shadow-sm backdrop-blur-sm">
+          <div className="rounded-xl border border-gray-300 bg-white/90 p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <button
                 onClick={goToPrevWeek}
@@ -317,7 +317,7 @@ export default function Todo() {
       <div className="mb-4 flex w-full justify-center">
         <div className="w-full max-w-4xl px-4">
           <div className="flex justify-center">
-            <div className="flex w-full rounded-xl bg-white/80 p-1 shadow-sm backdrop-blur-sm">
+            <div className="flex w-full rounded-xl border border-gray-300 bg-white/80 p-1 shadow-sm">
               {[
                 { key: "ALL", label: "모두" },
                 { key: "ROUTINE", label: "루틴" },

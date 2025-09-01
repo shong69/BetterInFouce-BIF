@@ -46,10 +46,10 @@ export default function Card({
 
   return (
     <div
-      className={`cursor-pointer rounded-xl border p-4 shadow-sm backdrop-blur-sm transition-all ${
+      className={`cursor-pointer rounded-xl border border-gray-300 p-4 shadow-sm transition-all ${
         isCompleted
-          ? "border-gray-300 bg-gray-100/80 opacity-70"
-          : "border-gray-200/50 bg-white/90 hover:shadow-md"
+          ? "bg-gray-100/80 opacity-70"
+          : "bg-white/90 hover:shadow-md"
       }`}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}

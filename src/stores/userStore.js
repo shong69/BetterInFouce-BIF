@@ -37,7 +37,17 @@ export const useUserStore = create((set, get) => ({
 
     const isTokenExpired = (token) => {
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return true;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        const payload = JSON.parse(json);
         const currentTime = Math.floor(Date.now() / 1000);
         return payload.exp < currentTime + 30;
       } catch {
@@ -47,7 +57,17 @@ export const useUserStore = create((set, get) => ({
 
     const getTokenPayload = (token) => {
       try {
-        return JSON.parse(atob(token.split(".")[1]));
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(
+          base64.length + ((4 - (base64.length % 4)) % 4),
+          "=",
+        );
+        const binary = atob(padded);
+        const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+        const json = new TextDecoder("utf-8").decode(bytes);
+        return JSON.parse(json);
       } catch {
         return null;
       }

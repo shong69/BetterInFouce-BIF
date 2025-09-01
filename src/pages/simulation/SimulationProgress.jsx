@@ -5,8 +5,11 @@ import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
-import BackButton from "@components/ui/BackButton";
 import logo2 from "@assets/logo2.png";
+
+import managerImage from "@assets/manager.png";
+import mamaImage from "@assets/mama.png";
+import minaImage from "@assets/mina.png";
 
 function ProgressBar({ progress = 0, label = "진행도" }) {
   return (
@@ -17,9 +20,9 @@ function ProgressBar({ progress = 0, label = "진행도" }) {
           {Math.round(progress)}%
         </span>
       </div>
-      <div className="bg-secondary/20 h-2 rounded-full">
+      <div className="bg-secondary/20 h-1 rounded-full">
         <div
-          className="bg-secondary h-2 rounded-full transition-all duration-300"
+          className="bg-secondary h-1 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -40,13 +43,16 @@ export default function SimulationProgress() {
   const [showFinal, setShowFinal] = useState(false);
   const [finalMessage, setFinalMessage] = useState("");
   const [shuffledChoices, setShuffledChoices] = useState([]);
-  const [showTyping, setShowTyping] = useState(false);
   const [hiddenFeedbackButtons, setHiddenFeedbackButtons] = useState(new Set());
   const conversationRef = useRef(null);
   const simrunCreatedRef = useRef(false);
   const isInitializedRef = useRef(false);
   const [isPlayingGlobal, setIsPlayingGlobal] = useState(false);
   const choicesRef = useRef(null);
+  const [isCardExpanded, setIsCardExpanded] = useState(true);
+
+  const [isTypingFeedback, setIsTypingFeedback] = useState(false);
+  const [currentFeedbackMessage, setCurrentFeedbackMessage] = useState("");
 
   useEffect(
     function () {
@@ -120,6 +126,23 @@ export default function SimulationProgress() {
     [id],
   );
 
+  useEffect(() => {
+    if (isTypingFeedback) {
+      let index = 0;
+
+      const interval = setInterval(() => {
+        if (index < currentFeedbackMessage.length) {
+          index++;
+        } else {
+          setIsTypingFeedback(false);
+          clearInterval(interval);
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    }
+  }, [isTypingFeedback, currentFeedbackMessage]);
+
   useEffect(
     function () {
       if (conversationRef.current) {
@@ -142,16 +165,7 @@ export default function SimulationProgress() {
   );
 
   useEffect(function () {
-    const handleTTSStateChange = (isPlaying) => {
-      setIsPlayingGlobal(isPlaying);
-    };
-
-    simulationService.tts.addListener(handleTTSStateChange);
     setIsPlayingGlobal(simulationService.tts.isPlaying());
-
-    return () => {
-      simulationService.tts.removeListener(handleTTSStateChange);
-    };
   }, []);
 
   useEffect(() => {
@@ -183,6 +197,26 @@ export default function SimulationProgress() {
       }, 200);
     }
   }, [conversationHistory]);
+
+  async function handleTTSPlay(message, voice) {
+    try {
+      setIsPlayingGlobal(true);
+      const result = await simulationService.tts.playTTS(message, voice);
+
+      if (!result) {
+        setIsPlayingGlobal(false);
+      }
+
+      const checkTTSStatus = setInterval(() => {
+        if (!simulationService.tts.isPlaying()) {
+          setIsPlayingGlobal(false);
+          clearInterval(checkTTSStatus);
+        }
+      }, 100);
+    } catch {
+      setIsPlayingGlobal(false);
+    }
+  }
 
   async function handleOptionSelect(optionIndex) {
     if (selectedOption !== null) return;
@@ -218,7 +252,6 @@ export default function SimulationProgress() {
     setConversationHistory(function (prev) {
       return [...prev, userResponse];
     });
-    setShowTyping(true);
 
     setTimeout(function () {
       let feedbackType;
@@ -254,7 +287,8 @@ export default function SimulationProgress() {
       setConversationHistory(function (prev) {
         return [...prev, feedbackMessageObj];
       });
-      setShowTyping(false);
+      setCurrentFeedbackMessage(feedbackMessage);
+      setIsTypingFeedback(true);
     }, 1400);
   }
 
@@ -298,11 +332,13 @@ export default function SimulationProgress() {
                   "시뮬레이션을 완료했습니다!";
 
                 localStorage.removeItem(`sim_${id}_total`);
+                localStorage.setItem(`sim_${id}_completed`, "true");
 
                 setShowFinal(true);
                 setFinalMessage(feedbackMessage);
               } catch {
                 localStorage.removeItem(`sim_${id}_total`);
+                localStorage.setItem(`sim_${id}_completed`, "true");
                 setShowFinal(true);
                 setFinalMessage("시뮬레이션을 완료했습니다!");
               }
@@ -310,11 +346,13 @@ export default function SimulationProgress() {
           })
           .catch(function () {
             localStorage.removeItem(`sim_${id}_total`);
+            localStorage.setItem(`sim_${id}_completed`, "true");
             setShowFinal(true);
             setFinalMessage("시뮬레이션을 완료했습니다!");
           });
       } else {
         localStorage.removeItem(`sim_${id}_total`);
+        localStorage.setItem(`sim_${id}_completed`, "true");
         setShowFinal(true);
         setFinalMessage("시뮬레이션을 완료했습니다!");
       }
@@ -338,14 +376,6 @@ export default function SimulationProgress() {
     return shuffled;
   }
 
-  function getCurrentDate() {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const date = now.getDate();
-    const day = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
-    return `${month}월 ${date}일 ${day}요일`;
-  }
-
   function clearAllsimruns() {
     const keys = Object.keys(localStorage);
     keys.forEach(function (key) {
@@ -356,6 +386,65 @@ export default function SimulationProgress() {
         localStorage.removeItem(key);
       }
     });
+  }
+
+  function getCategoryImage(category) {
+    switch (category) {
+      case "업무":
+        return managerImage;
+      case "사회":
+        return mamaImage;
+      case "일상":
+        return minaImage;
+      default:
+        return managerImage;
+    }
+  }
+
+  function splitMessageIntoSentences(message) {
+    const sentences = [];
+    let currentSentence = "";
+
+    for (let i = 0; i < message.length; i++) {
+      const char = message[i];
+      currentSentence += char;
+
+      if (char === "." || char === "!" || char === "?") {
+        if (i + 1 < message.length) {
+          const nextChar = message[i + 1];
+          if (nextChar === ")" || nextChar === '"') {
+            currentSentence += nextChar;
+            i++;
+          }
+        }
+
+        let dotCount = 1;
+        let j = i + 1;
+        while (j < message.length && message[j] === ".") {
+          dotCount++;
+          j++;
+        }
+
+        if (dotCount >= 2) {
+          for (let k = 1; k < dotCount; k++) {
+            currentSentence += ".";
+            i++;
+          }
+          continue;
+        }
+
+        if (currentSentence.trim()) {
+          sentences.push(currentSentence.trim());
+        }
+        currentSentence = "";
+      }
+    }
+
+    if (currentSentence.trim()) {
+      sentences.push(currentSentence.trim());
+    }
+
+    return sentences;
   }
 
   if (!simulation) {
@@ -374,42 +463,51 @@ export default function SimulationProgress() {
 
   return (
     <>
-      <Header />
+      <Header showTodoButton={false} />
 
-      <div className="bg-white px-5 py-5">
-        <div className="text-black-600 mb-3 text-[13px] font-medium">
-          {getCurrentDate()}
-        </div>
-        <BackButton onClick={handleBackToMain} />
-      </div>
-
-      <main className="w-full max-w-full flex-1 bg-white px-5 pb-32">
-        <div className="sticky top-20 z-10 mb-6 rounded-xl border-1 border-gray-300 bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3
-              className={`text-md font-bold ${
-                simulation.category === "업무"
-                  ? "text-[#EF4444]"
-                  : simulation.category === "일상"
-                    ? "text-[#F59E0B]"
-                    : "text-[#0B70F5]"
-              }`}
+      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-32">
+        <div className="sticky top-20 z-10 mb-4 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isCardExpanded && (
+                <img
+                  src={getCategoryImage(simulation.category)}
+                  alt={`${simulation.category} 캐릭터`}
+                  className="h-10 w-10 object-cover object-top"
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-black">
+                  {simulation.title}
+                </h3>
+                {isCardExpanded && (
+                  <p className="mt-1 text-xs text-gray-600">
+                    {simulation.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setIsCardExpanded(!isCardExpanded)}
+              className="flex items-center gap-1 text-gray-400 hover:text-gray-600"
             >
-              {simulation.title}
-            </h3>
-            <span
-              className={`rounded-xl px-3 py-1 text-sm font-medium ${
-                simulation.category === "업무"
-                  ? "bg-[#FEE2E2] text-[#EF4444]"
-                  : simulation.category === "일상"
-                    ? "bg-[#FEF3C7] text-[#F59E0B]"
-                    : "bg-[#C2DCFF] text-[#0B70F5]"
-              }`}
-            >
-              {simulation.category}
-            </span>
+              <svg
+                className={`h-4 w-4 transition-transform ${
+                  isCardExpanded ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
           </div>
-          <p className="mb-4 text-sm text-gray-600">{simulation.description}</p>
           <ProgressBar progress={progress} />
         </div>
 
@@ -421,51 +519,81 @@ export default function SimulationProgress() {
                 className={`flex ${item.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 {item.type === "opponent" && item.message && (
-                  <div className="flex max-w-[80%] items-start gap-2">
-                    <div className="rounded-2xl rounded-tl-md bg-[#F2F7FB] px-3 py-2 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                      <span className="text-sm font-medium">
-                        {item.message}
-                      </span>
+                  <div className="flex max-w-[85%] items-start gap-2">
+                    <img
+                      src={getCategoryImage(simulation.category)}
+                      alt={`${simulation.category} 캐릭터`}
+                      className="h-10 w-10 flex-shrink-0 object-cover object-top"
+                    />
+                    <div className="flex flex-col gap-2">
+                      {splitMessageIntoSentences(item.message).map(
+                        (sentence) => (
+                          <div
+                            key={`sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
+                            className="flex items-start gap-2"
+                          >
+                            <div className="rounded-2xl rounded-tl-md bg-white px-3 py-2 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+                              <span className="text-sm font-medium text-gray-800">
+                                {sentence.trim()}
+                              </span>
+                            </div>
+                            <button
+                              className={`cursor-pointer transition-colors ${
+                                isPlayingGlobal
+                                  ? "cursor-not-allowed text-blue-500"
+                                  : "text-gray-400 hover:text-gray-600"
+                              }`}
+                              onClick={function () {
+                                if (!isPlayingGlobal) {
+                                  handleTTSPlay(
+                                    sentence.trim(),
+                                    "ko-KR-Chirp3-HD-Aoede",
+                                  );
+                                }
+                              }}
+                              onKeyDown={function (event) {
+                                if (
+                                  (event.key === "Enter" ||
+                                    event.key === " ") &&
+                                  !isPlayingGlobal
+                                ) {
+                                  handleTTSPlay(
+                                    sentence.trim(),
+                                    "ko-KR-Chirp3-HD-Aoede",
+                                  );
+                                }
+                              }}
+                              title={
+                                isPlayingGlobal
+                                  ? "재생 중입니다..."
+                                  : "음성 재생"
+                              }
+                              disabled={isPlayingGlobal}
+                            >
+                              {isPlayingGlobal ? "🔈" : "🔊"}
+                            </button>
+                          </div>
+                        ),
+                      )}
                     </div>
-                    <button
-                      className={`cursor-pointer transition-colors ${
-                        isPlayingGlobal
-                          ? "cursor-not-allowed text-blue-500"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                      onClick={function () {
-                        if (!isPlayingGlobal) {
-                          simulationService.playTTS(
-                            item.message,
-                            "ko-KR-Chirp3-HD-Aoede",
-                          );
-                        }
-                      }}
-                      onKeyDown={function (event) {
-                        if (
-                          (event.key === "Enter" || event.key === " ") &&
-                          !isPlayingGlobal
-                        ) {
-                          simulationService.playTTS(
-                            item.message,
-                            "ko-KR-Chirp3-HD-Aoede",
-                          );
-                        }
-                      }}
-                      title={isPlayingGlobal ? "재생 중입니다..." : "음성 재생"}
-                      disabled={isPlayingGlobal}
-                    >
-                      {isPlayingGlobal ? "🔈" : "🔊"}
-                    </button>
                   </div>
                 )}
 
                 {item.type === "user" && item.message && (
                   <div className="flex max-w-[80%] justify-end">
-                    <div className="rounded-2xl rounded-tr-md bg-[#88C16F] px-3 py-2 text-black shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                      <span className="text-sm font-medium">
-                        {item.message}
-                      </span>
+                    <div className="flex flex-col gap-2">
+                      {splitMessageIntoSentences(item.message).map(
+                        (sentence) => (
+                          <div
+                            key={`user-sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
+                            className="rounded-2xl rounded-tr-md bg-white px-3 py-2 text-black shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
+                          >
+                            <span className="text-sm font-medium text-black">
+                              {sentence.trim()}
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -477,42 +605,14 @@ export default function SimulationProgress() {
                     isLastStep={currentStep === simulation.steps.length - 1}
                     isHidden={hiddenFeedbackButtons.has(item.step)}
                     onPlayTTS={(message, voice) =>
-                      simulationService.playTTS(message, voice)
+                      handleTTSPlay(message, voice)
                     }
-                    isPlaying={simulationService.tts.isPlaying()}
+                    isPlaying={isPlayingGlobal}
                   />
                 )}
               </div>
             );
           })}
-
-          {showTyping && (
-            <div className="flex justify-start">
-              <div className="flex max-w-[90%] items-start gap-2">
-                <img src={logo2} alt="현명한 거북이" className="h-7 w-7" />
-                <div className="max-w-full min-w-[200px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-t from-[#00FFF2]/0 to-[#08BDFF]/20 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-gray-800">
-                      현명한 거북이
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-800">
-                    <span className="flex gap-1">
-                      <span className="h-1 w-1 animate-pulse rounded-full bg-blue-500" />
-                      <span
-                        className="h-1 w-1 animate-pulse rounded-full bg-blue-500"
-                        style={{ animationDelay: "0.2s" }}
-                      />
-                      <span
-                        className="h-1 w-1 animate-pulse rounded-full bg-blue-500"
-                        style={{ animationDelay: "0.4s" }}
-                      />
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {selectedOption === null && (
@@ -526,7 +626,7 @@ export default function SimulationProgress() {
                   return (
                     <button
                       key={`choice-${currentStep}-${choice.choiceText || choice}-${Date.now()}`}
-                      className="w-full rounded-xl border-1 border-gray-300 bg-white p-4 text-left text-sm shadow-sm"
+                      className="w-full rounded-xl border-1 border-gray-300 bg-[#343434] p-2 text-center text-sm text-[#ffffff] shadow-sm"
                       onClick={function () {
                         handleOptionSelect(index);
                       }}
@@ -600,7 +700,7 @@ export default function SimulationProgress() {
             </div>
             <div className="mt-6 flex justify-center">
               <button
-                className="bg-secondary text-sb w-20 rounded-full px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#7db800]"
+                className="text-sb w-20 rounded-full bg-[#343434] px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#7db800]"
                 onClick={handleBackToMain}
               >
                 확인

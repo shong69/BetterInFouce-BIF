@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserStore } from "@stores/userStore";
+import { useStatsStore } from "@stores/statsStore";
 import { useToastStore } from "@stores/toastStore";
 import { Navigate } from "react-router-dom";
 
@@ -11,12 +12,19 @@ import { IoPerson, IoLogOut, IoPencil } from "react-icons/io5";
 
 export default function GuardianProfile() {
   const { user, logout, changeNickname, withdraw } = useUserStore();
+  const { stats, fetchGuardianStats } = useStatsStore();
   const { addToast } = useToastStore();
 
   const [newNickname, setNewNickname] = useState("");
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+
+  useEffect(() => {
+    if (user?.bifId) {
+      fetchGuardianStats(user.bifId);
+    }
+  }, [user?.bifId, fetchGuardianStats]);
 
   if (user?.userRole !== "GUARDIAN") {
     return <Navigate to="/guardian-profile" replace />;
@@ -105,23 +113,29 @@ export default function GuardianProfile() {
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
         <Header />
-        <div className="flex-1 bg-gray-50">
+        <div
+          className="flex-1"
+          style={{
+            background:
+              "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
+          }}
+        >
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
-            <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+            <div className="mb-6 rounded-lg p-4">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800">마이페이지</h2>
+                <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
               </div>
 
-              <div className="rounded-lg bg-white p-4 shadow-sm">
+              <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
-                      <IoPerson className="h-8 w-8 text-gray-600" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                      <IoPerson className="h-5 w-5 text-gray-600" />
                     </div>
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center space-x-1 rounded bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                      className="flex items-center space-x-1 rounded bg-gray-200 px-3 py-2 text-sm text-gray-800 transition-colors hover:bg-gray-400"
                     >
                       <IoLogOut className="h-4 w-4" />
                       <span>로그아웃</span>
@@ -130,26 +144,26 @@ export default function GuardianProfile() {
 
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-semibold text-gray-800">
-                      {user?.nickname || "보호자"} 님
+                      {user?.nickname &&
+                      user.nickname.length > 0 &&
+                      !user.nickname.includes("Wx")
+                        ? `${user.nickname} 님`
+                        : "보호자 님"}
                     </h3>
                     <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
                       <p className="text-sm whitespace-nowrap text-gray-600">
                         가입일:{" "}
                         {(() => {
-                          if (!user?.createdAt)
+                          const dateStr = stats?.guardianJoinDate;
+                          if (!dateStr) return "가입일을 불러올 수 없습니다";
+                          const d = new Date(dateStr);
+                          if (isNaN(d.getTime()))
                             return "가입일을 불러올 수 없습니다";
-                          try {
-                            const date = new Date(user.createdAt);
-                            if (isNaN(date.getTime()))
-                              return "가입일을 불러올 수 없습니다";
-                            return date.toLocaleDateString("ko-KR", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            });
-                          } catch {
-                            return "가입일을 불러올 수 없습니다";
-                          }
+                          return d.toLocaleDateString("ko-KR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
                         })()}
                       </p>
                       <p className="text-sm whitespace-nowrap text-gray-600" />
@@ -159,71 +173,74 @@ export default function GuardianProfile() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <IoPencil className="mr-2 h-6 w-6 text-blue-500" />
-                <h2 className="text-xl font-bold text-gray-800">
-                  회원정보 수정
-                </h2>
-              </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h4 className="text-md mb-4 font-semibold text-gray-800">
-                  닉네임 변경
-                </h4>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={newNickname}
-                    onChange={(e) => setNewNickname(e.target.value)}
-                    placeholder="새로운 닉네임을 입력해주세요."
-                    className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  {nicknameError && (
-                    <p className="mt-2 text-center text-sm text-red-500">
-                      {nicknameError}
-                    </p>
-                  )}
-                  <div className="flex justify-end">
-                    <BaseButton
-                      onClick={handleNicknameChange}
-                      title="변경"
-                      variant="primary"
-                      className="w-24"
-                    />
-                  </div>
+            <div className="mb-20">
+              <div className="mb-6 rounded-lg p-4">
+                <div className="ml-4 flex items-center">
+                  <IoPencil className="mr-2 h-6 w-6 text-blue-500" />
+                  <h2 className="text-lg font-bold text-gray-800">
+                    회원정보 수정
+                  </h2>
                 </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h4 className="text-md mb-4 font-semibold text-gray-800">
-                  회원 탈퇴
-                </h4>
-                <div className="space-y-3">
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                    <p className="text-sm text-red-700">
-                      정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.
-                    </p>
+                <div className="mt-4 space-y-6">
+                  <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
+                    <h4 className="text-md mb-4 font-bold text-gray-800">
+                      닉네임 변경
+                    </h4>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={newNickname}
+                        onChange={(e) => setNewNickname(e.target.value)}
+                        placeholder="새로운 닉네임을 입력해주세요."
+                        className="w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
+                      />
+                      {nicknameError && (
+                        <p className="mt-2 text-center text-sm text-red-500">
+                          {nicknameError}
+                        </p>
+                      )}
+                      <div className="flex justify-end">
+                        <BaseButton
+                          onClick={handleNicknameChange}
+                          title="변경"
+                          variant="primary"
+                          className="text-md w-24"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    value={withdrawNickname}
-                    onChange={(e) => setWithdrawNickname(e.target.value)}
-                    placeholder="닉네임을 입력해주세요."
-                    className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-red-500 focus:outline-none"
-                  />
-                  {withdrawError && (
-                    <p className="text-center text-sm text-red-500">
-                      {withdrawError}
-                    </p>
-                  )}
-                  <div className="flex justify-end">
-                    <BaseButton
-                      onClick={handleWithdraw}
-                      title="탈퇴"
-                      variant="danger"
-                      className="w-24"
-                    />
+
+                  <div className="rounded-lg border-1 border-gray-300 bg-white p-4">
+                    <h4 className="text-md mb-4 font-bold text-gray-800">
+                      회원 탈퇴
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="rounded-lg border-1 border-red-300 bg-red-50 p-4 shadow-sm">
+                        <p className="text-sm text-red-700">
+                          정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.
+                        </p>
+                      </div>
+                      <input
+                        type="text"
+                        value={withdrawNickname}
+                        onChange={(e) => setWithdrawNickname(e.target.value)}
+                        placeholder="닉네임을 입력해주세요."
+                        className="w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+                      />
+                      {withdrawError && (
+                        <p className="text-center text-sm text-red-500">
+                          {withdrawError}
+                        </p>
+                      )}
+                      <div className="flex justify-end">
+                        <BaseButton
+                          onClick={handleWithdraw}
+                          title="탈퇴"
+                          variant="danger"
+                          className="text-md w-24"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
