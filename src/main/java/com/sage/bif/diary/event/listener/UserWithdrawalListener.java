@@ -25,7 +25,7 @@ public class UserWithdrawalListener {
     private final AiFeedbackRepository aiFeedbackRepository;
     private final RedisService redisService;
     
-    @Async
+
     @EventListener
     @Transactional
     public void handleUserWithdrawal(UserWithdrawalEvent event) {
