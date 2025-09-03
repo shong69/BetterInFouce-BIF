@@ -49,7 +49,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     private ApplicationContext applicationContext;
     
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
+    public void setApplicationContext(@org.springframework.lang.NonNull ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
     
@@ -63,7 +63,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         try {
             log.info("BIF ID {}의 월별 통계 조회 시작", bifId);
             
-        final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
 
             if (existingStats.isEmpty()) {
@@ -71,7 +71,21 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 return generateAndSaveMonthlyStats(bifId, currentYearMonth);
             }
 
-            return buildStatsResponseWithRealTimeData(existingStats.get(), bifId, currentYearMonth);
+            // 실시간 감정 카운트 업데이트
+            final Map<EmotionType, Integer> realTimeEmotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
+            final Stats stats = existingStats.get();
+            
+            // 감정 카운트가 변경되었으면 통계 업데이트
+            final Map<EmotionType, Integer> storedEmotionCounts = parseEmotionCountsJson(stats.getEmotionCounts());
+            if (!realTimeEmotionCounts.equals(storedEmotionCounts)) {
+                log.info("BIF ID {}의 감정 카운트 변경 감지 - 실시간 업데이트", bifId);
+                stats.setEmotionCounts(objectMapper.writeValueAsString(realTimeEmotionCounts));
+                stats.setEmotionStatisticsText(generateStatisticsText(realTimeEmotionCounts));
+                stats.setGuardianAdviceText(generateGuardianAdvice(realTimeEmotionCounts));
+                statsRepository.save(stats);
+            }
+
+            return buildStatsResponseWithRealTimeData(stats, bifId, currentYearMonth);
             
         } catch (Exception e) {
             log.error("월별 통계 조회 중 오류 발생 - bifId: {}", bifId, e);
@@ -123,27 +137,30 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         log.info("BIF ID {}의 키워드 기반 통계 업데이트 시작", bifId);
         
         try {
-        final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
             
             if (existingStats.isPresent()) {
                 final Stats stats = existingStats.get();
                 
-                final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
-                
-                stats.setAiEmotionScore(analysis.getEmotionScore());
-                
-                keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
-                
+                // 실시간 감정 카운트 재계산
                 final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
                 stats.setEmotionCounts(objectMapper.writeValueAsString(emotionCounts));
                 
+                // AI 감정 분석 및 키워드 추출
+                final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
+                stats.setAiEmotionScore(analysis.getEmotionScore());
+                
+                // 키워드 누적 업데이트
+                keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
+                
+                // 통계 텍스트 및 조언 재생성
                 stats.setEmotionStatisticsText(generateStatisticsText(emotionCounts));
                 stats.setGuardianAdviceText(generateGuardianAdvice(emotionCounts));
                 
                 statsRepository.save(stats);
 
-                log.info("BIF ID {}의 AI 감정 분석 결과 및 통계 완전 업데이트 완료", bifId);
+                log.info("BIF ID {}의 실시간 통계 업데이트 완료 - 감정 카운트: {}", bifId, emotionCounts);
             } else {
                 // 통계가 없으면 새로 생성
                 log.info("BIF ID {}의 통계 데이터가 없어 새로 생성합니다.", bifId);
@@ -353,8 +370,15 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 return accumulatedKeywords;
             }
 
-            // 누적된 키워드가 없으면 월간 일기에서 새로 분석
-            return analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
+            // 누적된 키워드가 없으면 월간 일기에서 새로 분석 (한 번만)
+            final Map<String, Integer> newKeywords = analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
+            
+            // 새로 분석한 키워드를 누적 서비스에 저장
+            if (!newKeywords.isEmpty()) {
+                keywordAccumulationService.initializeKeywords(bifId, newKeywords);
+            }
+            
+            return newKeywords;
 
         } catch (Exception e) {
             log.error("키워드 빈도수 맵 생성 중 오류 발생 - bifId: {}", bifId, e);
@@ -1108,6 +1132,63 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         } catch (Exception e) {
             log.error("통계 데이터 강제 재생성 중 오류 발생 - bifId: {}", bifId, e);
         }
+    }
+    
+    public void cleanupInvalidKeywords(Long bifId) {
+        log.info("=== BIF ID {}의 잘못된 키워드 데이터 정리 시작 ===", bifId);
+        
+        try {
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                final Map<String, Integer> currentKeywords = parseTopKeywordsJson(stats.getTopKeywords()).stream()
+                        .collect(LinkedHashMap::new, 
+                                (map, item) -> map.put((String) item.get("keyword"), (Integer) item.get("count")), 
+                                LinkedHashMap::putAll);
+                
+                // 잘못된 키워드 제거
+                final Map<String, Integer> cleanedKeywords = new HashMap<>();
+                for (Map.Entry<String, Integer> entry : currentKeywords.entrySet()) {
+                    if (isValidKeyword(entry.getKey())) {
+                        cleanedKeywords.put(entry.getKey(), entry.getValue());
+                    } else {
+                        log.info("잘못된 키워드 제거: {}", entry.getKey());
+                    }
+                }
+                
+                stats.setTopKeywords(objectMapper.writeValueAsString(cleanedKeywords));
+                statsRepository.save(stats);
+                
+                log.info("키워드 정리 완료 - 정리 전: {}, 정리 후: {}", currentKeywords.size(), cleanedKeywords.size());
+            } else {
+                log.info("통계 데이터가 없음");
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 정리 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+    
+    private boolean isValidKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 잘못된 키워드 패턴들
+        String[] invalidPatterns = {
+            "사용불가", "서울역", "우울감", "협회", "회의실", "일상", "일반", "보통", "평범",
+            "그냥", "그저", "그런", "이런", "저런", "어떤", "무엇", "언제", "어디", "왜", "어떻게"
+        };
+        
+        for (String pattern : invalidPatterns) {
+            if (keyword.contains(pattern)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
 }

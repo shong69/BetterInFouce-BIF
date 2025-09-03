@@ -104,6 +104,52 @@ public class AiSettings {
             .maxTokens(400)
             .build();
 
+    // Stats 패키지 전용 AI 프리셋
+    public static final AiChatSettings STATS_KEYWORD_EXTRACTION = AiChatSettings.builder()
+            .systemPrompt("다음 일기 내용에서 의미있는 핵심 키워드 5개를 추출해주세요:\n\n" +
+                    "요구사항:\n" +
+                    "1. 일기 내용의 주요 주제나 감정을 나타내는 단어\n" +
+                    "2. 명사 위주로 추출\n" +
+                    "3. 쉼표로 구분하여 5개만 반환\n" +
+                    "4. 한국어로 작성\n" +
+                    "5. 설명이나 추가 텍스트 없이 키워드만 반환")
+            .temperature(0.7)
+            .maxTokens(1000)
+            .build();
+
+    public static final AiChatSettings STATS_EMOTION_ANALYSIS = AiChatSettings.builder()
+            .systemPrompt("다음은 사용자의 월별 감정 통계입니다. " +
+                    "감정별 개수와 비율을 바탕으로 간단하고 격려가 되는 요약을 작성해주세요.\n\n" +
+                    "요구사항:\n" +
+                    "1. 감정 상태를 정확하게 분석하여 요약\n" +
+                    "2. 2-3문장으로 작성 (100-150자)\n" +
+                    "3. 한국어로 작성\n" +
+                    "4. 따뜻하고 격려가 되는 톤으로 작성\n" +
+                    "5. 예시 일기문이나 구체적인 제안은 하지 말 것\n" +
+                    "6. 감정일기 피드백처럼 공감적이고 건설적인 내용으로 작성\n" +
+                    "7. 월 초반(1-3일)에는 '이번 달의 시작'을 언급하고, 일기 작성 습관을 격려하는 내용 포함\n" +
+                    "8. 구체적인 예시나 질문은 절대 제외하고, 일반적이고 격려적인 메시지로 작성\n" +
+                    "9. '예시를 써드릴게요', '도와드릴게요', '어떨까요?' 같은 표현 금지")
+            .temperature(0.7)
+            .maxTokens(1000)
+            .build();
+
+    public static final AiChatSettings STATS_GUARDIAN_ADVICE = AiChatSettings.builder()
+            .systemPrompt("다음은 BIF 사용자의 월별 감정 통계입니다. " +
+                    "보호자 입장에서 간단한 조언을 제공해주세요.\n\n" +
+                    "요구사항:\n" +
+                    "1. BIF의 감정 상태를 정확하게 분석\n" +
+                    "2. 2-3문장으로 작성 (100-150자)\n" +
+                    "3. 한국어로 작성\n" +
+                    "4. 보호자로서의 따뜻한 마음가짐으로 작성\n" +
+                    "5. 구체적인 행동 지시나 예시는 하지 말 것\n" +
+                    "6. 공감적이고 실용적인 조언 제공\n" +
+                    "7. 구체적인 예시나 질문은 절대 제외하고, 일반적이고 격려적인 메시지로 작성\n" +
+                    "8. '예시를 써드릴게요', '도와드릴게요', '어떨까요?' 같은 표현 금지")
+            .temperature(0.7)
+            .maxTokens(1000)
+            .build();
+
     private AiSettings() {
         throw new BaseException(ErrorCode.COMMON_UTILITY_CLASS_INSTANTIATION);
     }

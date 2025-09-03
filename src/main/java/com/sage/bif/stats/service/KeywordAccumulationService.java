@@ -88,11 +88,48 @@ public class KeywordAccumulationService {
         for (String keyword : newKeywords) {
             if (keyword != null && !keyword.trim().isEmpty()) {
                 final String normalizedKeyword = keyword.trim();
-                mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+                
+                // 잘못된 키워드 필터링
+                if (isValidKeyword(normalizedKeyword)) {
+                    mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+                    log.info("키워드 누적: {} (총 {}회)", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
+                } else {
+                    log.warn("잘못된 키워드 제외: {}", normalizedKeyword);
+                }
             }
         }
         
         return mergedKeywords;
+    }
+    
+    private boolean isValidKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 잘못된 키워드 패턴들
+        String[] invalidPatterns = {
+            "사용불가", "서울역", "우울감", "협회", "회의실", "일상", "일반", "보통", "평범",
+            "그냥", "그저", "그런", "이런", "저런", "어떤", "무엇", "언제", "어디", "왜", "어떻게"
+        };
+        
+        for (String pattern : invalidPatterns) {
+            if (keyword.contains(pattern)) {
+                return false;
+            }
+        }
+        
+        // 키워드 길이 검증 (1-10자)
+        if (keyword.length() < 1 || keyword.length() > 10) {
+            return false;
+        }
+        
+        // 특수문자나 숫자만으로 구성된 키워드 제외
+        if (keyword.matches("^[0-9\\s\\-_.,!?]+$")) {
+            return false;
+        }
+        
+        return true;
     }
 
     private List<String> extractTop5Keywords(Map<String, Integer> keywordCounts) {

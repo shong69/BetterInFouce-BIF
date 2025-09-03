@@ -1,6 +1,7 @@
 package com.sage.bif.stats.service;
 
-import com.sage.bif.common.client.ai.AzureOpenAiClient;
+import com.sage.bif.common.client.ai.AiServiceClient;
+import com.sage.bif.common.client.ai.AiSettings;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.stats.entity.EmotionType;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiEmotionAnalysisService {
 
-    private final AzureOpenAiClient aiClient;
+    private final AiServiceClient aiClient;
 
     public EmotionAnalysisResult analyzeEmotionFromText(String diaryContent) {
         try {
@@ -43,7 +44,7 @@ public class AiEmotionAnalysisService {
         try {
             String prompt = createStatisticsPrompt(emotionCounts);
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_EMOTION_ANALYSIS).getContent();
             
             log.info("AI 통계 텍스트 생성 완료: {}", response.substring(0, Math.min(100, response.length())));
             return response;
@@ -58,7 +59,7 @@ public class AiEmotionAnalysisService {
         try {
             String prompt = createGuardianAdvicePrompt(emotionCounts);
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_GUARDIAN_ADVICE).getContent();
             
             log.info("AI 보호자 조언 생성 완료: {}", response.substring(0, Math.min(100, response.length())));
             return response;
@@ -137,35 +138,42 @@ public class AiEmotionAnalysisService {
         }
 
         try {
-            String prompt = String.format("""
-                다음 일기 내용에서 의미있는 핵심 키워드 5개를 추출해주세요:
-                
-                %s
-                
-                요구사항:
-                1. 일기 내용의 주요 주제나 감정을 나타내는 단어
-                2. 명사 위주로 추출
-                3. 쉼표로 구분하여 5개만 반환
-                4. 한국어로 작성
-                5. 설명이나 추가 텍스트 없이 키워드만 반환""",
+            String prompt = String.format(
+                "다음 일기 내용에서 실제로 언급된 의미있는 핵심 키워드만 5개를 추출해주세요. " +
+                "일기 내용에 직접적으로 언급되지 않은 단어는 추출하지 마세요.\n\n" +
+                "일기 내용: %s\n\n" +
+                "요구사항:\n" +
+                "1. 일기 내용에 실제로 언급된 단어만 추출\n" +
+                "2. 구체적인 명사 위주로 추출 (예: 가족, 친구, 직장, 학교, 운동, 음식 등)\n" +
+                "3. 감정 표현이나 추상적인 단어는 제외\n" +
+                "4. 쉼표로 구분하여 5개 이하로 추출\n" +
+                "5. 일기 내용에 없는 단어는 절대 추출하지 마세요",
                 content.substring(0, Math.min(500, content.length()))
             );
 
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_KEYWORD_EXTRACTION).getContent();
             
             String[] keywords = response.split(",");
             List<String> extractedKeywords = new java.util.ArrayList<>();
+            String lowerContent = content.toLowerCase();
             
             for (String keyword : keywords) {
                 String trimmed = keyword.trim();
                 if (!trimmed.isEmpty() && trimmed.length() <= 10) {
-                    extractedKeywords.add(trimmed);
+                    // 키워드가 실제 일기 내용에 포함되어 있는지 검증
+                    if (lowerContent.contains(trimmed.toLowerCase())) {
+                        extractedKeywords.add(trimmed);
+                        log.info("키워드 검증 통과: {}", trimmed);
+                    } else {
+                        log.warn("키워드 검증 실패 - 일기 내용에 없음: {}", trimmed);
+                    }
                 }
             }
             
             if (extractedKeywords.isEmpty()) {
-                return new ArrayList<>();
+                log.info("AI 키워드 추출 결과가 비어있음 - fallback 사용");
+                return extractKeywordsFallback(content);
             }
             
             return extractedKeywords.subList(0, Math.min(5, extractedKeywords.size()));
