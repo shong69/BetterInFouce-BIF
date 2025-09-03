@@ -341,6 +341,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         
         log.info("최종 키워드 빈도수: {}", keywordFrequency);
         
+        // 키워드 빈도수 그대로 사용 (여러 일기에서 언급된 키워드는 누적)
         final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
@@ -349,12 +350,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                         (map, entry) -> map.put(entry.getKey(), entry.getValue()),
                         LinkedHashMap::putAll);
         
-        log.info("TOP 5 키워드 빈도수: {}", top5Keywords);
-        
-        // 키워드가 추출되었으면 데이터베이스에 저장
-        if (!top5Keywords.isEmpty()) {
-            saveKeywordsToDatabase(bifId, yearMonth, top5Keywords);
-        }
+        log.info("정규화된 TOP 5 키워드: {}", top5Keywords);
         
         return top5Keywords;
     }
@@ -433,10 +429,18 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 extractedKeywords.addAll(fallbackKeywords);
             }
             
+            // 일기별로 키워드 누적 (여러 일기에서 언급되면 누적, 같은 일기 내 중복은 1회만)
+            final Set<String> diaryKeywords = new HashSet<>(); // 같은 일기 내 중복 방지
             for (String keyword : extractedKeywords) {
                 if (keyword != null && !keyword.trim().isEmpty()) {
-                    keywordFrequency.put(keyword, keywordFrequency.getOrDefault(keyword, 0) + 1);
-                    log.info("키워드 '{}' 빈도수 증가: {}", keyword, keywordFrequency.get(keyword));
+                    final String normalizedKeyword = keyword.trim();
+                    if (!diaryKeywords.contains(normalizedKeyword)) {
+                        diaryKeywords.add(normalizedKeyword);
+                        keywordFrequency.put(normalizedKeyword, keywordFrequency.getOrDefault(normalizedKeyword, 0) + 1);
+                        log.info("키워드 '{}' 누적: {}회 (일기 ID: {})", normalizedKeyword, keywordFrequency.get(normalizedKeyword), diary.getId());
+                    } else {
+                        log.info("일기 ID {}에서 키워드 '{}' 중복 제거", diary.getId(), normalizedKeyword);
+                    }
                 }
             }
 

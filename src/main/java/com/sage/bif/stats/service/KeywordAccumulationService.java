@@ -32,6 +32,7 @@ public class KeywordAccumulationService {
                 final Stats stats = existingStats.get();
                 final Map<String, Integer> currentKeywords = parseKeywordsFromStats(stats.getTopKeywords());
                 
+                // 새 키워드만 추가 (중복 방지)
                 final Map<String, Integer> updatedKeywords = mergeKeywords(currentKeywords, newKeywords);
                 
                 final List<String> top5Keywords = extractTop5Keywords(updatedKeywords);
@@ -43,7 +44,7 @@ public class KeywordAccumulationService {
             } else {
                 final Map<String, Integer> initialKeywords = new HashMap<>();
                 for (String keyword : newKeywords) {
-                    if (keyword != null && !keyword.trim().isEmpty()) {
+                    if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim())) {
                         initialKeywords.put(keyword.trim(), 1);
                     }
                 }
@@ -60,6 +61,34 @@ public class KeywordAccumulationService {
             
         } catch (Exception e) {
             log.error("키워드 누적 업데이트 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+    
+    public void initializeKeywords(Long bifId, Map<String, Integer> initialKeywords) {
+        try {
+            log.info("BIF ID {}의 키워드 초기화 시작 - 초기 키워드: {}", bifId, initialKeywords);
+            
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                stats.setTopKeywords(objectMapper.writeValueAsString(initialKeywords));
+                statsRepository.save(stats);
+                log.info("BIF ID {}의 키워드 초기화 완료", bifId);
+            } else {
+                final Stats newStats = Stats.builder()
+                        .bifId(bifId)
+                        .yearMonth(currentYearMonth)
+                        .topKeywords(objectMapper.writeValueAsString(initialKeywords))
+                        .build();
+                
+                statsRepository.save(newStats);
+                log.info("BIF ID {}의 새로운 통계 및 키워드 초기화 완료", bifId);
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 초기화 중 오류 발생 - bifId: {}", bifId, e);
         }
     }
 
@@ -85,18 +114,18 @@ public class KeywordAccumulationService {
     private Map<String, Integer> mergeKeywords(Map<String, Integer> existingKeywords, List<String> newKeywords) {
         final Map<String, Integer> mergedKeywords = new HashMap<>(existingKeywords);
         
+        // 새 키워드들을 Set으로 중복 제거 (같은 일기 내 중복 방지)
+        final Set<String> uniqueNewKeywords = new HashSet<>();
         for (String keyword : newKeywords) {
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                final String normalizedKeyword = keyword.trim();
-                
-                // 잘못된 키워드 필터링
-                if (isValidKeyword(normalizedKeyword)) {
-                    mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
-                    log.info("키워드 누적: {} (총 {}회)", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
-                } else {
-                    log.warn("잘못된 키워드 제외: {}", normalizedKeyword);
-                }
+            if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim())) {
+                uniqueNewKeywords.add(keyword.trim());
             }
+        }
+        
+        // 중복 제거된 새 키워드들을 기존 키워드에 누적
+        for (String normalizedKeyword : uniqueNewKeywords) {
+            mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+            log.info("키워드 '{}' 누적: {}회", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
         }
         
         return mergedKeywords;
