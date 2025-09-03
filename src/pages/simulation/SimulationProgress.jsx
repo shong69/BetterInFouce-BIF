@@ -5,15 +5,11 @@ import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
-import DateBox from "@components/ui/DateBox";
-import BackButton from "@components/ui/BackButton";
 import logo2 from "@assets/logo2.png";
 
 import managerImage from "@assets/manager.png";
 import mamaImage from "@assets/mama.png";
 import minaImage from "@assets/mina.png";
-
-const returnTab = new URLSearchParams(window.location.search).get("returnTab");
 
 function ProgressBar({ progress = 0, label = "진행도" }) {
   return (
@@ -57,6 +53,9 @@ export default function SimulationProgress() {
 
   const [isTypingFeedback, setIsTypingFeedback] = useState(false);
   const [currentFeedbackMessage, setCurrentFeedbackMessage] = useState("");
+  const [displayedFeedbackTexts, setDisplayedFeedbackTexts] = useState({});
+  const [typingBubbleId, setTypingBubbleId] = useState(null);
+  const [showChoices, setShowChoices] = useState(false);
 
   useEffect(
     function () {
@@ -131,38 +130,80 @@ export default function SimulationProgress() {
   );
 
   useEffect(() => {
-    if (isTypingFeedback) {
-      let index = 0;
+    if (isTypingFeedback && currentFeedbackMessage && typingBubbleId) {
+      setDisplayedFeedbackTexts((prev) => ({ ...prev, [typingBubbleId]: "" }));
 
+      let index = 0;
       const interval = setInterval(() => {
         if (index < currentFeedbackMessage.length) {
+          setDisplayedFeedbackTexts((prev) => ({
+            ...prev,
+            [typingBubbleId]: currentFeedbackMessage.slice(0, index + 1),
+          }));
           index++;
         } else {
           setIsTypingFeedback(false);
+          setTypingBubbleId(null);
           clearInterval(interval);
         }
-      }, 50);
+      }, 100);
 
       return () => clearInterval(interval);
     }
-  }, [isTypingFeedback, currentFeedbackMessage]);
+  }, [isTypingFeedback, currentFeedbackMessage, typingBubbleId]);
 
   useEffect(
     function () {
-      if (conversationRef.current) {
-        conversationRef.current.scrollTop =
-          conversationRef.current.scrollHeight;
+      const scrollToTabBar = () => {
+        const tabBar = document.querySelector(
+          '[class*="rounded-full border border-gray-200/50 bg-white/90"]',
+        );
+        if (tabBar) {
+          const tabBarRect = tabBar.getBoundingClientRect();
+          const scrollTop = window.scrollY + tabBarRect.top - 20;
+          window.scrollTo({
+            top: scrollTop,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      if (isTypingFeedback) {
+        const interval = setInterval(scrollToTabBar, 300);
+        return () => clearInterval(interval);
+      } else {
+        setTimeout(scrollToTabBar, 200);
       }
     },
-    [conversationHistory],
+    [conversationHistory, isTypingFeedback],
   );
+
+  useEffect(() => {
+    if (choicesRef.current && selectedOption === null) {
+      const tabBar = document.querySelector(
+        '[class*="rounded-full border border-gray-200/50 bg-white/90"]',
+      );
+      if (tabBar) {
+        const tabBarRect = tabBar.getBoundingClientRect();
+        const scrollTop = window.scrollY + tabBarRect.top - 20;
+        window.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [shuffledChoices, selectedOption]);
 
   useEffect(
     function () {
       if (simulation && simulation.steps && simulation.steps[currentStep]) {
-        const currentChoices = simulation.steps[currentStep].choices || [];
-        const shuffled = shuffleChoices(currentChoices);
-        setShuffledChoices(shuffled);
+        setShowChoices(false);
+        setTimeout(() => {
+          const currentChoices = simulation.steps[currentStep].choices || [];
+          const shuffled = shuffleChoices(currentChoices);
+          setShuffledChoices(shuffled);
+          setShowChoices(true);
+        }, 100);
       }
     },
     [currentStep, simulation],
@@ -226,6 +267,7 @@ export default function SimulationProgress() {
     if (selectedOption !== null) return;
 
     setSelectedOption(optionIndex);
+    setShowChoices(false);
 
     const selectedChoice = shuffledChoices[optionIndex];
     const selectedOptionText = selectedChoice
@@ -281,18 +323,24 @@ export default function SimulationProgress() {
         }
       }
 
+      const bubbleId = `feedback-${currentStep}-${Date.now()}`;
       const feedbackMessageObj = {
         type: "feedback",
         message: feedbackMessage,
         feedbackType: feedbackType,
         step: currentStep,
+        id: bubbleId,
       };
 
-      setConversationHistory(function (prev) {
-        return [...prev, feedbackMessageObj];
-      });
       setCurrentFeedbackMessage(feedbackMessage);
+      setTypingBubbleId(bubbleId);
       setIsTypingFeedback(true);
+
+      setTimeout(() => {
+        setConversationHistory(function (prev) {
+          return [...prev, feedbackMessageObj];
+        });
+      }, 50);
     }, 1400);
   }
 
@@ -305,6 +353,7 @@ export default function SimulationProgress() {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       setSelectedOption(null);
+      setShowChoices(false);
 
       const nextStepData = simulation.steps[nextStep];
       const opponentMessage = {
@@ -405,6 +454,19 @@ export default function SimulationProgress() {
     }
   }
 
+  function getCategoryVoice(category) {
+    switch (category) {
+      case "업무":
+        return "ko-KR-Chirp3-HD-Algieba";
+      case "사회":
+        return "ko-KR-Chirp3-HD-Vindemiatrix";
+      case "일상":
+        return "ko-KR-Chirp3-HD-Sulafat";
+      default:
+        return "ko-KR-Chirp3-HD-Algieba";
+    }
+  }
+
   function splitMessageIntoSentences(message) {
     const sentences = [];
     let currentSentence = "";
@@ -467,26 +529,9 @@ export default function SimulationProgress() {
 
   return (
     <>
-      <Header />
+      <Header showTodoButton={false} />
 
-      <main className="w-full max-w-full flex-1 bg-[radial-gradient(ellipse_at_top,rgba(234,252,95,0.6),rgba(251,255,218,0.7),rgba(247,248,242,0.8))] px-5 pt-8 pb-32">
-        <div className="mx-auto mb-6 max-w-4xl">
-          <div className="mb-1">
-            <DateBox />
-          </div>
-
-          <div className="mt-4 mb-6">
-            <BackButton
-              onClick={() => {
-                if (returnTab) {
-                  navigate(`/?tab=${returnTab}`);
-                } else {
-                  navigate(-1);
-                }
-              }}
-            />
-          </div>
-        </div>
+      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-26">
         <div className="sticky top-20 z-10 mb-4 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -533,11 +578,20 @@ export default function SimulationProgress() {
         </div>
 
         <div className="mb-6 space-y-4" ref={conversationRef}>
-          {conversationHistory.map(function (item) {
+          {conversationHistory.map(function (item, index) {
+            const nextItem = conversationHistory[index + 1];
+            const shouldAddSpacing =
+              (item.type === "feedback" &&
+                nextItem &&
+                nextItem.type === "opponent") ||
+              (item.type === "opponent" &&
+                nextItem &&
+                nextItem.type === "feedback");
+
             return (
               <div
                 key={`${item.type}-${item.step}-${Date.now()}-${Math.random()}`}
-                className={`flex ${item.type === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${item.type === "user" ? "justify-end" : "justify-start"} ${shouldAddSpacing ? "mb-10" : ""}`}
               >
                 {item.type === "opponent" && item.message && (
                   <div className="flex max-w-[85%] items-start gap-2">
@@ -568,7 +622,7 @@ export default function SimulationProgress() {
                                 if (!isPlayingGlobal) {
                                   handleTTSPlay(
                                     sentence.trim(),
-                                    "ko-KR-Chirp3-HD-Aoede",
+                                    getCategoryVoice(simulation.category),
                                   );
                                 }
                               }}
@@ -580,7 +634,7 @@ export default function SimulationProgress() {
                                 ) {
                                   handleTTSPlay(
                                     sentence.trim(),
-                                    "ko-KR-Chirp3-HD-Aoede",
+                                    getCategoryVoice(simulation.category),
                                   );
                                 }
                               }}
@@ -621,7 +675,11 @@ export default function SimulationProgress() {
 
                 {item.type === "feedback" && (
                   <Bubble
-                    message={item.message}
+                    message={
+                      item.id && displayedFeedbackTexts[item.id] !== undefined
+                        ? displayedFeedbackTexts[item.id]
+                        : item.message
+                    }
                     onNextStep={handleNextStep}
                     isLastStep={currentStep === simulation.steps.length - 1}
                     isHidden={hiddenFeedbackButtons.has(item.step)}
@@ -629,6 +687,9 @@ export default function SimulationProgress() {
                       handleTTSPlay(message, voice)
                     }
                     isPlaying={isPlayingGlobal}
+                    showNextButton={
+                      !(isTypingFeedback && item.id === typingBubbleId)
+                    }
                   />
                 )}
               </div>
@@ -636,36 +697,42 @@ export default function SimulationProgress() {
           })}
         </div>
 
-        {selectedOption === null && (
-          <div ref={choicesRef}>
-            <div className="mb-4 text-center text-sm text-gray-600">
-              상황에 알맞은 답변을 선택해주세요!
+        {selectedOption === null &&
+          showChoices &&
+          simulation &&
+          simulation.steps &&
+          simulation.steps[currentStep] && (
+            <div ref={choicesRef}>
+              <div className="mb-4 text-center text-sm text-gray-600">
+                상황에 알맞은 답변을 선택해주세요!
+              </div>
+              <div className="space-y-3">
+                {shuffledChoices.length > 0 ? (
+                  shuffledChoices.map(function (choice, index) {
+                    const choiceId =
+                      choice.id || choice.choiceId || `choice-${index}`;
+                    return (
+                      <button
+                        key={`${currentStep}-${choiceId}`}
+                        className="w-full rounded-xl border-1 border-gray-300 bg-[#343434] p-2 text-center text-sm text-[#ffffff] shadow-sm"
+                        onClick={function () {
+                          handleOptionSelect(index);
+                        }}
+                      >
+                        {typeof choice === "string"
+                          ? choice
+                          : choice.choiceText || "선택지"}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="py-8 text-center text-gray-500">
+                    선택지가 없습니다.
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="space-y-3">
-              {shuffledChoices.length > 0 ? (
-                shuffledChoices.map(function (choice, index) {
-                  return (
-                    <button
-                      key={`choice-${currentStep}-${choice.choiceText || choice}-${Date.now()}`}
-                      className="w-full rounded-xl border-1 border-gray-300 bg-[#343434] p-2 text-center text-sm text-[#ffffff] shadow-sm"
-                      onClick={function () {
-                        handleOptionSelect(index);
-                      }}
-                    >
-                      {typeof choice === "string"
-                        ? choice
-                        : choice.choiceText || "선택지"}
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="py-8 text-center text-gray-500">
-                  선택지가 없습니다.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
       </main>
 
       {showFinal && (

@@ -2,7 +2,8 @@ import Logo from "@components/ui/LoginLogo";
 import Footer from "@components/common/Footer";
 
 export default function Login() {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
   function handleGoogleLogin() {
     window.location.href = `${API_BASE_URL}/api/oauth2/authorization/google`;

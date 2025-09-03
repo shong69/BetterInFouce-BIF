@@ -6,6 +6,7 @@ import { useUserStore } from "@stores/userStore";
 import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import SimulationCard from "@pages/simulation/components/SimulationCard";
+import Header from "@components/common/Header";
 
 import managerImage from "@assets/manager.png";
 import mamaImage from "@assets/mama.png";
@@ -82,15 +83,6 @@ export default function Simulation() {
     });
   }
 
-  function getCurrentDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const date = now.getDate();
-    const day = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
-    return { year, month, date, day };
-  }
-
   const categoryGroups = {
     업무: {
       simulations: simulations.filter((sim) => sim.category === "업무"),
@@ -142,22 +134,9 @@ export default function Simulation() {
     <>
       <LoadingSpinner />
 
-      <main className="w-full max-w-full flex-1 bg-[radial-gradient(ellipse_at_top,rgba(234,252,95,0.6),rgba(251,255,218,0.7),rgba(247,248,242,0.8))] px-5 pt-8 pb-24">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex flex-col">
-            <div className="mb-1 text-[16px] font-bold text-black">
-              시뮬레이션
-            </div>
-            <div className="text-[13px] font-medium text-black">
-              {getCurrentDate().year}년 {getCurrentDate().month}월{" "}
-              {getCurrentDate().date}일
-            </div>
-            <div className="text-[13px] font-medium text-black">
-              {getCurrentDate().day}요일
-            </div>
-          </div>
-        </div>
+      <Header showTodoButton={false} />
 
+      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-24">
         <div className="w-full space-y-6">
           {Object.entries(categoryGroups).map(([category, group]) => {
             if (group.simulations.length === 0) return null;

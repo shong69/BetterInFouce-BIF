@@ -1,12 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import PageHeader from "@components/common/PageHeader";
+import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
-import Modal2 from "@components/ui/Modal2";
+import Modal from "@components/ui/Modal";
 import RecordButton from "@components/ui/RecordButton";
 import PrimaryButton from "@components/ui/PrimaryButton";
-import BackButton from "@components/ui/BackButton";
-import DateBox from "@components/ui/DateBox";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { getEmotionInfo } from "@utils/emotionUtils";
@@ -178,14 +176,6 @@ export default function DiaryEdit() {
     };
   }, []);
 
-  const handleBack = () => {
-    if (content.trim() && content !== originalContent) {
-      setShowExitModal(true);
-    } else {
-      navigate(`/diaries/${id}`);
-    }
-  };
-
   const handleExitConfirm = () => {
     setShowExitModal(false);
     navigate(`/diaries/${id}`);
@@ -229,13 +219,8 @@ export default function DiaryEdit() {
   if (!location.state?.diaryData && !content) {
     return (
       <>
-        <PageHeader title="감정일기" />
-        <div className="mx-auto max-w-2xl p-4 sm:p-4">
-          <DateBox />
-          <div className="mb-2">
-            <BackButton onClick={handleBack} />
-          </div>
-        </div>
+        <Header showTodoButton={false} />
+        <div className="mx-auto max-w-2xl p-4 sm:p-4" />
         <TabBar />
       </>
     );
@@ -248,12 +233,9 @@ export default function DiaryEdit() {
   };
 
   return (
-    <div className="bg-radial-gradient min-h-screen">
-      <PageHeader title="감정일기 수정" />
+    <div className="min-h-screen">
+      <Header showTodoButton={false} />
       <div className="mx-auto mb-24 max-w-2xl p-4 sm:p-4">
-        <div className="mb-2">
-          <BackButton onClick={handleBack} />
-        </div>
         <div className="flex items-center justify-between">
           <div className="mx-4 mb-2 text-sm font-semibold">
             {formatDate(diaryData.createdAt)}의 일기
@@ -283,55 +265,61 @@ export default function DiaryEdit() {
           />
         </div>
 
-        <div className="px-2 sm:px-0">
+        <div className="mb-4 px-2 sm:px-0">
           <RecordButton isRecording={isRecording} onClick={toggleRecording} />
           <PrimaryButton onClick={handleSave} title={"일기 수정하기"} />
         </div>
       </div>
       <TabBar />
 
-      <Modal2
+      <Modal
         isOpen={showExitModal}
         onClose={handleExitCancel}
-        icon={<HiArrowLeft className="h-12 w-12 text-white" />}
-        iconBgColor="bg-[#343434]"
         primaryButtonText="나가기"
         secondaryButtonText="취소"
-        primaryButtonColor="bg-[#CACACA]"
-        secondaryButtonColor="bg-[#343434]"
+        primaryButtonColor="bg-black"
         onPrimaryClick={handleExitConfirm}
         onSecondaryClick={handleExitCancel}
-        children={
-          <div className="text-center">
-            <h2 className="mb-2 text-lg font-semibold">정말 나가시겠습니까?</h2>
-            <div className="text-sm">저장하지 않은 수정사항이 있습니다.</div>
-          </div>
-        }
-      />
-
-      <Modal2
-        isOpen={showSaveModal}
-        onClose={handleSaveCancel}
-        icon={<HiPencilAlt className="h-8 w-8 text-white" />}
-        iconBgColor="bg-primary"
-        primaryButtonText="수정"
-        secondaryButtonText="취소"
-        primaryButtonColor="bg-[#CACACA]"
-        secondaryButtonColor="bg-primary"
-        onPrimaryClick={handleSaveConfirm}
-        onSecondaryClick={handleSaveCancel}
-        children={
-          <div className="text-center">
-            <h2 className="mb-2 text-lg font-semibold">
-              일기를 수정하시겠습니까?
-            </h2>
-            <div className="text-sm">
-              수정된 내용으로 일기가 <br />
-              업데이트됩니다.
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black">
+              <HiArrowLeft className="h-12 w-12 text-white" />
             </div>
           </div>
-        }
-      />
+          <h3 className="mb-2 text-xl font-bold text-black">
+            정말 나가시겠습니까?
+          </h3>
+          <p className="mb-1 text-sm text-black">
+            저장하지 않은 수정사항이 있습니다.
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showSaveModal}
+        onClose={handleSaveCancel}
+        primaryButtonText="수정"
+        secondaryButtonText="취소"
+        primaryButtonColor="bg-primary"
+        onPrimaryClick={handleSaveConfirm}
+        onSecondaryClick={handleSaveCancel}
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="bg-primary flex h-16 w-16 items-center justify-center rounded-full">
+              <HiPencilAlt className="text-white" size={32} />
+            </div>
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-black">
+            일기를 수정하시겠습니까?
+          </h3>
+          <p className="mb-1 text-sm text-black">
+            수정된 내용으로 일기가 <br />
+            업데이트됩니다.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }
