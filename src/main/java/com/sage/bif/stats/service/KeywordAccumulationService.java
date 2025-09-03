@@ -32,7 +32,6 @@ public class KeywordAccumulationService {
                 final Stats stats = existingStats.get();
                 final Map<String, Integer> currentKeywords = parseKeywordsFromStats(stats.getTopKeywords());
                 
-                // 새 키워드만 추가 (중복 방지)
                 final Map<String, Integer> updatedKeywords = mergeKeywords(currentKeywords, newKeywords);
                 
                 final List<String> top5Keywords = extractTop5Keywords(updatedKeywords);
@@ -122,7 +121,6 @@ public class KeywordAccumulationService {
             }
         }
         
-        // 중복 제거된 새 키워드들을 기존 키워드에 누적
         for (String normalizedKeyword : uniqueNewKeywords) {
             mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
             log.info("키워드 '{}' 누적: {}회", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
@@ -148,12 +146,10 @@ public class KeywordAccumulationService {
             }
         }
         
-        // 키워드 길이 검증 (1-10자)
         if (keyword.length() < 1 || keyword.length() > 10) {
             return false;
         }
         
-        // 특수문자나 숫자만으로 구성된 키워드 제외
         if (keyword.matches("^[0-9\\s\\-_.,!?]+$")) {
             return false;
         }

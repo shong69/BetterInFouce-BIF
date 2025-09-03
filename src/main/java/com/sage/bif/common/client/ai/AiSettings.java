@@ -104,7 +104,6 @@ public class AiSettings {
             .maxTokens(400)
             .build();
 
-    // Stats 패키지 전용 AI 프리셋
     public static final AiChatSettings STATS_KEYWORD_EXTRACTION = AiChatSettings.builder()
             .systemPrompt("다음 일기 내용에서 의미있는 핵심 키워드 5개를 추출해주세요:\n\n" +
                     "요구사항:\n" +

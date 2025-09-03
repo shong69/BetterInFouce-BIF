@@ -71,11 +71,9 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 return generateAndSaveMonthlyStats(bifId, currentYearMonth);
             }
 
-            // 실시간 감정 카운트 업데이트
             final Map<EmotionType, Integer> realTimeEmotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
             final Stats stats = existingStats.get();
             
-            // 감정 카운트가 변경되었으면 통계 업데이트
             final Map<EmotionType, Integer> storedEmotionCounts = parseEmotionCountsJson(stats.getEmotionCounts());
             if (!realTimeEmotionCounts.equals(storedEmotionCounts)) {
                 log.info("BIF ID {}의 감정 카운트 변경 감지 - 실시간 업데이트", bifId);
@@ -143,18 +141,14 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             if (existingStats.isPresent()) {
                 final Stats stats = existingStats.get();
                 
-                // 실시간 감정 카운트 재계산
                 final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(bifId, currentYearMonth);
                 stats.setEmotionCounts(objectMapper.writeValueAsString(emotionCounts));
                 
-                // AI 감정 분석 및 키워드 추출
                 final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
                 stats.setAiEmotionScore(analysis.getEmotionScore());
                 
-                // 키워드 누적 업데이트
                 keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
                 
-                // 통계 텍스트 및 조언 재생성
                 stats.setEmotionStatisticsText(generateStatisticsText(emotionCounts));
                 stats.setGuardianAdviceText(generateGuardianAdvice(emotionCounts));
                 
@@ -162,7 +156,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
                 log.info("BIF ID {}의 실시간 통계 업데이트 완료 - 감정 카운트: {}", bifId, emotionCounts);
             } else {
-                // 통계가 없으면 새로 생성
                 log.info("BIF ID {}의 통계 데이터가 없어 새로 생성합니다.", bifId);
                 generateAndSaveMonthlyStats(bifId, currentYearMonth);
             }
@@ -199,7 +192,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     
     private StatsResponse generateAndSaveMonthlyStats(Long bifId, LocalDateTime yearMonth) {
         try {
-            // 성능 최적화: 한 번의 DB 조회로 월간 일기 데이터 로드
             final MonthlyDiaryData monthlyData = loadMonthlyDiaryData(bifId, yearMonth);
             
             final Map<EmotionType, Integer> emotionCounts = calculateEmotionCounts(monthlyData);
@@ -252,7 +244,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return emotionCounts;
     }
 
-    // 성능 최적화: 이미 로드된 데이터를 사용하는 버전
     private Map<EmotionType, Integer> calculateEmotionCounts(MonthlyDiaryData monthlyData) {
         final List<Diary> monthlyDiaries = monthlyData.getDiaries();
 
@@ -363,7 +354,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         
         log.info("최종 키워드 빈도수: {}", keywordFrequency);
         
-        // 키워드 빈도수 그대로 사용 (여러 일기에서 언급된 키워드는 누적)
         final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
@@ -377,7 +367,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return top5Keywords;
     }
 
-    // 성능 최적화: 이미 로드된 데이터를 사용하는 버전
     private Map<String, Integer> analyzeMonthlyDiariesForKeywords(MonthlyDiaryData monthlyData) {
         final List<Diary> monthlyDiaries = monthlyData.getDiaries();
         
@@ -396,7 +385,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         
         log.info("최종 키워드 빈도수: {}", keywordFrequency);
         
-        // 키워드 빈도수 그대로 사용 (여러 일기에서 언급된 키워드는 누적)
         final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
@@ -421,10 +409,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 return accumulatedKeywords;
             }
 
-            // 누적된 키워드가 없으면 월간 일기에서 새로 분석 (한 번만)
             final Map<String, Integer> newKeywords = analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
             
-            // 새로 분석한 키워드를 누적 서비스에 저장
             if (!newKeywords.isEmpty()) {
                 keywordAccumulationService.initializeKeywords(bifId, newKeywords);
             }
@@ -437,13 +423,11 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    // 성능 최적화: 이미 로드된 데이터를 사용하는 버전
     private Map<String, Integer> buildKeywordFrequencyMap(MonthlyDiaryData monthlyData) {
         try {
             log.info("=== 키워드 빈도수 맵 생성 시작 - BIF ID: {}, 월: {} ===", 
                 monthlyData.getBifId(), monthlyData.getYearMonth().getMonthValue());
 
-            // 기존 누적된 키워드 먼저 확인
             final Map<String, Integer> accumulatedKeywords = keywordAccumulationService
                 .getKeywordFrequency(monthlyData.getBifId(), monthlyData.getYearMonth());
             if (!accumulatedKeywords.isEmpty()) {
@@ -451,10 +435,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 return accumulatedKeywords;
             }
 
-            // 누적된 키워드가 없으면 월간 일기에서 새로 분석 (한 번만)
             final Map<String, Integer> newKeywords = analyzeMonthlyDiariesForKeywords(monthlyData);
             
-            // 새로 분석한 키워드를 누적 서비스에 저장
             if (!newKeywords.isEmpty()) {
                 keywordAccumulationService.initializeKeywords(monthlyData.getBifId(), newKeywords);
             }
@@ -488,7 +470,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                     aiEmotionAnalysisService.analyzeEmotionFromText(content);
             
             if (analysis.getKeywords() != null && !analysis.getKeywords().isEmpty()) {
-                // AI가 반환한 키워드가 실제 일기 내용에 포함되어 있는지 검증
                 final List<String> validatedKeywords = validateKeywords(content, analysis.getKeywords());
                 extractedKeywords.addAll(validatedKeywords);
                 log.info("일기 ID {}에서 AI 키워드 추출 성공: {}", diary.getId(), validatedKeywords);
@@ -514,8 +495,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 extractedKeywords.addAll(fallbackKeywords);
             }
             
-            // 일기별로 키워드 누적 (여러 일기에서 언급되면 누적, 같은 일기 내 중복은 1회만)
-            final Set<String> diaryKeywords = new HashSet<>(); // 같은 일기 내 중복 방지
+            final Set<String> diaryKeywords = new HashSet<>();
             for (String keyword : extractedKeywords) {
                 if (keyword != null && !keyword.trim().isEmpty()) {
                     final String normalizedKeyword = keyword.trim();
@@ -730,7 +710,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    // 성능 최적화: 이미 로드된 데이터를 사용하는 버전
     private StatsResponse buildStatsResponseWithRealTimeData(Stats statsData, MonthlyDiaryData monthlyData) {
         try {
             final Long bifId = monthlyData.getBifId();
@@ -744,7 +723,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
             final StatsResponse.CharacterInfo characterInfo = createCharacterInfo();
             final StatsResponse.AchievementInfo achievementInfo = createAchievementInfo(bifId, emotionCounts, topKeywords);
-            // 성능 최적화: 이미 로드된 데이터 사용
             final List<StatsResponse.EmotionTrend> emotionTrends = createEmotionTrends(monthlyData);
 
             return StatsResponse.builder()
@@ -770,7 +748,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
 
     private StatsResponse.CharacterInfo createCharacterInfo() {
-        // 프론트엔드에서 처리할 캐릭터 정보는 단순하게 반환
         return StatsResponse.CharacterInfo.builder()
                 .name("현명한 거북이")
                 .message("오늘 하루도 수고하셨어요! 🐢")
@@ -875,7 +852,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    // 성능 최적화: 이미 로드된 데이터를 사용하는 버전
     private List<StatsResponse.EmotionTrend> createEmotionTrends(MonthlyDiaryData monthlyData) {
         try {
             final List<StatsResponse.EmotionTrend> trends = new ArrayList<>();
@@ -1326,7 +1302,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                                 (map, item) -> map.put((String) item.get("keyword"), (Integer) item.get("count")), 
                                 LinkedHashMap::putAll);
                 
-                // 잘못된 키워드 제거
                 final Map<String, Integer> cleanedKeywords = new HashMap<>();
                 for (Map.Entry<String, Integer> entry : currentKeywords.entrySet()) {
                     if (isValidKeyword(entry.getKey())) {
@@ -1354,7 +1329,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             return false;
         }
         
-        // 잘못된 키워드 패턴들
         String[] invalidPatterns = {
             "사용불가", "서울역", "우울감", "협회", "회의실", "일상", "일반", "보통", "평범",
             "그냥", "그저", "그런", "이런", "저런", "어떤", "무엇", "언제", "어디", "왜", "어떻게"
@@ -1369,7 +1343,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return true;
     }
 
-    // 성능 최적화: 월간 일기 데이터를 한번만 로드
     private MonthlyDiaryData loadMonthlyDiaryData(Long bifId, LocalDateTime yearMonth) {
         LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
@@ -1379,7 +1352,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return new MonthlyDiaryData(diaries, yearMonth, bifId);
     }
 
-    // 성능 최적화를 위한 월간 일기 데이터 래퍼 클래스
     private static class MonthlyDiaryData {
         private final List<Diary> diaries;
         private final LocalDateTime yearMonth;
