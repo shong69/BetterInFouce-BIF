@@ -26,8 +26,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import java.util.LinkedHashMap;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -38,6 +36,14 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String NO_ADVICE_MSG = "BIF의 감정 데이터가 없어 조언을 제공할 수 없습니다.";
+    private static final int MAX_KEYWORDS = 5;
+    private static final int MAX_KEYWORD_DISPLAY_LENGTH = 100;
+    private static final double CHANGE_THRESHOLD = 20.0;
+    private static final int DEFAULT_LEVEL = 1;
+    private static final int DEFAULT_POINTS = 0;
+    private static final int HOUR_23 = 23;
+    private static final int MINUTE_59 = 59;
+    private static final int SECOND_59 = 59;
 
     private final StatsRepository statsRepository;
     private final DiaryRepository diaryRepository;
@@ -55,6 +61,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     
     private static final String KEYWORD_KEY = "keyword";
     private static final String NORMALIZED_VALUE_KEY = "normalizedValue";
+    private static final String COUNT_KEY = "count";
+    private static final String RANK_KEY = "rank";
     private final EntityManager entityManager;
 
     @Override
@@ -225,28 +233,17 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     private Map<EmotionType, Integer> calculateEmotionCounts(Long bifId, LocalDateTime yearMonth) {
         final LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         final LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
-                .withHour(23).withMinute(59).withSecond(59);
+                .withHour(HOUR_23).withMinute(MINUTE_59).withSecond(SECOND_59);
 
         final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
-
-        if (monthlyDiaries.isEmpty()) {
-            return initializeEmotionCounts();
-        }
-
-        final Map<EmotionType, Integer> emotionCounts = initializeEmotionCounts();
-
-        for (Diary diary : monthlyDiaries) {
-            final Emotion diaryEmotion = diary.getEmotion();
-            final EmotionType statsEmotion = EmotionMapper.mapDiaryEmotionToStats(diaryEmotion);
-            emotionCounts.put(statsEmotion, emotionCounts.get(statsEmotion) + 1);
-        }
-
-        return emotionCounts;
+        return calculateEmotionCountsFromDiaries(monthlyDiaries);
     }
 
     private Map<EmotionType, Integer> calculateEmotionCounts(MonthlyDiaryData monthlyData) {
-        final List<Diary> monthlyDiaries = monthlyData.getDiaries();
+        return calculateEmotionCountsFromDiaries(monthlyData.getDiaries());
+    }
 
+    private Map<EmotionType, Integer> calculateEmotionCountsFromDiaries(List<Diary> monthlyDiaries) {
         if (monthlyDiaries.isEmpty()) {
             return initializeEmotionCounts();
         }
@@ -330,14 +327,11 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         return result;
     }
 
-    private Map<String, Integer> analyzeMonthlyDiariesForKeywords(Long bifId, LocalDateTime yearMonth) {
-        final LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        final LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
-                .withHour(23).withMinute(59).withSecond(59);
+    private Map<String, Integer> analyzeMonthlyDiariesForKeywords(MonthlyDiaryData monthlyData) {
+        return analyzeMonthlyDiariesForKeywordsFromList(monthlyData.getDiaries());
+    }
 
-        final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
-        log.info("월간 일기 개수: {}", monthlyDiaries.size());
-        
+    private Map<String, Integer> analyzeMonthlyDiariesForKeywordsFromList(List<Diary> monthlyDiaries) {
         if (monthlyDiaries.isEmpty()) {
             log.info("월간 일기가 없음 - 빈 맵 반환");
             return new HashMap<>();
@@ -357,7 +351,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
-                .limit(5)
+                .limit(MAX_KEYWORDS)
                 .collect(LinkedHashMap::new,
                         (map, entry) -> map.put(entry.getKey(), entry.getValue()),
                         LinkedHashMap::putAll);
@@ -365,62 +359,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         log.info("정규화된 TOP 5 키워드: {}", top5Keywords);
         
         return top5Keywords;
-    }
-
-    private Map<String, Integer> analyzeMonthlyDiariesForKeywords(MonthlyDiaryData monthlyData) {
-        final List<Diary> monthlyDiaries = monthlyData.getDiaries();
-        
-        if (monthlyDiaries.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        final Map<String, Integer> keywordFrequency = new HashMap<>();
-        for (Diary diary : monthlyDiaries) {
-            if (diary.getContent() != null && !diary.getContent().trim().isEmpty()) {
-                processDiaryKeywords(diary, keywordFrequency);
-            } else {
-                log.warn("일기 ID {}의 내용이 비어있음", diary.getId());
-            }
-        }
-        
-        log.info("최종 키워드 빈도수: {}", keywordFrequency);
-        
-        final Map<String, Integer> top5Keywords = keywordFrequency.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
-                        .thenComparing(Map.Entry.comparingByKey()))
-                .limit(5)
-                .collect(LinkedHashMap::new,
-                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
-                        LinkedHashMap::putAll);
-        
-        log.info("정규화된 TOP 5 키워드: {}", top5Keywords);
-        
-        return top5Keywords;
-    }
-
-    private Map<String, Integer> buildKeywordFrequencyMap(Long bifId, LocalDateTime yearMonth) {
-        try {
-            log.info("=== 키워드 빈도수 맵 생성 시작 - BIF ID: {}, 월: {} ===", bifId, yearMonth.getMonthValue());
-
-            // 기존 누적된 키워드 먼저 확인
-            final Map<String, Integer> accumulatedKeywords = keywordAccumulationService.getKeywordFrequency(bifId, yearMonth);
-            if (!accumulatedKeywords.isEmpty()) {
-                log.info("누적된 키워드 사용: {}", accumulatedKeywords);
-                return accumulatedKeywords;
-            }
-
-            final Map<String, Integer> newKeywords = analyzeMonthlyDiariesForKeywords(bifId, yearMonth);
-            
-            if (!newKeywords.isEmpty()) {
-                keywordAccumulationService.initializeKeywords(bifId, newKeywords);
-            }
-            
-            return newKeywords;
-
-        } catch (Exception e) {
-            log.error("키워드 빈도수 맵 생성 중 오류 발생 - bifId: {}", bifId, e);
-            return new HashMap<>();
-        }
     }
 
     private Map<String, Integer> buildKeywordFrequencyMap(MonthlyDiaryData monthlyData) {
@@ -449,20 +387,6 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         }
     }
 
-    private void saveKeywordsToDatabase(Long bifId, LocalDateTime yearMonth, Map<String, Integer> top5Keywords) {
-        try {
-            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, yearMonth);
-            if (existingStats.isPresent()) {
-                final Stats stats = existingStats.get();
-                stats.setTopKeywords(objectMapper.writeValueAsString(top5Keywords));
-                statsRepository.save(stats);
-                log.info("BIF ID {}의 키워드 데이터베이스 저장 완료: {}", bifId, top5Keywords);
-            }
-        } catch (Exception e) {
-            log.error("키워드 데이터베이스 저장 실패: {}", e.getMessage());
-        }
-    }
-
     private List<String> extractAiKeywords(Diary diary, String content) {
         List<String> extractedKeywords = new ArrayList<>();
         try {
@@ -485,7 +409,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     private void processDiaryKeywords(Diary diary, Map<String, Integer> keywordFrequency) {
         try {
             final String content = diary.getContent().trim();
-            log.info("일기 ID {} 분석 - 내용: {}", diary.getId(), content.substring(0, Math.min(100, content.length())));
+            log.info("일기 ID {} 분석 - 내용: {}", diary.getId(), content.substring(0, Math.min(MAX_KEYWORD_DISPLAY_LENGTH, content.length())));
             
             List<String> extractedKeywords = extractAiKeywords(diary, content);
             
@@ -599,8 +523,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
     private StatsResponse.AchievementInfo createDefaultAchievementInfo() {
         return StatsResponse.AchievementInfo.builder()
-                .totalPoints(0)
-                .currentLevel(1)
+                .totalPoints(DEFAULT_POINTS)
+                .currentLevel(DEFAULT_LEVEL)
                 .levelTitle("감정 탐험가")
                 .recentAchievements(Collections.emptyList())
                 .streakCount(0)
@@ -802,49 +726,12 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
     private List<StatsResponse.EmotionTrend> createEmotionTrends(Long bifId, LocalDateTime yearMonth) {
         try {
-            final List<StatsResponse.EmotionTrend> trends = new ArrayList<>();
             final LocalDateTime startOfMonth = yearMonth.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
             final LocalDateTime endOfMonth = yearMonth.withDayOfMonth(yearMonth.toLocalDate().lengthOfMonth())
-                    .withHour(23).withMinute(59).withSecond(59);
+                    .withHour(HOUR_23).withMinute(MINUTE_59).withSecond(SECOND_59);
 
             final List<Diary> monthlyDiaries = diaryRepository.findByUserIdAndDateBetween(bifId, startOfMonth, endOfMonth);
-
-            if (monthlyDiaries.isEmpty()) {
-                return trends;
-            }
-
-            for (int day = 1; day <= yearMonth.toLocalDate().lengthOfMonth(); day++) {
-                final LocalDateTime dayStart = yearMonth.withDayOfMonth(day).withHour(0).withMinute(0).withSecond(0);
-                final LocalDateTime dayEnd = yearMonth.withDayOfMonth(day).withHour(23).withMinute(59).withSecond(59);
-
-                final List<Diary> dayDiaries = monthlyDiaries.stream()
-                        .filter(diary -> !diary.getCreatedAt().isBefore(dayStart) && !diary.getCreatedAt().isAfter(dayEnd))
-                        .toList();
-
-                if (!dayDiaries.isEmpty()) {
-                    final double averageScore = dayDiaries.stream()
-                            .mapToDouble(diary -> {
-                                final EmotionType emotionType = EmotionMapper.mapDiaryEmotionToStats(diary.getEmotion());
-                                return emotionType.getScore();
-                            })
-                            .average()
-                            .orElse(0.0);
-
-                    final EmotionType dominantEmotion = EmotionType.fromScore(averageScore);
-                    final String trend = determineTrend(averageScore);
-                    final String description = generateTrendDescription(averageScore);
-
-                    trends.add(StatsResponse.EmotionTrend.builder()
-                            .date(dayStart.format(DateTimeFormatter.ofPattern("MM-dd")))
-                            .dominantEmotion(dominantEmotion)
-                            .averageScore(averageScore)
-                            .trend(trend)
-                            .description(description)
-                            .build());
-                }
-            }
-
-            return trends;
+            return createEmotionTrendsFromDiaries(monthlyDiaries, yearMonth);
 
         } catch (Exception e) {
             log.error("감정 트렌드 생성 중 오류 발생", e);
@@ -854,51 +741,52 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
     private List<StatsResponse.EmotionTrend> createEmotionTrends(MonthlyDiaryData monthlyData) {
         try {
-            final List<StatsResponse.EmotionTrend> trends = new ArrayList<>();
-            final List<Diary> monthlyDiaries = monthlyData.getDiaries();
-            final LocalDateTime yearMonth = monthlyData.getYearMonth();
-
-            if (monthlyDiaries.isEmpty()) {
-                return trends;
-            }
-
-            for (int day = 1; day <= yearMonth.toLocalDate().lengthOfMonth(); day++) {
-                final LocalDateTime dayStart = yearMonth.withDayOfMonth(day).withHour(0).withMinute(0).withSecond(0);
-                final LocalDateTime dayEnd = yearMonth.withDayOfMonth(day).withHour(23).withMinute(59).withSecond(59);
-
-                final List<Diary> dayDiaries = monthlyDiaries.stream()
-                        .filter(diary -> !diary.getCreatedAt().isBefore(dayStart) && !diary.getCreatedAt().isAfter(dayEnd))
-                        .toList();
-
-                if (!dayDiaries.isEmpty()) {
-                    final double averageScore = dayDiaries.stream()
-                            .mapToDouble(diary -> {
-                                final EmotionType emotionType = EmotionMapper.mapDiaryEmotionToStats(diary.getEmotion());
-                                return emotionType.getScore();
-                            })
-                            .average()
-                            .orElse(0.0);
-
-                    final EmotionType dominantEmotion = EmotionType.fromScore(averageScore);
-                    final String trend = determineTrend(averageScore);
-                    final String description = generateTrendDescription(averageScore);
-
-                    trends.add(StatsResponse.EmotionTrend.builder()
-                            .date(dayStart.format(DateTimeFormatter.ofPattern("MM-dd")))
-                            .dominantEmotion(dominantEmotion)
-                            .averageScore(averageScore)
-                            .trend(trend)
-                            .description(description)
-                            .build());
-                }
-            }
-
-            return trends;
-
+            return createEmotionTrendsFromDiaries(monthlyData.getDiaries(), monthlyData.getYearMonth());
         } catch (Exception e) {
             log.error("감정 트렌드 생성 중 오류 발생", e);
             return Collections.emptyList();
         }
+    }
+
+    private List<StatsResponse.EmotionTrend> createEmotionTrendsFromDiaries(List<Diary> monthlyDiaries, LocalDateTime yearMonth) {
+        final List<StatsResponse.EmotionTrend> trends = new ArrayList<>();
+
+        if (monthlyDiaries.isEmpty()) {
+            return trends;
+        }
+
+        for (int day = 1; day <= yearMonth.toLocalDate().lengthOfMonth(); day++) {
+            final LocalDateTime dayStart = yearMonth.withDayOfMonth(day).withHour(0).withMinute(0).withSecond(0);
+            final LocalDateTime dayEnd = yearMonth.withDayOfMonth(day).withHour(HOUR_23).withMinute(MINUTE_59).withSecond(SECOND_59);
+
+            final List<Diary> dayDiaries = monthlyDiaries.stream()
+                    .filter(diary -> !diary.getCreatedAt().isBefore(dayStart) && !diary.getCreatedAt().isAfter(dayEnd))
+                    .toList();
+
+            if (!dayDiaries.isEmpty()) {
+                final double averageScore = dayDiaries.stream()
+                        .mapToDouble(diary -> {
+                            final EmotionType emotionType = EmotionMapper.mapDiaryEmotionToStats(diary.getEmotion());
+                            return emotionType.getScore();
+                        })
+                        .average()
+                        .orElse(0.0);
+
+                final EmotionType dominantEmotion = EmotionType.fromScore(averageScore);
+                final String trend = determineTrend(averageScore);
+                final String description = generateTrendDescription(averageScore);
+
+                trends.add(StatsResponse.EmotionTrend.builder()
+                        .date(dayStart.format(DateTimeFormatter.ofPattern("MM-dd")))
+                        .dominantEmotion(dominantEmotion)
+                        .averageScore(averageScore)
+                        .trend(trend)
+                        .description(description)
+                        .build());
+            }
+        }
+
+        return trends;
     }
 
     private String determineTrend(double averageScore) {
@@ -1044,7 +932,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         final List<Map.Entry<String, Integer>> sortedKeywords = keywordCounts.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey()))
-                .limit(5)
+                .limit(MAX_KEYWORDS)
                 .toList();
         
         log.info("정렬된 키워드 Top5: {}", sortedKeywords);
@@ -1058,8 +946,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             final Map.Entry<String, Integer> entry = sortedKeywords.get(i);
             final Map<String, Object> keywordData = new HashMap<>();
             keywordData.put(KEYWORD_KEY, entry.getKey());
-            keywordData.put("count", entry.getValue());
-            keywordData.put("rank", i + 1);
+            keywordData.put(COUNT_KEY, entry.getValue());
+            keywordData.put(RANK_KEY, i + 1);
             keywordData.put(NORMALIZED_VALUE_KEY, maxCount > 0 ? (double) entry.getValue() / maxCount : 0.0);
             keywordList.add(keywordData);
             
@@ -1084,8 +972,8 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 })
                 .map(keyword -> {
                     String keywordText = (String) keyword.get(KEYWORD_KEY);
-                    Integer count = (Integer) keyword.get("count");
-                    Integer rank = (Integer) keyword.get("rank");
+                    Integer count = (Integer) keyword.get(COUNT_KEY);
+                    Integer rank = (Integer) keyword.get(RANK_KEY);
                     
                     Double normalizedValue = keyword.get(NORMALIZED_VALUE_KEY) != null ?
                             (Double) keyword.get(NORMALIZED_VALUE_KEY) : 0.0;
@@ -1170,9 +1058,9 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
 
         final double change = ((double) (currentValue - previousValue) / previousValue) * 100.0;
 
-        if (change > 20.0) {
+        if (change > CHANGE_THRESHOLD) {
             return "INCREASE";
-        } else if (change < -20.0) {
+        } else if (change < -CHANGE_THRESHOLD) {
             return "DECREASE";
         } else {
             return "STABLE";
@@ -1187,9 +1075,9 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             return String.format("지난달과 이번달 모두 %s 감정이 나타나지 않았습니다.", emotion.getKoreanName());
         }
 
-        if (changePercentage > 20.0) {
+        if (changePercentage > CHANGE_THRESHOLD) {
             return String.format("지난달보다 %s 감정이 %.1f%% 증가했습니다.", emotion.getKoreanName(), changePercentage);
-        } else if (changePercentage < -20.0) {
+        } else if (changePercentage < -CHANGE_THRESHOLD) {
             return String.format("지난달보다 %s 감정이 %.1f%% 감소했습니다.", emotion.getKoreanName(), Math.abs(changePercentage));
         } else {
             return String.format("지난달과 비슷한 수준의 %s 감정을 보였습니다.", emotion.getKoreanName());
@@ -1299,7 +1187,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 final Stats stats = existingStats.get();
                 final Map<String, Integer> currentKeywords = parseTopKeywordsJson(stats.getTopKeywords()).stream()
                         .collect(LinkedHashMap::new, 
-                                (map, item) -> map.put((String) item.get("keyword"), (Integer) item.get("count")), 
+                                (map, item) -> map.put((String) item.get(KEYWORD_KEY), (Integer) item.get(COUNT_KEY)), 
                                 LinkedHashMap::putAll);
                 
                 final Map<String, Integer> cleanedKeywords = new HashMap<>();
