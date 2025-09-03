@@ -365,13 +365,7 @@ export default function BifProfile() {
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
         <Header />
-        <div
-          className="flex-1"
-          style={{
-            background:
-              "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
-          }}
-        >
+        <div className="flex-1">
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="mb-6 rounded-lg p-4">
               <div className="mb-4 flex items-center justify-between">
@@ -545,10 +539,9 @@ export default function BifProfile() {
                             className="h-7 w-7"
                           />
                           <div
-                            className="w-full max-w-full rounded-2xl rounded-tl-md px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
+                            className="w-full max-w-full rounded-2xl rounded-tl-md bg-linear-to-b from-[#DAEAF8] to-[#F7E6FF] px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
                             style={{
-                              background:
-                                "linear-gradient(180deg, #F7E6FF 0%, #DAEAF8 100%)",
+                              background: "",
                             }}
                           >
                             <div className="mb-2 flex items-center gap-2">

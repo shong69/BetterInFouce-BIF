@@ -1,12 +1,10 @@
-import { FiEdit } from "react-icons/fi";
-
-export default function EditButton({ onClick }) {
+export default function TextEditButton({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="bg-secondary hover:bg-secondary/80 mr-2 flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md transition-colors"
+      className="rounded-xl border bg-[#343434] px-3 py-1 text-sm font-medium text-white transition-colors duration-200 hover:bg-black"
     >
-      <FiEdit size={20} />
+      수정
     </button>
   );
 }

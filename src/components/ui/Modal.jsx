@@ -44,7 +44,7 @@ export default function Modal({
         }
       }}
     >
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div className="mx-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-6">{children}</div>
 
         {hasButtons && (

@@ -9,19 +9,24 @@ export async function getTodos(date) {
   let dateString = "";
 
   if (date) {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    dateString = `${year}-${month}-${day}`;
+    if (typeof date === "string") {
+      dateString = date;
+    } else if (date instanceof Date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const day = date.getDate().toString().padStart(2, "0");
+      dateString = `${year}-${month}-${day}`;
+    }
   }
 
-  const params = date ? { date: dateString } : {};
+  const params = dateString ? { date: dateString } : {};
   const response = await api.get("/api/todos", { params });
   return response.data;
 }
 
-export async function getTodoDetail(todoId) {
-  const response = await api.get(`/api/todos/${todoId}`);
+export async function getTodoDetail(todoId, date = null) {
+  const params = date ? { date } : {};
+  const response = await api.get(`/api/todos/${todoId}`, { params });
   return response.data;
 }
 
@@ -35,28 +40,33 @@ export async function deleteTodo(todoId) {
   return response.data;
 }
 
-export async function completeTodo(todoId) {
-  const response = await api.patch(`/api/todos/${todoId}/complete`);
+export async function completeTodo(todoId, date = null) {
+  const params = date ? { date } : {};
+  const response = await api.patch(`/api/todos/${todoId}/complete`, null, {
+    params,
+  });
   return response.data;
 }
 
-export async function uncompleteTodo(todoId) {
-  const response = await api.patch(`/api/todos/${todoId}/uncomplete`);
+export async function uncompleteTodo(todoId, date = null) {
+  const params = date ? { date } : {};
+  const response = await api.patch(`/api/todos/${todoId}/uncomplete`, null, {
+    params,
+  });
   return response.data;
 }
 
-export async function updateSubTodoCompletion(todoId, subTodoId, isCompleted) {
+export async function updateSubTodoCompletion(
+  todoId,
+  subTodoId,
+  isCompleted,
+  date = null,
+) {
+  const params = date ? { date } : {};
   const response = await api.patch(
     `/api/todos/${todoId}/subtodos/${subTodoId}/complete`,
     { isCompleted },
-  );
-  return response.data;
-}
-
-export async function updateSubTodo(todoId, subTodoId, request) {
-  const response = await api.put(
-    `/api/todos/${todoId}/subtodos/${subTodoId}`,
-    request,
+    { params },
   );
   return response.data;
 }

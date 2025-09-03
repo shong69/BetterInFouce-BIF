@@ -5,15 +5,11 @@ import { simulationService } from "@services/simulationService";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Bubble from "@components/common/Bubble";
-import DateBox from "@components/ui/DateBox";
-import BackButton from "@components/ui/BackButton";
 import logo2 from "@assets/logo2.png";
 
 import managerImage from "@assets/manager.png";
 import mamaImage from "@assets/mama.png";
 import minaImage from "@assets/mina.png";
-
-const returnTab = new URLSearchParams(window.location.search).get("returnTab");
 
 function ProgressBar({ progress = 0, label = "진행도" }) {
   return (
@@ -467,26 +463,9 @@ export default function SimulationProgress() {
 
   return (
     <>
-      <Header />
+      <Header showTodoButton={false} />
 
-      <main className="w-full max-w-full flex-1 bg-[radial-gradient(ellipse_at_top,rgba(234,252,95,0.6),rgba(251,255,218,0.7),rgba(247,248,242,0.8))] px-5 pt-8 pb-32">
-        <div className="mx-auto mb-6 max-w-4xl">
-          <div className="mb-1">
-            <DateBox />
-          </div>
-
-          <div className="mt-4 mb-6">
-            <BackButton
-              onClick={() => {
-                if (returnTab) {
-                  navigate(`/?tab=${returnTab}`);
-                } else {
-                  navigate(-1);
-                }
-              }}
-            />
-          </div>
-        </div>
+      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-32">
         <div className="sticky top-20 z-10 mb-4 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

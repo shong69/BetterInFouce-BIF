@@ -17,7 +17,7 @@ function ToastItem({ toast, removeToast, typeStyles, icons, positionStyles }) {
       className={`fixed z-[9999] animate-bounce ${positionStyles[toast.position]} transition-all duration-300 ease-in-out`}
     >
       <div
-        className={`flex items-center space-x-3 rounded-lg px-4 py-3 shadow-lg ${typeStyles[toast.type]} min-w-[300px] cursor-pointer`}
+        className={`flex items-center space-x-3 rounded-lg px-4 py-3 shadow-sm ${typeStyles[toast.type]} min-w-[300px] cursor-pointer`}
         onClick={toast.onClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {

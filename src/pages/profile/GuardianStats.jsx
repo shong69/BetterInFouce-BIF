@@ -294,13 +294,7 @@ export default function GuardianStats() {
                             alt="현명한 거북이"
                             className="h-7 w-7"
                           />
-                          <div
-                            className="w-full max-w-full rounded-2xl rounded-tl-md px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
-                            style={{
-                              background:
-                                "linear-gradient(180deg, #F7E6FF 0%, #DAEAF8 100%)",
-                            }}
-                          >
+                          <div className="w-full max-w-full rounded-2xl rounded-tl-md bg-linear-to-b from-[#DAEAF8] to-[#F7E6FF] px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
                             <div className="mb-2 flex items-center gap-2">
                               <span className="text-sm font-semibold text-gray-800">
                                 현명한 거북이
