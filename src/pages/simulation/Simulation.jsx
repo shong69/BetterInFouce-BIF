@@ -16,7 +16,6 @@ export default function Simulation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
-  const [currentTime, setCurrentTime] = useState("");
   const navigate = useNavigate();
   const { user } = useUserStore();
 
@@ -58,20 +57,6 @@ export default function Simulation() {
     [user],
   );
 
-  useEffect(() => {
-    function updateTime() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      setCurrentTime(`${hours}:${minutes}`);
-    }
-
-    updateTime();
-    const intervalId = setInterval(updateTime, 60 * 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   function handleStartSimulation(simulationId) {
     navigate(`/simulation/${simulationId}`);
   }
@@ -104,18 +89,6 @@ export default function Simulation() {
     const date = now.getDate();
     const day = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
     return { year, month, date, day };
-  }
-
-  function calculateOverallProgress() {
-    const totalSimulations = simulations.length;
-    if (totalSimulations === 0) return 0;
-
-    const completedCount = simulations.filter((sim) => {
-      const completedKey = `sim_${sim.id}_completed`;
-      return localStorage.getItem(completedKey) === "true";
-    }).length;
-
-    return Math.round((completedCount / totalSimulations) * 100);
   }
 
   const categoryGroups = {
@@ -169,42 +142,6 @@ export default function Simulation() {
     <>
       <LoadingSpinner />
 
-      <div className="flex items-center justify-between px-5 py-3">
-        <div className="text-lg font-bold text-gray-800">{currentTime}</div>
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-            <svg
-              className="h-5 w-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1-1v-3.6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v3.6l-1 1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1z"
-              />
-            </svg>
-          </div>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-            <svg
-              className="h-5 w-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-        </div>
-      </div>
-
       <main className="w-full max-w-full flex-1 bg-[radial-gradient(ellipse_at_top,rgba(234,252,95,0.6),rgba(251,255,218,0.7),rgba(247,248,242,0.8))] px-5 pt-8 pb-24">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex flex-col">
@@ -217,12 +154,6 @@ export default function Simulation() {
             </div>
             <div className="text-[13px] font-medium text-black">
               {getCurrentDate().day}요일
-            </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <div className="mb-1 text-sm text-gray-600">전체 진행도</div>
-            <div className="text-primary text-lg font-bold">
-              {calculateOverallProgress()}%
             </div>
           </div>
         </div>
