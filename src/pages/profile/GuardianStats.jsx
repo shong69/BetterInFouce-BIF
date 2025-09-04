@@ -213,13 +213,7 @@ export default function GuardianStats() {
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
         <Header />
-        <div
-          className="flex-1"
-          style={{
-            background:
-              "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
-          }}
-        >
+        <div className="flex-1">
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="rounded-lg p-4">
               <div className="space-y-6">
