@@ -7,6 +7,7 @@ import { Navigate } from "react-router-dom";
 import Header from "@components/common/Header";
 import BaseButton from "@components/ui/BaseButton";
 import TabBar from "@components/common/TabBar";
+import BadgeModal from "@components/ui/BadgeModal";
 
 import { IoPerson, IoLogOut, IoPencil } from "react-icons/io5";
 
@@ -15,6 +16,7 @@ export default function GuardianProfile() {
   const { stats, fetchGuardianStats } = useStatsStore();
   const { addToast } = useToastStore();
 
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [newNickname, setNewNickname] = useState("");
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
@@ -98,6 +100,14 @@ export default function GuardianProfile() {
     window.location.href = "/login";
   }
 
+  function handleOpenBadgeModal() {
+    setShowBadgeModal(true);
+  }
+
+  function handleCloseBadgeModal() {
+    setShowBadgeModal(false);
+  }
+
   if (!user) {
     return (
       <>
@@ -112,7 +122,7 @@ export default function GuardianProfile() {
   return (
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
-        <Header />
+        <Header onBadgeClick={handleOpenBadgeModal} />
         <div
           className="flex-1"
           style={{
@@ -122,36 +132,69 @@ export default function GuardianProfile() {
         >
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="mb-6 rounded-lg p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
-              </div>
+              <div className="mb-4 flex items-center justify-between" />
 
               <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
-                <div className="flex flex-col space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                      <IoPerson className="h-5 w-5 text-gray-600" />
-                    </div>
-
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center space-x-1 rounded bg-gray-200 px-3 py-2 text-sm text-gray-800 transition-colors hover:bg-gray-400"
-                    >
-                      <IoLogOut className="h-4 w-4" />
-                      <span>로그아웃</span>
-                    </button>
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-shrink-0 flex-col items-center">
+                    {stats?.totalDiaryCount >= 1 && (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 shadow-lg">
+                        <span className="text-lg">
+                          {stats.totalDiaryCount >= 200
+                            ? "👑"
+                            : stats.totalDiaryCount >= 100
+                              ? "💝"
+                              : stats.totalDiaryCount >= 50
+                                ? "🎭"
+                                : stats.totalDiaryCount >= 20
+                                  ? "📚"
+                                  : stats.totalDiaryCount >= 5
+                                    ? "📝"
+                                    : "🌱"}
+                        </span>
+                      </div>
+                    )}
+                    {(!stats?.totalDiaryCount || stats.totalDiaryCount < 1) && (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
+                        <IoPerson className="h-6 w-6 text-gray-600" />
+                      </div>
+                    )}
+                    {stats?.totalDiaryCount >= 1 && (
+                      <span className="mt-1 text-center text-xs font-medium text-gray-600">
+                        {stats.totalDiaryCount >= 200
+                          ? "감정 마스터"
+                          : stats.totalDiaryCount >= 100
+                            ? "마음의 기록가"
+                            : stats.totalDiaryCount >= 50
+                              ? "감정 탐험가"
+                              : stats.totalDiaryCount >= 20
+                                ? "꾸준한 기록자"
+                                : stats.totalDiaryCount >= 5
+                                  ? "일기 초보"
+                                  : "첫 걸음"}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="min-w-0">
-                    <h3 className="truncate text-lg font-semibold text-gray-800">
-                      {user?.nickname &&
-                      user.nickname.length > 0 &&
-                      !user.nickname.includes("Wx")
-                        ? `${user.nickname} 님`
-                        : "보호자 님"}
-                    </h3>
-                    <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
-                      <p className="text-sm whitespace-nowrap text-gray-600">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-800">
+                        {user?.nickname &&
+                        user.nickname.length > 0 &&
+                        !user.nickname.includes("Wx")
+                          ? `${user.nickname} 님`
+                          : "보호자 님"}
+                      </h3>
+                      <button
+                        onClick={handleLogout}
+                        className="border-gray flex items-center space-x-1 rounded border bg-gray-100 px-3 py-2 text-sm text-gray-800"
+                      >
+                        <IoLogOut className="h-4 w-4" />
+                        <span>로그아웃</span>
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">
                         가입일:{" "}
                         {(() => {
                           const dateStr = stats?.guardianJoinDate;
@@ -166,7 +209,9 @@ export default function GuardianProfile() {
                           });
                         })()}
                       </p>
-                      <p className="text-sm whitespace-nowrap text-gray-600" />
+                      <p className="text-sm text-gray-600">
+                        작성한 일기: {stats?.totalDiaryCount || 0}개
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -250,6 +295,12 @@ export default function GuardianProfile() {
       </div>
 
       <TabBar />
+
+      <BadgeModal
+        isOpen={showBadgeModal}
+        onClose={handleCloseBadgeModal}
+        totalDiaryCount={stats?.totalDiaryCount || 0}
+      />
     </>
   );
 }

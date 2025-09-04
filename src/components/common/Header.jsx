@@ -3,6 +3,7 @@ import { CgProfile } from "react-icons/cg";
 import { TbBell } from "react-icons/tb";
 import { BiPlus } from "react-icons/bi";
 import { FaMedal } from "react-icons/fa";
+import { IoPerson } from "react-icons/io5";
 import { useUserStore, useNotificationStore } from "@stores";
 import { useState, useEffect } from "react";
 import NotificationSettingsModal from "@components/notifications/NotificationSettingsModal";
@@ -12,6 +13,8 @@ import { formatDateToDisplay } from "@utils/dateUtils";
 export default function Header({
   showTodoButton = false,
   rightActions = null,
+  onBadgeClick = null,
+  onEditProfileClick = null,
 }) {
   const { user } = useUserStore();
   const location = useLocation();
@@ -84,19 +87,29 @@ export default function Header({
           <div className="mb-2 flex items-center justify-between">
             <h1 className="text-xl font-bold">{getPageTitle()}</h1>
             <div className="flex items-center gap-2">
-              {user?.userRole === "BIF" && (
+              {(user?.userRole === "BIF" || user?.userRole === "GUARDIAN") && (
                 <button
-                  onClick={() => setShowNotificationModal(true)}
+                  onClick={() =>
+                    isProfilePage && onBadgeClick
+                      ? onBadgeClick()
+                      : user?.userRole === "BIF"
+                        ? setShowNotificationModal(true)
+                        : null
+                  }
                   className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white"
                   title={
-                    stats.unread > 0
-                      ? `읽지 않은 알림 ${stats.unread}개`
-                      : "알림 센터"
+                    isProfilePage
+                      ? "뱃지 보기"
+                      : user?.userRole === "BIF" && stats.unread > 0
+                        ? `읽지 않은 알림 ${stats.unread}개`
+                        : user?.userRole === "BIF"
+                          ? "알림 센터"
+                          : "뱃지 보기"
                   }
                 >
                   {isProfilePage ? (
                     <FaMedal size={20} color="#343434" />
-                  ) : (
+                  ) : user?.userRole === "BIF" ? (
                     <>
                       <TbBell size={20} color="#343434" />
                       {stats.unread > 0 && (
@@ -105,6 +118,8 @@ export default function Header({
                         </span>
                       )}
                     </>
+                  ) : (
+                    <FaMedal size={20} color="#343434" />
                   )}
                 </button>
               )}
@@ -129,6 +144,15 @@ export default function Header({
 
             <div className="flex items-center gap-3">
               {rightActions}
+              {isProfilePage && onEditProfileClick && (
+                <button
+                  onClick={onEditProfileClick}
+                  className="flex items-center space-x-1 rounded border border-black bg-white px-3 py-2 text-sm font-bold text-gray-800"
+                >
+                  <IoPerson className="h-4 w-4" />
+                  <span>회원정보수정</span>
+                </button>
+              )}
               {showTodoButton && user?.userRole === "BIF" && isMainPage() && (
                 <button
                   onClick={handleCreateTodo}
