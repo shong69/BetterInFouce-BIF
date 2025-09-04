@@ -272,7 +272,7 @@ export default function DiaryView() {
           </div>
           <div className="mr-4 flex items-center">
             <div
-              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionInfo(currentDiary.emotion).bgColor}`}
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] shadow-xs ${getEmotionInfo(currentDiary.emotion).bgColor}`}
             >
               {getEmotionInfo(currentDiary.emotion).name}
             </div>

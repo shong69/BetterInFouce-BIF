@@ -260,7 +260,7 @@ export default function DiaryEdit() {
           </div>
           <div className="mr-4 flex items-center">
             <div
-              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionInfo(diaryData.emotion).bgColor}`}
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] shadow-xs ${getEmotionInfo(diaryData.emotion).bgColor}`}
             >
               {getEmotionInfo(diaryData.emotion).name}
             </div>

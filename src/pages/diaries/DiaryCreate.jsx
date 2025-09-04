@@ -188,7 +188,7 @@ export default function DiaryCreate() {
           </div>
           <div className="mr-4 flex items-center">
             <div
-              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionContent(selectedEmotion).bgColor}`}
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] shadow-xs ${getEmotionContent(selectedEmotion).bgColor}`}
             >
               {getEmotionContent(selectedEmotion).name}
             </div>

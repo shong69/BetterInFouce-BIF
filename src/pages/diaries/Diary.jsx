@@ -111,7 +111,7 @@ export default function Diary() {
         <div
           className={`mx-3 mb-6 rounded-lg border-1 border-gray-300 p-4 shadow-sm sm:mb-8 ${
             !canWriteToday
-              ? "border-gray-200 bg-gray-50 opacity-60"
+              ? "border-gray-200 bg-gray-50"
               : "border-gray-200 bg-white"
           }`}
         >
