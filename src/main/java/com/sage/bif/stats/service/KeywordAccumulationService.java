@@ -113,7 +113,6 @@ public class KeywordAccumulationService {
     private Map<String, Integer> mergeKeywords(Map<String, Integer> existingKeywords, List<String> newKeywords) {
         final Map<String, Integer> mergedKeywords = new HashMap<>(existingKeywords);
         
-        // 새 키워드들을 Set으로 중복 제거 (같은 일기 내 중복 방지)
         final Set<String> uniqueNewKeywords = new HashSet<>();
         for (String keyword : newKeywords) {
             if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim())) {

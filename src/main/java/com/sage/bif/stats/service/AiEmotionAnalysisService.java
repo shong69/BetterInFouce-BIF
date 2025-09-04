@@ -168,7 +168,6 @@ public class AiEmotionAnalysisService {
             for (String keyword : keywords) {
                 String trimmed = keyword.trim();
                 if (!trimmed.isEmpty() && trimmed.length() <= 10) {
-                    // 키워드가 실제 일기 내용에 포함되어 있는지 검증
                     if (lowerContent.contains(trimmed.toLowerCase())) {
                         extractedKeywords.add(trimmed);
                         log.info("키워드 검증 통과: {}", trimmed);
