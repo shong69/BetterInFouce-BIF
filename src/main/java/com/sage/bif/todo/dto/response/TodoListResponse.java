@@ -40,7 +40,7 @@ public class TodoListResponse {
                             .subTodoId(subTodo.getSubTodoId())
                             .title(subTodo.getTitle())
                             .sortOrder(subTodo.getSortOrder())
-                            .isCompleted(subTodo.getIsCompleted())
+                            .isCompleted(todo.getType() != TodoTypes.ROUTINE && subTodo.getIsCompleted())
                             .build())
                     .collect(Collectors.toList());
 

@@ -56,7 +56,9 @@ public class TodoController {
             @Valid @RequestBody AiTodoCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        validateGuardianAccess(userDetails, OPERATION_CREATE);
+        if (userDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 생성할 수 없습니다.");
+        }
         Long bifId = userDetails.getBifId();
         TodoListResponse response = todoService.createTodoByAi(bifId, request);
 
@@ -105,12 +107,12 @@ public class TodoController {
 
     @PutMapping("/{todoId}")
     @Operation(summary = "할 일 목록 수정")
-    public ResponseEntity<TodoListResponse> updateTodo(
+    public ResponseEntity<TodoUpdatePageResponse> updateTodo(
             @PathVariable Long todoId,
             @Valid @RequestBody TodoUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long bifId = getBifIdForUser(customUserDetails);
-        TodoListResponse response = todoService.updateTodo(bifId, todoId, request);
+        TodoUpdatePageResponse response = todoService.updateTodo(bifId, todoId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -120,7 +122,9 @@ public class TodoController {
     public ResponseEntity<Void> deleteTodo(
             @PathVariable Long todoId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_DELETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 삭제할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
         todoService.deleteTodo(bifId, todoId);
 
@@ -133,7 +137,9 @@ public class TodoController {
             @PathVariable Long todoId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
         LocalDate completionDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
         TodoListResponse response = todoService.completeTodo(bifId, todoId, completionDate);
@@ -147,7 +153,9 @@ public class TodoController {
             @PathVariable Long todoId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
         LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
         TodoListResponse response = todoService.uncompleteTodo(bifId, todoId, targetDate);
@@ -163,7 +171,9 @@ public class TodoController {
             @Valid @RequestBody SubTodoCompletionUpdateRequest request,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
 
         if (date != null) {
@@ -197,19 +207,6 @@ public class TodoController {
                     .orElseThrow(() -> new GuardianConnectionNotFoundException("Guardian과 연결된 BIF를 찾을 수 없습니다."));
         }
         throw new UnsupportedUserRoleException("지원하지 않는 사용자 역할입니다.");
-    }
-
-    private void validateGuardianAccess(CustomUserDetails userDetails, String operation) {
-        if (userDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN &&
-                (OPERATION_CREATE.equals(operation) || OPERATION_DELETE.equals(operation) || OPERATION_COMPLETE.equals(operation))) {
-            String operationName = switch (operation) {
-                case OPERATION_CREATE -> "생성";
-                case OPERATION_DELETE -> "삭제";
-                case OPERATION_COMPLETE -> "완료/미완료";
-                default -> operation;
-            };
-            throw new GuardianAccessDeniedException("Guardian은 할 일을 " + operationName + "할 수 없습니다.");
-        }
     }
 
     @Getter
