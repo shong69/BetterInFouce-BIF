@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/diaries")
 @RequiredArgsConstructor
@@ -112,6 +113,7 @@ public class DiaryController {
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
+            log.error("STT 오류 발생:{}",e.getMessage());
             return ResponseEntity.status(500).build();
         }
     }
