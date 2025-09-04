@@ -1,98 +1,149 @@
+server:
+  port: 8080
+
 spring:
-  application:
-    name: bif-dev
-  
-  # JPA 설정
+  #  datasource:
+  #    url: jdbc:h2:mem:testdb
+  #    username: sa
+  #    password:
+  #    driver-class-name: org.h2.Driver
+  #    hikari:
+  #      maximum-pool-size: 10
+  #      minimum-idle: 5
+  #      connection-timeout: 30000
+  #  h2:
+  #    console:
+  #      enabled: true
+  #      path: /h2-console
+  #      settings:
+  #        web-allow-others: true
+  #  jpa:
+  #    hibernate:
+  #      ddl-auto: update
+  #    show-sql: true
+  #    defer-datasource-initialization: true
+  #    properties:
+  #      hibernate:
+  #        format_sql: true
+  #        dialect: org.hibernate.dialect.H2Dialect
+  #        use_sql_comments: true
+  #  sql:
+  #    init:
+  #      mode: always
+  #      continue-on-error: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bif?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
-        use_sql_comments: true
-  
-  # H2 데이터베이스 설정 (개발용)
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-  
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-        
-    # 데이터베이스 설정:로컬 서버 사용시 (주석 처리)
-  # datasource:
-  #   url: jdbc:mysql://localhost:3306/bif?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
-  #   username: root
-  #   password: password
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
-  
+        dialect: org.hibernate.dialect.MySQLDialect
+        connection:
+          characterEncoding: utf8
+          useUnicode: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+        shutdown-timeout: 100ms
+
+  security:
+    user:
+      name: ${SPRING_SECURITY_USER_NAME}
+      password: ${SPRING_SECURITY_USER_PASSWORD}
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/api/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            scope: account_email
+            client-authentication-method: client_secret_post
+          naver:
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/api/login/oauth2/code/naver
+            authorization-grant-type: authorization_code
+            scope: email
+            client-authentication-method: client_secret_post
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/api/login/oauth2/code/google
+            authorization-grant-type: authorization_code
+            scope: email
+            client-authentication-method: client_secret_post
 
   ai:
     azure:
       openai:
-        endpoint: ${AZURE_OPENAI_ENDPOINT:https://your-resource.openai.azure.com}
-        api-key: ${AZURE_OPENAI_API_KEY:your-api-key}
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        api-key: ${AZURE_OPENAI_API_KEY}
+        resource-name: ${AZURE_OPENAI_RESOURCE_NAME}
         deployment:
-          name: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-35-turbo}
-  
-  # Spring Security 설정
-  security:
-    user:
-      name: admin
-      password: admin123
-  
-  # 서버 설정
-  server:
-    port: 8080
-    servlet:
-      context-path: /api
-  
-  # 로깅 설정 (개발용 상세 로깅)
-  logging:
-    level:
-      root: INFO
-      com.sage.bif: DEBUG
-      org.springframework.web: DEBUG
-      org.hibernate.SQL: DEBUG
-      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-      org.springframework.security: DEBUG
-    pattern:
-      console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-      file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    # 파일 로깅 설정 (일별 롤링)
-    file:
-      name: logs/bif-dev.log
-    # 로그백 설정 (롤링 파일)
-    logback:
-      rollingpolicy:
-        max-file-size: 10MB
-        max-history: 30
-        total-size-cap: 1GB
-        file-name-pattern: logs/bif-dev-%d{yyyy-MM-dd}.%i.log
-  
-  # 개발 도구
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      content-safety:
+        endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
+        api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
+      speech-service:
+        endpoint: ${AZURE_OPENAI_SPEECH_SERVICE_ENDPOINT}
+        api-key: ${AZURE_OPENAI_SPEECH_SERVICE_API_KEY}
+
   devtools:
     restart:
       enabled: true
     livereload:
       enabled: true
 
-# Swagger/OpenAPI 설정
+logging:
+  level:
+    root: INFO
+    com.sage.bif: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: DEBUG
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/bif-dev.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
+      file-name-pattern: logs/bif-dev-%d{yyyy-MM-dd}.%i.log
+
+jwt:
+  secret: ${JWT_SECRET}
+
+app:
+  frontend:
+    url: http://localhost:3000
+
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
     info:
       title: "BIF API Documentation (DEV)"
       description: "BIF (Business Intelligence Framework) REST API Documentation - Development Environment"
@@ -106,19 +157,12 @@ springdoc:
         url: "https://opensource.org/licenses/MIT"
   swagger-ui:
     path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
     doc-expansion: none
     display-request-duration: true
     filter: true
-  packages-to-scan: com.sage.bif
-  paths-to-match: /api/**
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+  paths-to-match: /**
 
-# 애플리케이션 커스텀 설정
-app:
-  name: "BIF Development"
-  version: "1.0.0"
-  environment: "development"
-  debug: true 
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
