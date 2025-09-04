@@ -146,7 +146,7 @@ export default function SimulationProgress() {
           setTypingBubbleId(null);
           clearInterval(interval);
         }
-      }, 100);
+      }, 50);
 
       return () => clearInterval(interval);
     }
