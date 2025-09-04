@@ -532,7 +532,7 @@ export default function SimulationProgress() {
       <Header showTodoButton={false} />
 
       <main className="w-full pt-8 pb-26">
-        <div className="fixed top-25 left-1/2 z-10 mb-4 w-full max-w-4xl -translate-x-1/2 transform rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+        <div className="fixed top-25 right-4 left-4 z-10 mx-auto mb-4 max-w-4xl rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isCardExpanded && (
