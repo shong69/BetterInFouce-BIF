@@ -43,7 +43,7 @@ public class KeywordAccumulationService {
             } else {
                 final Map<String, Integer> initialKeywords = new HashMap<>();
                 for (String keyword : newKeywords) {
-                    if (keyword != null && !keyword.trim().isEmpty()) {
+                    if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim())) {
                         initialKeywords.put(keyword.trim(), 1);
                     }
                 }
@@ -60,6 +60,34 @@ public class KeywordAccumulationService {
             
         } catch (Exception e) {
             log.error("키워드 누적 업데이트 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+    
+    public void initializeKeywords(Long bifId, Map<String, Integer> initialKeywords) {
+        try {
+            log.info("BIF ID {}의 키워드 초기화 시작 - 초기 키워드: {}", bifId, initialKeywords);
+            
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                stats.setTopKeywords(objectMapper.writeValueAsString(initialKeywords));
+                statsRepository.save(stats);
+                log.info("BIF ID {}의 키워드 초기화 완료", bifId);
+            } else {
+                final Stats newStats = Stats.builder()
+                        .bifId(bifId)
+                        .yearMonth(currentYearMonth)
+                        .topKeywords(objectMapper.writeValueAsString(initialKeywords))
+                        .build();
+                
+                statsRepository.save(newStats);
+                log.info("BIF ID {}의 새로운 통계 및 키워드 초기화 완료", bifId);
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 초기화 중 오류 발생 - bifId: {}", bifId, e);
         }
     }
 
@@ -85,14 +113,47 @@ public class KeywordAccumulationService {
     private Map<String, Integer> mergeKeywords(Map<String, Integer> existingKeywords, List<String> newKeywords) {
         final Map<String, Integer> mergedKeywords = new HashMap<>(existingKeywords);
         
+        final Set<String> uniqueNewKeywords = new HashSet<>();
         for (String keyword : newKeywords) {
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                final String normalizedKeyword = keyword.trim();
-                mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+            if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim())) {
+                uniqueNewKeywords.add(keyword.trim());
             }
         }
         
+        for (String normalizedKeyword : uniqueNewKeywords) {
+            mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+            log.info("키워드 '{}' 누적: {}회", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
+        }
+        
         return mergedKeywords;
+    }
+    
+    private boolean isValidKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        String[] invalidPatterns = {
+            "일상", "일반", "보통", "평범", "생각", "느낌", "시간", "하루", "오늘", "내일", "어제",
+            "그냥", "그저", "그런", "이런", "저런", "어떤", "무엇", "언제", "어디", "왜", "어떻게",
+            "정말", "참", "너무", "많이", "조금", "좀", "잘", "못", "안", "없", "있", "되", "안되"
+        };
+        
+        for (String pattern : invalidPatterns) {
+            if (keyword.contains(pattern)) {
+                return false;
+            }
+        }
+        
+        if (keyword.length() < 1 || keyword.length() > 10) {
+            return false;
+        }
+        
+        if (keyword.matches("^[0-9\\s\\-_.,!?]+$")) {
+            return false;
+        }
+        
+        return true;
     }
 
     private List<String> extractTop5Keywords(Map<String, Integer> keywordCounts) {
