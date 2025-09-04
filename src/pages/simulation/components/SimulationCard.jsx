@@ -1,38 +1,11 @@
-import { IoIosArrowForward } from "react-icons/io";
-
 export default function SimulationCard({
   id = 1,
   title = "제목",
-  category = "일상",
   onClick,
   showThumbsUpButton = false,
   onThumbsUp = null,
   isThumbsUp = false,
 }) {
-  function getCategoryColor() {
-    switch (category) {
-      case "업무":
-        return "text-warning";
-      case "일상":
-        return "text-[#F59E0B]";
-      case "사회":
-      default:
-        return "text-[#0B70F5]";
-    }
-  }
-
-  function getTagColor() {
-    switch (category) {
-      case "업무":
-        return "bg-[#FEE2E2] text-warning";
-      case "일상":
-        return "bg-[#FEF3C7] text-[#F59E0B]";
-      case "사회":
-      default:
-        return "bg-[#C2DCFF] text-[#0B70F5]";
-    }
-  }
-
   function handleClick() {
     if (onClick) {
       onClick(id);
@@ -55,24 +28,31 @@ export default function SimulationCard({
   return (
     <div className="relative">
       <div
-        className="w-full cursor-pointer rounded-xl border-1 border-gray-300 bg-white p-3 pt-4 text-left shadow-sm"
+        className={`w-full cursor-pointer rounded-xl bg-white p-3 pt-4 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+          isThumbsUp ? "border-primary/60 border-2" : ""
+        }`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         role="button"
         tabIndex={0}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex h-full items-center justify-between">
           <div className="flex flex-1 items-center">
-            <h3 className={`text-md font-medium ${getCategoryColor()}`}>
-              {title}
-            </h3>
+            <h3 className="text-[13px] font-extrabold text-black">{title}</h3>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-center gap-3">
+            {isThumbsUp && (
+              <span className="text-primary/80 bg-primary/10 rounded-full px-2 py-0.5 text-xs font-medium">
+                추천
+              </span>
+            )}
             {showThumbsUpButton && (
               <button
                 onClick={handleThumbsUpClick}
-                className={`h-4 w-4 ${
-                  isThumbsUp ? "text-primary" : "text-gray-400"
+                className={`h-4 w-4 transition-colors duration-200 ${
+                  isThumbsUp
+                    ? "text-primary scale-110"
+                    : "text-gray-400 hover:text-gray-600"
                 }`}
                 title={isThumbsUp ? "추천 취소" : "추천"}
               >
@@ -85,14 +65,6 @@ export default function SimulationCard({
                 </svg>
               </button>
             )}
-            <div className="flex flex-col items-center gap-2">
-              <span
-                className={`rounded-xl px-3 py-1 text-sm font-medium ${getTagColor()}`}
-              >
-                {category}
-              </span>
-              <IoIosArrowForward className="text-primary font-sm text-lg" />
-            </div>
           </div>
         </div>
       </div>

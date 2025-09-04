@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import PageHeader from "@components/common/PageHeader";
+import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
 import Modal from "@components/ui/Modal";
 import SecondaryButton from "@components/ui/SecondaryButton";
 import RecordButton from "@components/ui/RecordButton";
-import BackButton from "@components/ui/BackButton";
 import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { getEmotionContent } from "@utils/emotionUtils";
@@ -21,14 +20,6 @@ export default function DiaryCreate() {
   const { showSuccess, showError } = useToastStore();
   const [showExitModal, setShowExitModal] = useState(false);
   const recognizerRef = useRef(null);
-
-  const handleBack = () => {
-    if (content.trim()) {
-      setShowExitModal(true);
-    } else {
-      navigate("/diaries");
-    }
-  };
 
   const handleExitConfirm = () => {
     setShowExitModal(false);
@@ -173,13 +164,10 @@ export default function DiaryCreate() {
     }
   };
   return (
-    <div className="bg-radial-gradient min-h-screen">
-      <PageHeader title="감정일기" />
+    <div className="min-h-screen">
+      <Header showTodoButton={false} />
       <div className="mx-auto mb-24 max-w-2xl p-4 sm:p-4">
-        <div className="mb-2">
-          <BackButton onClick={handleBack} />
-        </div>
-        <div className="mt-3 mb-1 flex items-center justify-between">
+        <div className="mb-1 flex items-center justify-between">
           <div
             className="ml-3 text-sm font-extralight"
             style={{ whiteSpace: "pre-line" }}
@@ -212,7 +200,7 @@ export default function DiaryCreate() {
           />
         </div>
 
-        <div className="px-2 sm:px-0">
+        <div className="mb-2 px-2 sm:px-0">
           <RecordButton isRecording={isRecording} onClick={toggleRecording} />
           <SecondaryButton onClick={handleSave} title={"일기 저장하기"} />
         </div>

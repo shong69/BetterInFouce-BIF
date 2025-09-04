@@ -8,8 +8,11 @@
   --color-warning: #ef4444;
   --color-secondary: #8fcd00;
   --color-toggle: #76c500;
-  --color-gradient-yellow: #fffb7d;
+  --color-yellow: #fffb7d;
   --color-gray-medium: #cacaca;
+  --color-black: #343434;
+  --color-orange: #ffb347;
+  --color-light-orange: #ffd762;
 
   --font-sans:
     "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont,
@@ -21,16 +24,7 @@
   --text-tiny: 0.6rem;
 }
 
-.bg-radial-gradient {
-  background: radial-gradient(
-    ellipse 90% 80% at center 15%,
-    #f5f8c7,
-    #fbffda,
-    #fdfdfd,
-    #ffffff
-  );
-}
-
+html,
 body {
   background: radial-gradient(
     circle 500px at 50% -15%,
@@ -38,10 +32,10 @@ body {
     #fbffda,
     #f7f7f7
   );
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
   min-height: 100vh;
-  margin: 0;
-}
-
-#root {
-  min-height: 100vh;
+  overscroll-behavior: none;
+  overflow-x: hidden;
 }

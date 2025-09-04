@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToastStore, useUserStore } from "@stores";
+import { useToastStore, useUserStore, useNotificationStore } from "@stores";
 
 const NOTIFICATION_TYPES = {
   TODO_REMINDER: "todo-reminder",
@@ -21,6 +21,7 @@ export function useNotifications() {
   const navigate = useNavigate();
   const { showSuccess, showInfo, showError, clearAllToasts } = useToastStore();
   const { user } = useUserStore();
+  const { addNotification } = useNotificationStore();
 
   const eventSourceRef = useRef(null);
   const retryCountRef = useRef(0);
@@ -124,6 +125,8 @@ export function useNotifications() {
 
   const handleNotification = useCallback(
     (notification) => {
+      addNotification(notification);
+
       updateNotificationStats(notification.type);
 
       switch (notification.type) {
@@ -143,6 +146,7 @@ export function useNotifications() {
       }
     },
     [
+      addNotification,
       updateNotificationStats,
       handleTodoReminder,
       handleRoutineReminder,
@@ -236,6 +240,22 @@ export function useNotifications() {
     try {
       updateConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
+      const { accessToken } = useUserStore.getState();
+      if (accessToken) {
+        document.cookie =
+          "authenticatedUserToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        const isProduction = window.location.protocol === "https:";
+        const cookieOptions = [
+          `authenticatedUserToken=${accessToken}`,
+          "Path=/",
+          "SameSite=Strict",
+          ...(isProduction ? ["Secure"] : []),
+        ].join("; ");
+
+        document.cookie = cookieOptions;
+      }
+
       const url = `${baseUrl}/api/notifications/sse/subscribe`;
 
       const eventSource = new EventSource(url, {
@@ -268,6 +288,9 @@ export function useNotifications() {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+
+    document.cookie =
+      "authenticatedUserToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
 
     updateConnectionStatus(CONNECTION_STATUS.DISCONNECTED);
     setNotificationStats({

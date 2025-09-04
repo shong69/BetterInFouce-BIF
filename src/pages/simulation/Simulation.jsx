@@ -2,21 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { simulationService } from "@services/simulationService";
 import { useUserStore } from "@stores/userStore";
-import Header from "@components/common/Header";
+
 import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import SimulationCard from "@pages/simulation/components/SimulationCard";
-import DateBox from "@components/ui/DateBox";
+import Header from "@components/common/Header";
+
+import managerImage from "@assets/manager.png";
+import mamaImage from "@assets/mama.png";
+import minaImage from "@assets/mina.png";
 
 export default function Simulation() {
   const [simulations, setSimulations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
   const navigate = useNavigate();
   const { user } = useUserStore();
 
   const userRole = user?.userRole;
-  const isBif = userRole === "BIF";
+
   const isGuardian = userRole === "GUARDIAN";
 
   useEffect(
@@ -27,22 +32,18 @@ export default function Simulation() {
           setError(null);
 
           const simulationsData = await simulationService.getSimulations();
-          const processedSimulations = simulationsData.map((sim) => ({
-            ...sim,
-            isActive: sim.isActive === null ? false : sim.isActive,
-          }));
-          setSimulations(processedSimulations);
-        } catch (err) {
+          setSimulations(simulationsData);
+        } catch (error) {
           if (
-            err.message?.includes("Network Error") ||
-            err.code === "ERR_NETWORK"
+            error.message?.includes("Network Error") ||
+            error.code === "ERR_NETWORK"
           ) {
             setError(
               "서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.",
             );
-          } else if (err.response?.status === 403) {
+          } else if (error.response?.status === 403) {
             setError("접근 권한이 없습니다.");
-          } else if (err.response?.status === 401) {
+          } else if (error.response?.status === 401) {
             setError("로그인이 필요합니다.");
           } else {
             setError("시뮬레이션을 불러오는데 실패했습니다.");
@@ -62,40 +63,59 @@ export default function Simulation() {
   }
 
   async function handleRecommendSimulation(simulationId) {
-    const responseData =
+    try {
       await simulationService.recommendSimulation(simulationId);
 
-    const newIsActive = responseData?.data?.isActive;
-
-    if (newIsActive === undefined) {
-      return;
+      const updatedSimulations = simulations.map((sim) =>
+        sim.id === simulationId
+          ? { ...sim, isRecommended: !sim.isRecommended }
+          : sim,
+      );
+      setSimulations(updatedSimulations);
+    } catch {
+      setError("추천 상태 업데이트에 실패했습니다.");
     }
-
-    setSimulations((prevSimulations) =>
-      prevSimulations.map((sim) =>
-        sim.id === simulationId ? { ...sim, isActive: newIsActive } : sim,
-      ),
-    );
   }
 
-  const bifRecommendedSimulations = isBif
-    ? simulations.filter((sim) => sim.isActive)
-    : [];
-  const bifOtherSimulations = isBif
-    ? simulations.filter((sim) => !sim.isActive)
-    : [];
+  function toggleCategory(category) {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  }
 
-  const guardianRecommendedSimulations = isGuardian
-    ? simulations.filter((sim) => sim.isActive)
-    : [];
-  const guardianOtherSimulations = isGuardian
-    ? simulations.filter((sim) => !sim.isActive)
-    : [];
+  const categoryGroups = {
+    업무: {
+      simulations: simulations.filter((sim) => sim.category === "업무"),
+      description: "업무 환경에서 필요한 대화를 연습합니다.",
+      color: "text-[#EF4444]",
+      bgColor: "bg-[#FEE2E2]",
+      characterImage: managerImage,
+    },
+    사회: {
+      simulations: simulations.filter((sim) => sim.category === "사회"),
+      description: "사회생활에서 필요한 대화를 나눕니다.",
+      color: "text-[#0B70F5]",
+      bgColor: "bg-[#C2DCFF]",
+      characterImage: mamaImage,
+    },
+    일상: {
+      simulations: simulations.filter((sim) => sim.category === "일상"),
+      description: "일상 속 다양한 상황들을 연습합니다.",
+      color: "text-[#F59E0B]",
+      bgColor: "bg-[#FEF3C7]",
+      characterImage: minaImage,
+    },
+  };
 
   if (loading) {
     return (
       <>
-        <Header />
         <LoadingSpinner />
         <TabBar />
       </>
@@ -105,15 +125,10 @@ export default function Simulation() {
   if (error) {
     return (
       <>
-        <Header />
-        <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
-          <div className="mb-1 px-2 sm:px-0">
-            <div className="py-8 text-center">
-              <div className="mb-2 text-lg text-red-500">
-                오류가 발생했습니다
-              </div>
-              <div className="text-gray-600">{error}</div>
-            </div>
+        <div className="w-full max-w-full flex-1 bg-gray-50 px-5 pb-24">
+          <div className="py-8 text-center">
+            <div className="mb-2 text-lg text-red-500">오류가 발생했습니다</div>
+            <div className="text-gray-600">{error}</div>
           </div>
         </div>
         <TabBar />
@@ -123,138 +138,99 @@ export default function Simulation() {
 
   return (
     <>
-      <Header />
-      <div className="mx-auto max-w-4xl bg-white p-2 sm:p-4">
-        <div className="mb-1 px-2 sm:px-0">
-          <DateBox />
+      <LoadingSpinner />
+
+      <Header showTodoButton={false} />
+
+      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-24">
+        <div className="w-full space-y-6">
+          {Object.entries(categoryGroups).map(([category, group]) => {
+            if (group.simulations.length === 0) return null;
+
+            const isExpanded = expandedCategories.has(category);
+
+            return (
+              <div
+                key={category}
+                className="w-full rounded-xl border border-gray-300 bg-white/80 p-4 shadow-sm backdrop-blur-sm"
+              >
+                <button
+                  className="flex w-full cursor-pointer items-center justify-between"
+                  onClick={() => toggleCategory(category)}
+                  type="button"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="flex-shrink-0">
+                      <img
+                        src={group.characterImage}
+                        alt={`${category} 캐릭터`}
+                        className="h-10 w-10 object-cover object-top"
+                      />
+                    </div>
+                    <div className="text-left">
+                      <h3 className={`text-xl font-bold ${group.color}`}>
+                        {category}
+                      </h3>
+                      <p className="mt-2 text-sm text-black">
+                        {group.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <svg
+                      className={`h-6 w-6 text-gray-400 transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-6 space-y-3 border-t border-gray-100 pt-6">
+                    {group.simulations
+                      .sort((a, b) => {
+                        if (a.isRecommended && !b.isRecommended) return -1;
+                        if (!a.isRecommended && b.isRecommended) return 1;
+                        return 0;
+                      })
+                      .map((simulation) => (
+                        <SimulationCard
+                          key={simulation.id}
+                          id={simulation.id}
+                          title={simulation.title}
+                          category={simulation.category}
+                          duration={simulation.duration}
+                          onClick={handleStartSimulation}
+                          showThumbsUpButton={isGuardian}
+                          onThumbsUp={handleRecommendSimulation}
+                          isThumbsUp={simulation.isRecommended}
+                        />
+                      ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="mx-3 mt-6 mb-24">
-          {isBif && (
-            <>
-              {bifRecommendedSimulations.length > 0 && (
-                <section className="mb-6 w-full">
-                  <h2 className="mb-3 text-sm font-bold text-gray-800">
-                    👍 추천
-                  </h2>
-                  <div className="w-full space-y-3">
-                    {bifRecommendedSimulations.map((simulation) => (
-                      <SimulationCard
-                        key={simulation.id}
-                        id={simulation.id}
-                        title={simulation.title}
-                        category={simulation.category}
-                        duration={simulation.duration}
-                        onClick={handleStartSimulation}
-                        showThumbsUpButton={false}
-                        onThumbsUp={handleRecommendSimulation}
-                        isThumbsUp={simulation.isActive}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {bifOtherSimulations.length > 0 && (
-                <section className="mb-6 w-full">
-                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
-                  <div className="w-full space-y-3">
-                    {bifOtherSimulations.map((simulation) => (
-                      <SimulationCard
-                        key={simulation.id}
-                        id={simulation.id}
-                        title={simulation.title}
-                        category={simulation.category}
-                        duration={simulation.duration}
-                        onClick={handleStartSimulation}
-                        showThumbsUpButton={false}
-                        onThumbsUp={handleRecommendSimulation}
-                        isThumbsUp={simulation.isActive}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
-          )}
-
-          {isGuardian && (
-            <>
-              {guardianRecommendedSimulations.length > 0 && (
-                <section className="mb-6 w-full">
-                  <h2 className="mb-3 text-sm font-bold text-gray-800">
-                    👍 추천
-                  </h2>
-                  <div className="w-full space-y-3">
-                    {guardianRecommendedSimulations.map((simulation) => (
-                      <SimulationCard
-                        key={simulation.id}
-                        id={simulation.id}
-                        title={simulation.title}
-                        category={simulation.category}
-                        duration={simulation.duration}
-                        onClick={handleStartSimulation}
-                        showThumbsUpButton={true}
-                        onThumbsUp={handleRecommendSimulation}
-                        isThumbsUp={simulation.isActive}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-              {guardianOtherSimulations.length > 0 && (
-                <section className="mb-6 w-full">
-                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
-                  <div className="w-full space-y-3">
-                    {guardianOtherSimulations.map((simulation) => (
-                      <SimulationCard
-                        key={simulation.id}
-                        id={simulation.id}
-                        title={simulation.title}
-                        category={simulation.category}
-                        duration={simulation.duration}
-                        onClick={handleStartSimulation}
-                        showThumbsUpButton={true}
-                        onThumbsUp={handleRecommendSimulation}
-                        isThumbsUp={simulation.isActive}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
-          )}
-
-          {!isBif && !isGuardian && (
-            <>
-              {simulations.length > 0 && (
-                <section className="mb-6 w-full">
-                  <h2 className="mb-3 text-sm font-bold text-gray-800">주제</h2>
-                  <div className="w-full space-y-3">
-                    {simulations.map((simulation) => (
-                      <SimulationCard
-                        key={simulation.id}
-                        id={simulation.id}
-                        title={simulation.title}
-                        category={simulation.category}
-                        duration={simulation.duration}
-                        onClick={handleStartSimulation}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
-          )}
-
-          {simulations.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">시뮬레이션이 없습니다.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
+        {simulations.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-gray-500">
+              시뮬레이션을 불러오는데 실패했습니다.
+            </p>
+          </div>
+        )}
+      </main>
       <TabBar />
     </>
   );
