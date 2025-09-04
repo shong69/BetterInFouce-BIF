@@ -26,6 +26,7 @@ export default function TodoDetail() {
   const location = useLocation();
   const { id } = useParams();
   const [todoData, setTodoData] = useState(null);
+  const { needsRefresh, setNeedsRefresh, selectedDate } = useTodoStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +38,6 @@ export default function TodoDetail() {
   const typeFromUrl = new URLSearchParams(window.location.search).get("type");
   const { showError } = useToastStore();
   const { user } = useUserStore();
-  const { selectedDate } = useTodoStore();
 
   const colors = useMemo(() => {
     if (!todoData?.type) {
@@ -74,12 +74,11 @@ export default function TodoDetail() {
   }
 
   useEffect(() => {
-    async function fetchTodoDetail() {
+    async function fetchInitialData() {
+      setIsLoading(true);
       try {
         const data = await getTodoDetail(id, selectedDate);
-
         setTodoData(data);
-
         if (data.hasOrder) {
           setCurrentStep(data.currentStep || 0);
         }
@@ -90,9 +89,30 @@ export default function TodoDetail() {
         setIsLoading(false);
       }
     }
-
-    fetchTodoDetail();
+    fetchInitialData();
   }, [id, selectedDate, navigate, showError]);
+
+  useEffect(() => {
+    async function refreshData() {
+      setIsLoading(true);
+      try {
+        const data = await getTodoDetail(id, selectedDate);
+        setTodoData(data);
+        if (data.hasOrder) {
+          setCurrentStep(data.currentStep || 0);
+        }
+      } catch {
+        showError("데이터를 새로고침하는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (needsRefresh) {
+      refreshData();
+      setNeedsRefresh(false);
+    }
+  }, [needsRefresh, id, selectedDate, setNeedsRefresh, showError]);
 
   useEffect(() => {
     const handleVisibilityChange = async () => {
@@ -140,7 +160,6 @@ export default function TodoDetail() {
     const shouldBeCompleted = updatedSubTodos.every((s) => s.isCompleted);
 
     const previousTodoData = todoData;
-    const previousTodoCompleted = todoData.isCompleted;
 
     setTodoData((prev) => ({
       ...prev,
@@ -156,7 +175,7 @@ export default function TodoDetail() {
         selectedDate,
       );
 
-      if (previousTodoCompleted !== shouldBeCompleted) {
+      if (previousTodoData.isCompleted !== shouldBeCompleted) {
         if (shouldBeCompleted) {
           await completeTodo(todoData.todoId);
         } else {

@@ -11,7 +11,8 @@ export default function mapBackendToFrontend(backendData) {
     const description = simulation?.description || "설명 없음";
     const id = simulation?.simulation_id || simulation?.id || 0;
     const category = simulation?.category || getCategoryFromTitle(title);
-    const isRecommended = simulation?.isActive || false;
+    const isRecommended =
+      simulation?.isRecommended || simulation?.isActive || false;
 
     return {
       id: id,
@@ -186,7 +187,12 @@ export const simulationService = {
         simulationId: simulationId,
       },
     );
-    return response.data;
+
+    if (response.data && response.data.success !== false) {
+      return response.data;
+    } else {
+      throw new Error("추천 업데이트 응답이 올바르지 않습니다.");
+    }
   },
 
   tts: {
