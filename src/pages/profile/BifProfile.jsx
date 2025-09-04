@@ -131,15 +131,26 @@ export default function BifProfile() {
   }
 
   function createKeywordChartData(topKeywords) {
-    const limitedKeywords = topKeywords.slice(0, 5);
+    const placeholdersNeeded = Math.max(0, 5 - topKeywords.length);
+    const placeholders = Array.from({ length: placeholdersNeeded }).map(() => ({
+      keyword: "",
+      count: 0,
+    }));
+
+    const filled = topKeywords.slice(0, 5).concat(placeholders).slice(0, 5);
+
+    const colors = filled.map((item, idx) =>
+      item.keyword ? KEYWORD_COLORS[idx] : "#E5E7EB",
+    );
+
     return {
-      labels: limitedKeywords.map((item) => item.keyword),
+      labels: filled.map((item) => (item.keyword ? item.keyword : " ")),
       datasets: [
         {
           label: "사용 횟수",
-          data: limitedKeywords.map((item) => item.count),
-          backgroundColor: KEYWORD_COLORS,
-          borderColor: KEYWORD_COLORS,
+          data: filled.map((item) => item.count),
+          backgroundColor: colors,
+          borderColor: colors,
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
