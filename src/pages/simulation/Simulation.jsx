@@ -142,7 +142,7 @@ export default function Simulation() {
 
       <Header showTodoButton={false} />
 
-      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-24">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-24">
         <div className="w-full space-y-6">
           {Object.entries(categoryGroups).map(([category, group]) => {
             if (group.simulations.length === 0) return null;
