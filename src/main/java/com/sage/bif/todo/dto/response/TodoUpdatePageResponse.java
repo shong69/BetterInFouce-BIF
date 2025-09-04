@@ -52,7 +52,7 @@ public class TodoUpdatePageResponse {
                             .subTodoId(subTodo.getSubTodoId())
                             .title(subTodo.getTitle())
                             .sortOrder(subTodo.getSortOrder())
-                            .isCompleted(subTodo.getIsCompleted())
+                            .isCompleted(todo.getType() != TodoTypes.ROUTINE && subTodo.getIsCompleted())
                             .build())
                     .collect(Collectors.toList());
 
@@ -72,7 +72,7 @@ public class TodoUpdatePageResponse {
                 .notificationTime(todo.getNotificationTime())
                 .isCompleted(isCompleted)
                 .subTodos(subTodoInfos)
-                .currentStep(todo.getCurrentStep())
+                .currentStep(todo.getType() == TodoTypes.ROUTINE ? 0 : todo.getCurrentStep())
                 .build();
     }
 
@@ -96,7 +96,7 @@ public class TodoUpdatePageResponse {
                         } else {
                             isSubTodoCompleted = subTodo.getIsCompleted();
                         }
-                        
+
                         return SubTodoInfo.builder()
                                 .subTodoId(subTodo.getSubTodoId())
                                 .title(subTodo.getTitle())
@@ -122,7 +122,7 @@ public class TodoUpdatePageResponse {
                 .notificationTime(todo.getNotificationTime())
                 .isCompleted(isCompleted)
                 .subTodos(subTodoInfos)
-                .currentStep(todo.getCurrentStep())
+                .currentStep(todo.getType() == TodoTypes.ROUTINE ? 0 : todo.getCurrentStep())
                 .build();
     }
 

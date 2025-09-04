@@ -1,5 +1,6 @@
 package com.sage.bif.todo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,6 +23,7 @@ public class SubTodo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
+    @JsonBackReference
     private Todo todo;
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
