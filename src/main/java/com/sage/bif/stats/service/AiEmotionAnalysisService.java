@@ -1,6 +1,7 @@
 package com.sage.bif.stats.service;
 
-import com.sage.bif.common.client.ai.AzureOpenAiClient;
+import com.sage.bif.common.client.ai.AiServiceClient;
+import com.sage.bif.common.client.ai.AiSettings;
 import com.sage.bif.common.client.ai.dto.AiRequest;
 import com.sage.bif.stats.entity.EmotionType;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiEmotionAnalysisService {
 
-    private final AzureOpenAiClient aiClient;
+    private final AiServiceClient aiClient;
 
     public EmotionAnalysisResult analyzeEmotionFromText(String diaryContent) {
         try {
@@ -43,7 +44,7 @@ public class AiEmotionAnalysisService {
         try {
             String prompt = createStatisticsPrompt(emotionCounts);
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_EMOTION_ANALYSIS).getContent();
             
             log.info("AI 통계 텍스트 생성 완료: {}", response.substring(0, Math.min(100, response.length())));
             return response;
@@ -58,7 +59,7 @@ public class AiEmotionAnalysisService {
         try {
             String prompt = createGuardianAdvicePrompt(emotionCounts);
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_GUARDIAN_ADVICE).getContent();
             
             log.info("AI 보호자 조언 생성 완료: {}", response.substring(0, Math.min(100, response.length())));
             return response;
@@ -137,35 +138,48 @@ public class AiEmotionAnalysisService {
         }
 
         try {
-            String prompt = String.format("""
-                다음 일기 내용에서 의미있는 핵심 키워드 5개를 추출해주세요:
-                
-                %s
-                
-                요구사항:
-                1. 일기 내용의 주요 주제나 감정을 나타내는 단어
-                2. 명사 위주로 추출
-                3. 쉼표로 구분하여 5개만 반환
-                4. 한국어로 작성
-                5. 설명이나 추가 텍스트 없이 키워드만 반환""",
+            String prompt = String.format(
+                "다음 감정일기 내용에서 실제로 언급된 의미있는 핵심 키워드만 추출해주세요.\n\n" +
+                "일기 내용에 직접적으로 언급되지 않은 단어는 추출하지 마세요.\n\n" +
+                "일기 내용: %s\n\n" +
+                "요구사항:\n" +
+                "1. 일기 내용에 실제로 언급된 단어만 추출\n" +
+                "2. 구체적인 명사 위주로 추출 (장소, 사람, 활동, 물건, 기관 등)\n" +
+                "3. 감정을 유발한 원인이나 상황을 나타내는 키워드 추출\n" +
+                "4. 감정 상태를 나타내는 구체적 표현도 포함 (예: 우울감, 기쁨, 스트레스 등)\n" +
+                "5. 일상적이고 일반적인 단어(오늘, 하루, 시간, 느낌, 생각 등)는 제외\n" +
+                "6. 추상적이고 모호한 단어는 제외\n" +
+                "7. 쉼표로 구분하여 3-5개만 추출\n" +
+                "8. 일기 내용에 없는 단어는 절대 추출하지 마세요\n\n" +
+                "예시:\n" +
+                "- '오늘 협회 회의실 사용이 불가하다고 전달 받아서 서울역에서 모이기로 했었는데... 회의하러 갈 생각에 참 우울하네' → 협회, 회의실, 서울역, 회의, 우울감\n" +
+                "- '오늘은 정말 그저 그런 하루였다. 식사를 좀 일정한 시간에 해야겠음을 느꼈다. 내일은 프로젝트 회의가 있는 날' → 식사, 프로젝트, 회의\n" +
+                "- '친구와 카페에서 커피를 마셨다. 정말 기분이 좋았다' → 친구, 카페, 커피, 기쁨",
                 content.substring(0, Math.min(500, content.length()))
             );
 
             AiRequest request = new AiRequest(prompt);
-            String response = aiClient.generate(request).getContent();
+            String response = aiClient.generate(request, AiSettings.STATS_KEYWORD_EXTRACTION).getContent();
             
             String[] keywords = response.split(",");
             List<String> extractedKeywords = new java.util.ArrayList<>();
+            String lowerContent = content.toLowerCase();
             
             for (String keyword : keywords) {
                 String trimmed = keyword.trim();
                 if (!trimmed.isEmpty() && trimmed.length() <= 10) {
-                    extractedKeywords.add(trimmed);
+                    if (lowerContent.contains(trimmed.toLowerCase())) {
+                        extractedKeywords.add(trimmed);
+                        log.info("키워드 검증 통과: {}", trimmed);
+                    } else {
+                        log.warn("키워드 검증 실패 - 일기 내용에 없음: {}", trimmed);
+                    }
                 }
             }
             
             if (extractedKeywords.isEmpty()) {
-                return new ArrayList<>();
+                log.info("AI 키워드 추출 결과가 비어있음 - fallback 사용");
+                return extractKeywordsFallback(content);
             }
             
             return extractedKeywords.subList(0, Math.min(5, extractedKeywords.size()));

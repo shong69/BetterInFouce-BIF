@@ -21,4 +21,6 @@ public interface StatsService {
 
     void forceRegenerateStats(Long bifId);
 
+    void cleanupInvalidKeywords(Long bifId);
+
 }

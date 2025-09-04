@@ -4,6 +4,7 @@ import com.sage.bif.common.dto.ApiResponse;
 import com.sage.bif.stats.dto.GuardianStatsResponse;
 import com.sage.bif.stats.dto.StatsResponse;
 import com.sage.bif.stats.service.StatsService;
+import com.sage.bif.stats.service.StatsServiceImpl;
 import com.sage.bif.common.dto.CustomUserDetails;
 import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.user.entity.Guardian;
@@ -45,7 +46,7 @@ public class StatsController {
     private static final String ERROR_AUTH_INVALID = "인증 정보가 올바르지 않습니다.";
     private static final String ERROR_BIF_ONLY = "BIF 사용자만 접근할 수 있습니다.";
     private static final String ERROR_GUARDIAN_ONLY = "보호자만 접근할 수 있습니다.";
-    private static final String ERROR_USER_ONLY = "사용자만 접근할 수 있습니다.";
+
 
     private CustomUserDetails validateAuthentication(UserDetails userDetails) {
         if (!(userDetails instanceof CustomUserDetails customUserDetails)) {
@@ -173,6 +174,33 @@ public class StatsController {
             log.error("통계 데이터 강제 재생성 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("통계 재생성 중 오류가 발생했습니다."));
+        }
+    }
+
+    @PostMapping("/cleanup-keywords/{bifId}")
+    @Operation(summary = "잘못된 키워드 정리", description = "BIF 사용자의 통계에서 잘못된 키워드들을 정리합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "키워드 정리 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public ResponseEntity<ApiResponse<String>> cleanupInvalidKeywords(
+            @AuthenticationPrincipal final UserDetails userDetails,
+            @PathVariable final Long bifId) {
+
+        try {
+            final CustomUserDetails customUserDetails = validateAuthentication(userDetails);
+            validateBifRole(customUserDetails);
+
+            ((StatsServiceImpl) statsService).cleanupInvalidKeywords(bifId);
+            return ResponseEntity.ok(ApiResponse.success("잘못된 키워드가 성공적으로 정리되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("키워드 정리 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("키워드 정리 중 오류가 발생했습니다."));
         }
     }
 
