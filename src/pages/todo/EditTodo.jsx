@@ -461,7 +461,9 @@ export default function EditTodo() {
       showSuccess("할 일이 수정되었습니다.");
       navigate(-1);
     } catch (error) {
-      if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
+      if (error?.response?.status === 401) {
+        showError("인증 오류가 발생했습니다. 다시 로그인해주세요.");
+      } else if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
         showError(error.response.data.message);
       } else {
         const errorMessage =
