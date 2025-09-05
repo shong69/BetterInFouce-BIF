@@ -10,18 +10,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class StatsUpdatedListener {
 
+    @Async
     @EventListener
     public void handleStatsUpdated(final StatsUpdatedEvent event) {
         log.info("Stats updated: {} - User: {} - Type: {} - Reason: {} - EventId: {}",
                 event.getStats().getId(), event.getUserId(), event.getUpdateType(),
                 event.getUpdateReason(), event.getEventId());
-    }
-
-    @Async
-    @EventListener
-    public void handleStatsUpdatedAsync(final StatsUpdatedEvent event) {
-        log.info("Async processing stats update: {} - User: {} - Type: {} - EventId: {}",
-                event.getStats().getId(), event.getUserId(), event.getUpdateType(), event.getEventId());
     }
 
 }
