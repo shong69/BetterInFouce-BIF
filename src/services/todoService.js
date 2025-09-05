@@ -40,19 +40,13 @@ export async function deleteTodo(todoId) {
   return response.data;
 }
 
-export async function completeTodo(todoId, date = null) {
+export async function updateTodoCompletion(todoId, isCompleted, date = null) {
   const params = date ? { date } : {};
-  const response = await api.patch(`/api/todos/${todoId}/complete`, null, {
-    params,
-  });
-  return response.data;
-}
-
-export async function uncompleteTodo(todoId, date = null) {
-  const params = date ? { date } : {};
-  const response = await api.patch(`/api/todos/${todoId}/uncomplete`, null, {
-    params,
-  });
+  const response = await api.patch(
+    `/api/todos/${todoId}/completion`,
+    { isCompleted },
+    { params },
+  );
   return response.data;
 }
 
