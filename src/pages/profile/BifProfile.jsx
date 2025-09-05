@@ -83,6 +83,7 @@ export default function BifProfile() {
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+  const [nicknameValidation, setNicknameValidation] = useState("");
 
   const handleLoadUserStats = useCallback(async () => {
     try {
@@ -297,10 +298,30 @@ export default function BifProfile() {
     setShowBadgeModal(false);
   }
 
+  function validateNickname(nickname) {
+    if (!nickname.trim()) {
+      return "";
+    }
+    if (nickname.includes(" ")) {
+      return "띄어쓰기는 사용할 수 없습니다.";
+    }
+    if (nickname.length < 2) {
+      return "닉네임은 2자 이상 입력해주세요.";
+    }
+    if (nickname.length > 10) {
+      return "닉네임은 10자 이하로 입력해주세요.";
+    }
+    if (!/^[가-힣a-zA-Z0-9]+$/.test(nickname)) {
+      return "닉네임은 한글, 영문, 숫자만 사용 가능합니다.";
+    }
+    return "";
+  }
+
   function handleTabChange(tabType) {
     setActiveTab(tabType);
     setNicknameError("");
     setWithdrawError("");
+    setNicknameValidation("");
   }
 
   async function handleNicknameChange() {
@@ -618,7 +639,29 @@ export default function BifProfile() {
             totalDiaryCount={stats?.totalDiaryCount || 0}
           />
 
-          <Modal isOpen={showUserInfoModal} onClose={handleCloseUserInfoModal}>
+          <Modal
+            isOpen={showUserInfoModal}
+            onClose={handleCloseUserInfoModal}
+            primaryButtonText={
+              activeTab === "nickname"
+                ? "변경"
+                : activeTab === "withdraw"
+                  ? "탈퇴"
+                  : null
+            }
+            secondaryButtonText={activeTab === "auth" ? null : "취소"}
+            primaryButtonColor={
+              activeTab === "withdraw" ? "bg-red-500" : "bg-secondary"
+            }
+            onPrimaryClick={
+              activeTab === "nickname"
+                ? handleNicknameChange
+                : activeTab === "withdraw"
+                  ? handleWithdraw
+                  : null
+            }
+            onSecondaryClick={handleCloseUserInfoModal}
+          >
             <div className="mx-auto w-full max-w-md">
               <h2 className="mb-6 text-center text-xl font-bold">
                 회원정보 수정
@@ -659,55 +702,52 @@ export default function BifProfile() {
 
               <div className="space-y-4">
                 {activeTab === "nickname" && (
-                  <div>
+                  <div className="pt-1">
                     <input
                       type="text"
                       value={newNickname}
-                      onChange={(e) => setNewNickname(e.target.value)}
+                      onChange={(e) => {
+                        setNewNickname(e.target.value);
+                        setNicknameValidation(validateNickname(e.target.value));
+                      }}
                       placeholder="새로운 닉네임을 입력해주세요."
                       className="mt-6.5 mb-4 w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
                     />
 
-                    <p
-                      className={`text-warning mt-2 text-center text-sm ${nicknameError ? "visible" : "invisible"}`}
-                    >
-                      {nicknameError ? nicknameError : "i"}
-                    </p>
-
-                    <div className="mt-4 flex space-x-3">
-                      <BaseButton
-                        onClick={handleCloseUserInfoModal}
-                        title="취소"
-                        variant="secondary"
-                        className="flex-1"
-                      />
-                      <BaseButton
-                        onClick={handleNicknameChange}
-                        title="변경"
-                        variant="primary"
-                        className="flex-1"
-                      />
+                    <div className="flex h-6 items-center justify-center">
+                      {nicknameValidation && (
+                        <p className="text-center text-sm text-red-500">
+                          {nicknameValidation}
+                        </p>
+                      )}
+                      {!nicknameValidation && nicknameError && (
+                        <p className="text-center text-sm text-red-500">
+                          {nicknameError}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {activeTab === "auth" && (
                   <div className="text-center">
-                    <div className="mb-6 rounded-lg bg-gray-100 p-6">
+                    <div className="mb-5 rounded-lg bg-gray-100 p-5">
                       <p className="mb-2 text-sm text-gray-600">
                         보호자 연결용 인증번호
                       </p>
-                      <p className="text-2xl font-bold tracking-wider text-gray-800">
+                      <p className="text-xl font-bold tracking-wider text-gray-800">
                         {stats?.connectionCode ||
                           "인증번호를 불러올 수 없습니다"}
                       </p>
                     </div>
-                    <BaseButton
-                      onClick={handleAuthConfirm}
-                      title="확인"
-                      variant="primary"
-                      className="w-full"
-                    />
+                    <div className="mb-3">
+                      <BaseButton
+                        onClick={handleAuthConfirm}
+                        title="확인"
+                        variant="primary"
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -730,20 +770,6 @@ export default function BifProfile() {
                         {withdrawError}
                       </p>
                     )}
-                    <div className="mt-4 flex space-x-3">
-                      <BaseButton
-                        onClick={handleCloseUserInfoModal}
-                        title="취소"
-                        variant="secondary"
-                        className="flex-1"
-                      />
-                      <BaseButton
-                        onClick={handleWithdraw}
-                        title="탈퇴"
-                        variant="danger"
-                        className="flex-1"
-                      />
-                    </div>
                   </div>
                 )}
               </div>

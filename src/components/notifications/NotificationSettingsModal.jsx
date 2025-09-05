@@ -167,7 +167,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
 
         <div className="mb-6 text-left">
           <div
-            className={`flex items-center justify-between rounded-lg border p-3 ${
+            className={`flex items-center justify-between rounded-full border p-3 ${
               notificationStatus === "granted" && webPushStatus === "subscribed"
                 ? "border-green-300 bg-green-50"
                 : "border-gray-300 bg-gray-50"
@@ -266,7 +266,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
                   key={notification.id}
                   role="button"
                   tabIndex={0}
-                  className={`w-full cursor-pointer rounded-lg border p-2 text-left transition-colors hover:bg-gray-100 ${
+                  className={`w-full cursor-pointer rounded-full border p-2 text-left transition-colors hover:bg-gray-100 ${
                     notification.read
                       ? "border-gray-100 bg-gray-50"
                       : "border-gray-300 bg-white shadow-sm"
@@ -309,7 +309,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
 
         <button
           onClick={onClose}
-          className="bg-primary hover:bg-secondary mt-4 w-full rounded-lg py-2 text-white"
+          className="bg-primary hover:bg-secondary mt-4 w-full rounded-full py-2 text-white"
         >
           닫기
         </button>
