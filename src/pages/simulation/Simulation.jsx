@@ -63,12 +63,18 @@ export default function Simulation() {
   }
 
   async function handleRecommendSimulation(simulationId) {
-    const updatedSimulations = simulations.map((sim) =>
-      sim.id === simulationId
-        ? { ...sim, isRecommended: !sim.isRecommended }
-        : sim,
-    );
-    setSimulations(updatedSimulations);
+    try {
+      await simulationService.recommendSimulation(simulationId);
+
+      const updatedSimulations = simulations.map((sim) =>
+        sim.id === simulationId
+          ? { ...sim, isRecommended: !sim.isRecommended }
+          : sim,
+      );
+      setSimulations(updatedSimulations);
+    } catch {
+      setError("추천 상태 업데이트에 실패했습니다.");
+    }
   }
 
   function toggleCategory(category) {
@@ -136,7 +142,7 @@ export default function Simulation() {
 
       <Header showTodoButton={false} />
 
-      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-24">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-24">
         <div className="w-full space-y-6">
           {Object.entries(categoryGroups).map(([category, group]) => {
             if (group.simulations.length === 0) return null;

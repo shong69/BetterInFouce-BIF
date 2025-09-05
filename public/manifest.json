@@ -4,8 +4,6 @@
   "description": "경계선 지능인을 위한 할일 관리 앱",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#16a34a",
   "orientation": "portrait",
   "scope": "/",
   "icons": [
