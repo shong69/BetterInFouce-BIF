@@ -62,7 +62,7 @@ export default function DatePickerModal({
         <div className="mb-4 flex items-center justify-between">
           <button
             onClick={() => handleMonthChange(-1)}
-            className="rounded-full p-2 hover:bg-gray-100"
+            className="rounded-lg p-2 hover:bg-gray-100"
           >
             ←
           </button>
@@ -71,7 +71,7 @@ export default function DatePickerModal({
           </h3>
           <button
             onClick={() => handleMonthChange(1)}
-            className="rounded-full p-2 hover:bg-gray-100"
+            className="rounded-lg p-2 hover:bg-gray-100"
           >
             →
           </button>
@@ -90,7 +90,7 @@ export default function DatePickerModal({
             <button
               key={formatDateToYMD(dayInfo.date)}
               onClick={() => handleDateSelect(dayInfo.date)}
-              className={`rounded-full p-2 text-sm transition-colors ${!dayInfo.isCurrentMonth ? "text-gray-300" : "text-gray-900"} ${dayInfo.isToday ? "bg-blue-100 font-medium text-blue-600" : ""} ${dayInfo.isSelected ? "bg-secondary text-white" : "hover:bg-gray-100"} `}
+              className={`rounded-lg p-2 text-sm transition-colors ${!dayInfo.isCurrentMonth ? "text-gray-300" : "text-gray-900"} ${dayInfo.isToday ? "bg-blue-100 font-medium text-blue-600" : ""} ${dayInfo.isSelected ? "bg-secondary text-white" : "hover:bg-gray-100"} `}
             >
               {dayInfo.day}
             </button>
@@ -122,7 +122,7 @@ export default function DatePickerModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1 hover:bg-gray-100"
+            className="rounded-lg p-1 hover:bg-gray-100"
           >
             <BiX size={20} />
           </button>
