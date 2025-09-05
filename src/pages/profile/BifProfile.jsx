@@ -396,8 +396,8 @@ export default function BifProfile() {
                 <div className="flex items-center space-x-4">
                   <div className="flex flex-shrink-0 flex-col items-center">
                     {stats?.totalDiaryCount >= 1 && (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 shadow-lg">
-                        <span className="text-lg">
+                      <div className="flex h-12 w-12 items-center justify-center">
+                        <span className="text-2xl">
                           {stats.totalDiaryCount >= 500
                             ? "👑"
                             : stats.totalDiaryCount >= 100
