@@ -10,16 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApplicationEventListener {
 
+    @Async
     @EventListener
     public void handleBaseEvent(BaseEvent event) {
         log.info("Event received: {} - EventId: {} - Source: {} - CorrelationId: {}",
                 event.getEventType(), event.getEventId(), event.getSource(), event.getCorrelationId());
-    }
-
-    @Async
-    @EventListener
-    public void handleAsyncEvent(BaseEvent event) {
-        log.info("Async event processing: {} - EventId: {}", event.getEventType(), event.getEventId());
     }
 
 }

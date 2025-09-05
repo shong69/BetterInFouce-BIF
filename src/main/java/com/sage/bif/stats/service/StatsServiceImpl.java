@@ -66,7 +66,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     private final EntityManager entityManager;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public StatsResponse getMonthlyStats(final Long bifId) {
         try {
             log.info("BIF ID {}의 월별 통계 조회 시작", bifId);
@@ -100,7 +100,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public GuardianStatsResponse getGuardianStats(final Long bifId) {
         log.info("보호자가 BIF ID {}의 통계를 조회합니다.", bifId);
 

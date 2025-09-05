@@ -133,24 +133,36 @@ public class KeywordAccumulationService {
             return false;
         }
         
-        String[] invalidPatterns = {
-            "일상", "일반", "보통", "평범", "생각", "느낌", "시간", "하루", "오늘", "내일", "어제",
-            "그냥", "그저", "그런", "이런", "저런", "어떤", "무엇", "언제", "어디", "왜", "어떻게",
-            "정말", "참", "너무", "많이", "조금", "좀", "잘", "못", "안", "없", "있", "되", "안되"
+        String trimmedKeyword = keyword.trim();
+        
+        if (trimmedKeyword.length() < 1 || trimmedKeyword.length() > 10) {
+            return false;
+        }
+        
+        if (trimmedKeyword.matches("^[0-9\\s\\-_.,!?]+$")) {
+            return false;
+        }
+        
+        String[] invalidCategories = {
+            "개발", "프로그래밍", "코딩", "기술", "소프트웨어", "하드웨어", "앱", "웹", "모바일",
+            "업무", "회의", "프로젝트", "과제", "시험", "학습", "공부", "교육", "훈련",
+            "도구", "장비", "기계", "컴퓨터", "스마트폰", "태블릿", "프로그램", "시스템"
         };
         
-        for (String pattern : invalidPatterns) {
-            if (keyword.contains(pattern)) {
+        for (String category : invalidCategories) {
+            if (trimmedKeyword.contains(category)) {
                 return false;
             }
         }
         
-        if (keyword.length() < 1 || keyword.length() > 10) {
-            return false;
-        }
+        String[] tooGeneric = {
+            "일상", "생각", "느낌", "시간", "하루", "오늘", "내일", "어제", "그냥", "정말", "참", "너무"
+        };
         
-        if (keyword.matches("^[0-9\\s\\-_.,!?]+$")) {
-            return false;
+        for (String generic : tooGeneric) {
+            if (trimmedKeyword.equals(generic)) {
+                return false;
+            }
         }
         
         return true;
