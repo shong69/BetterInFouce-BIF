@@ -42,7 +42,7 @@ export default function Bubble({
   return (
     <div className="flex max-w-[85%] items-start gap-2">
       <img src={logo2} alt="현명한 거북이" className="h-7 w-7" />
-      <div className="max-w-full min-w-[240px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-b from-[#DAEAF8]/90 to-[#F7E6FF]/100 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+      <div className="w-[240px] rounded-2xl rounded-tl-md bg-white bg-gradient-to-b from-[#DAEAF8]/90 to-[#F7E6FF]/100 px-4 py-3 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-800">
             현명한 거북이
@@ -52,7 +52,7 @@ export default function Bubble({
         {!isHidden && showNextButton && onNextStep && (
           <div className="flex justify-end">
             <button
-              className="w-13 rounded-full bg-[#343434] px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-[#7db800]"
+              className="w-13 rounded-full bg-[#343434] px-3 py-1 text-sm font-medium text-white transition-colors"
               onClick={onNextStep}
             >
               {isLastStep ? "완료" : "다음"}

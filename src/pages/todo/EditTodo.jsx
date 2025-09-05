@@ -8,7 +8,7 @@ import PrimaryButton from "@components/ui/PrimaryButton";
 import { HiPlus, HiX } from "react-icons/hi";
 
 import { getTodoDetail, updateTodo } from "@services/todoService";
-import { useToastStore, useLoadingStore } from "@stores";
+import { useToastStore, useLoadingStore, useTodoStore } from "@stores";
 
 const TODO_TYPES = {
   TASK: "TASK",
@@ -47,11 +47,13 @@ export default function EditTodo() {
   const { id } = useParams();
   const { showSuccess, showError } = useToastStore();
   const { showLoading, hideLoading } = useLoadingStore();
+  const { setNeedsRefresh } = useTodoStore();
 
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaveTime, setLastSaveTime] = useState(0);
   const [originalData, setOriginalData] = useState(null);
   const timeInputRef = useRef(null);
+  const [hasOrder, setHasOrder] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     type: TODO_TYPES.TASK,
@@ -84,7 +86,9 @@ export default function EditTodo() {
 
     if (Array.isArray(dateString)) {
       const [year, month, day] = dateString;
-      return `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+      return `${year}-${month.toString().padStart(2, "0")}-${day
+        .toString()
+        .padStart(2, "0")}`;
     }
 
     if (typeof dateString === "string") {
@@ -99,7 +103,9 @@ export default function EditTodo() {
 
     if (Array.isArray(timeString)) {
       const [hours, minutes] = timeString;
-      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
     }
 
     if (typeof timeString === "string" && timeString.includes(":")) {
@@ -133,6 +139,11 @@ export default function EditTodo() {
     async function fetchTodoDetail() {
       try {
         const data = await getTodoDetail(id);
+        const isOrdered =
+          data.subTodos &&
+          data.subTodos.length > 0 &&
+          data.subTodos.every((sub) => sub.sortOrder > 0);
+        setHasOrder(isOrdered);
 
         const formattedData = {
           title: data.title || "",
@@ -147,7 +158,7 @@ export default function EditTodo() {
             data.subTodos?.map((sub) => ({
               subTodoId: sub.subTodoId || null,
               title: sub.title || "",
-              sortOrder: sub.sortOrder || 1,
+              sortOrder: sub.sortOrder || 0,
             })) || [],
         };
 
@@ -371,7 +382,7 @@ export default function EditTodo() {
     const newSubTodo = {
       subTodoId: null,
       title: "",
-      sortOrder: formData.subTodos.length + 1,
+      sortOrder: hasOrder ? formData.subTodos.length + 1 : 0,
     };
 
     setFormData((prev) => ({
@@ -383,7 +394,7 @@ export default function EditTodo() {
   function handleRemoveSubTodo(index) {
     const newSubTodos = formData.subTodos
       .filter((_, i) => i !== index)
-      .map((item, i) => ({ ...item, sortOrder: i + 1 }));
+      .map((item, i) => ({ ...item, sortOrder: hasOrder ? i + 1 : 0 }));
 
     setFormData((prev) => ({ ...prev, subTodos: newSubTodos }));
 
@@ -441,15 +452,18 @@ export default function EditTodo() {
           .map((sub, index) => ({
             subTodoId: sub.subTodoId,
             title: sub.title.trim(),
-            sortOrder: index + 1,
+            sortOrder: hasOrder ? index + 1 : 0,
           })),
       };
 
       await updateTodo(id, updateRequest);
+      setNeedsRefresh(true);
       showSuccess("할 일이 수정되었습니다.");
       navigate(-1);
     } catch (error) {
-      if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
+      if (error?.response?.status === 401) {
+        showError("인증 오류가 발생했습니다. 다시 로그인해주세요.");
+      } else if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
         showError(error.response.data.message);
       } else {
         const errorMessage =

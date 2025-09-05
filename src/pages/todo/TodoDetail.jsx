@@ -14,8 +14,6 @@ import { HiOutlineTrash } from "react-icons/hi";
 import {
   getTodoDetail,
   updateSubTodoCompletion,
-  completeTodo,
-  uncompleteTodo,
   updateTodoStep,
   deleteTodo,
 } from "@services/todoService";
@@ -26,6 +24,7 @@ export default function TodoDetail() {
   const location = useLocation();
   const { id } = useParams();
   const [todoData, setTodoData] = useState(null);
+  const { selectedDate, updateTodoCompletion } = useTodoStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,10 +33,8 @@ export default function TodoDetail() {
     todoTitle: "",
   });
 
-  const typeFromUrl = new URLSearchParams(window.location.search).get("type");
   const { showError } = useToastStore();
   const { user } = useUserStore();
-  const { selectedDate } = useTodoStore();
 
   const colors = useMemo(() => {
     if (!todoData?.type) {
@@ -74,12 +71,11 @@ export default function TodoDetail() {
   }
 
   useEffect(() => {
-    async function fetchTodoDetail() {
+    async function fetchInitialData() {
+      setIsLoading(true);
       try {
         const data = await getTodoDetail(id, selectedDate);
-
         setTodoData(data);
-
         if (data.hasOrder) {
           setCurrentStep(data.currentStep || 0);
         }
@@ -90,8 +86,7 @@ export default function TodoDetail() {
         setIsLoading(false);
       }
     }
-
-    fetchTodoDetail();
+    fetchInitialData();
   }, [id, selectedDate, navigate, showError]);
 
   useEffect(() => {
@@ -140,7 +135,6 @@ export default function TodoDetail() {
     const shouldBeCompleted = updatedSubTodos.every((s) => s.isCompleted);
 
     const previousTodoData = todoData;
-    const previousTodoCompleted = todoData.isCompleted;
 
     setTodoData((prev) => ({
       ...prev,
@@ -156,12 +150,12 @@ export default function TodoDetail() {
         selectedDate,
       );
 
-      if (previousTodoCompleted !== shouldBeCompleted) {
-        if (shouldBeCompleted) {
-          await completeTodo(todoData.todoId);
-        } else {
-          await uncompleteTodo(todoData.todoId, selectedDate);
-        }
+      if (previousTodoData.isCompleted !== shouldBeCompleted) {
+        await updateTodoCompletion(
+          todoData.todoId,
+          shouldBeCompleted,
+          selectedDate,
+        );
       }
 
       const updatedData = await getTodoDetail(id, selectedDate);
@@ -178,12 +172,25 @@ export default function TodoDetail() {
       return;
     }
 
-    if (currentStep <= 0 || isRecentClick()) {
+    if (isRecentClick()) {
       return;
     }
 
-    const wasLastStep = currentStep === todoData.subTodos.length - 1;
-    const newStep = currentStep - 1;
+    let newStep;
+    if (currentStep === 0) {
+      if (todoData.isCompleted) {
+        newStep = todoData.subTodos.length - 1;
+      } else {
+        newStep = 0;
+      }
+    } else {
+      newStep = currentStep - 1;
+    }
+
+    if (newStep === currentStep) {
+      return;
+    }
+
     const previousStep = currentStep;
     const previousIsCompleted = todoData.isCompleted;
 
@@ -191,16 +198,15 @@ export default function TodoDetail() {
 
     try {
       await updateTodoStep(id, newStep);
-      if (wasLastStep) {
-        await uncompleteTodo(id, selectedDate);
-      }
       const updatedData = await getTodoDetail(id, selectedDate);
       setTodoData(updatedData);
       setCurrentStep(newStep);
     } catch {
       showError("단계 저장에 실패했습니다.");
       setCurrentStep(previousStep);
-      setTodoData((prev) => ({ ...prev, isCompleted: previousIsCompleted }));
+      if (todoData.type !== "ROUTINE") {
+        setTodoData((prev) => ({ ...prev, isCompleted: previousIsCompleted }));
+      }
     }
   }
 
@@ -210,23 +216,39 @@ export default function TodoDetail() {
       return;
     }
 
-    if (isRecentClick() || currentStep >= todoData.subTodos.length - 1) {
+    if (isRecentClick()) {
       return;
     }
 
-    const newStep = currentStep + 1;
+    let newStep;
+    if (currentStep === todoData.subTodos.length - 1) {
+      if (todoData.isCompleted) {
+        newStep = 0;
+      } else {
+        newStep = todoData.subTodos.length - 1;
+      }
+    } else {
+      newStep = currentStep + 1;
+    }
+
+    if (newStep === currentStep) {
+      return;
+    }
+
     const previousStep = currentStep;
 
     setCurrentStep(newStep);
 
-    try {
-      await updateTodoStep(id, newStep);
-      const updatedData = await getTodoDetail(id, selectedDate);
-      setTodoData(updatedData);
-      setCurrentStep(newStep);
-    } catch {
-      showError("단계 저장에 실패했습니다.");
-      setCurrentStep(previousStep);
+    if (!todoData.isCompleted) {
+      try {
+        await updateTodoStep(id, newStep);
+        const updatedData = await getTodoDetail(id, selectedDate);
+        setTodoData(updatedData);
+        setCurrentStep(newStep);
+      } catch {
+        showError("단계 저장에 실패했습니다.");
+        setCurrentStep(previousStep);
+      }
     }
   }
 
@@ -250,10 +272,9 @@ export default function TodoDetail() {
         await updateTodoStep(id, currentStep);
       }
 
-      await completeTodo(id, selectedDate);
+      await updateTodoCompletion(id, true, selectedDate);
       const updatedData = await getTodoDetail(id, selectedDate);
       setTodoData(updatedData);
-
       if (updatedData.hasOrder) {
         setCurrentStep(updatedData.currentStep || 0);
       }
@@ -415,13 +436,14 @@ export default function TodoDetail() {
                 : handleNextStep
             }
             disabled={
-              !todoData ||
-              (currentStep === todoData.subTodos.length - 1 &&
-                todoData.isCompleted)
+              user?.userRole === "GUARDIAN" ||
+              (todoData.isCompleted &&
+                currentStep === todoData.subTodos.length - 1)
             }
             className={`text-md flex-1 rounded-xl px-4 py-3 font-medium transition-colors ${
-              currentStep === todoData.subTodos.length - 1 &&
-              todoData.isCompleted
+              user?.userRole === "GUARDIAN" ||
+              (todoData.isCompleted &&
+                currentStep === todoData.subTodos.length - 1)
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : currentStep === todoData.subTodos.length - 1
                   ? colors.completeButton
@@ -431,7 +453,7 @@ export default function TodoDetail() {
             {currentStep === todoData.subTodos.length - 1
               ? todoData.isCompleted
                 ? "완료됨"
-                : "완료"
+                : "완료하기"
               : "다음"}
           </button>
         </div>
@@ -452,28 +474,57 @@ export default function TodoDetail() {
 
       <div className="mx-auto max-w-4xl p-2 sm:p-4">
         <div className="px-2">
-          {typeFromUrl === "checklist" ? renderChecklist() : renderSequence()}
+          {todoData?.hasOrder ? renderSequence() : renderChecklist()}
 
           <div className="mt-4">
             <div className="rounded-xl border border-gray-200/50 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
-              {todoData.isCompleted ? (
-                <>
-                  <span className="mb-3 block text-sm text-gray-600">
-                    진행도
-                  </span>
+              <span className="mb-3 block text-sm text-black">진행도</span>
 
-                  <div className="mb-4 flex items-center justify-center px-4">
-                    {todoData.subTodos.map((subTodo, index) => (
+              <div
+                className="mb-3 flex items-center justify-center px-4"
+                key={currentStep}
+              >
+                {todoData.subTodos.map((subTodo, index) => {
+                  let isCompleted = false;
+                  let isActive = false;
+
+                  if (
+                    todoData?.type === "SEQUENCE" ||
+                    (todoData?.type === "ROUTINE" && todoData?.hasOrder)
+                  ) {
+                    if (todoData.isCompleted) {
+                      isCompleted = true;
+                      isActive = false;
+                    } else {
+                      isCompleted = index < currentStep;
+                      isActive = index === currentStep;
+                    }
+                  } else {
+                    isCompleted = subTodo.isCompleted;
+                    isActive = !isCompleted;
+                  }
+
+                  const lineActive = isCompleted;
+
+                  return (
+                    <div
+                      key={`progress-${subTodo.subTodoId || index}`}
+                      className="flex items-center"
+                    >
                       <div
-                        key={`completed-${subTodo.subTodoId || index}`}
-                        className="flex items-center"
+                        className={`text-2xl transition-all duration-500 ${
+                          isCompleted
+                            ? "scale-110 animate-bounce"
+                            : "scale-100 opacity-60"
+                        }`}
+                        style={{
+                          transform: isCompleted ? "scale(1.2)" : "scale(1)",
+                          filter: isCompleted
+                            ? `drop-shadow(0 0 10px ${todoData.type === "ROUTINE" ? "rgba(255, 179, 71, 0.5)" : "rgba(76, 175, 80, 0.5)"})`
+                            : "none",
+                        }}
                       >
-                        <div
-                          className="scale-110 text-2xl transition-all duration-500"
-                          style={{
-                            filter: `drop-shadow(0 0 10px ${todoData.type === "ROUTINE" ? "rgba(255, 179, 71, 0.5)" : "rgba(76, 175, 80, 0.5)"})`,
-                          }}
-                        >
+                        {isCompleted ? (
                           <FaCheckCircle
                             style={{
                               color:
@@ -482,120 +533,51 @@ export default function TodoDetail() {
                                   : "#4CAF50",
                             }}
                           />
-                        </div>
-                        {index < todoData.subTodos.length - 1 && (
-                          <div className="mx-2 flex items-center">
-                            <div
-                              className="h-0.5 w-8 transition-all duration-700"
-                              style={{
-                                backgroundImage:
-                                  todoData.type === "ROUTINE"
-                                    ? "linear-gradient(90deg, #fb923c, #fdba74)"
-                                    : "linear-gradient(90deg, #4caf50, #81c784)",
-                                backgroundSize: "100% 100%",
-                              }}
-                            />
-                          </div>
+                        ) : isActive ? (
+                          <FaCircle
+                            style={{
+                              color:
+                                todoData.type === "ROUTINE"
+                                  ? "#FFB347"
+                                  : "#4CAF50",
+                              opacity: 1,
+                            }}
+                          />
+                        ) : (
+                          <FaCircle
+                            style={{ color: "#D1D5DB", opacity: 0.5 }}
+                          />
                         )}
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="py-2 text-center">
-                    <p className="text-lg font-medium text-black">
-                      🎉 완료했어요! 🌟
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="mb-3 block text-sm text-black">진행도</span>
-
-                  <div className="mb-3 flex items-center justify-center px-4">
-                    {todoData.subTodos.map((subTodo, index) => {
-                      let isCompleted = false;
-                      let isActive = false;
-
-                      if (typeFromUrl === "sequence") {
-                        if (todoData.isCompleted) {
-                          isCompleted = true;
-                          isActive = false;
-                        } else {
-                          isCompleted = index < currentStep;
-                          isActive = index === currentStep;
-                        }
-                      } else {
-                        isCompleted = subTodo.isCompleted;
-                        isActive = !isCompleted;
-                      }
-
-                      const lineActive = isCompleted;
-
-                      return (
-                        <div
-                          key={`progress-${subTodo.subTodoId || index}`}
-                          className="flex items-center"
-                        >
+                      {index < todoData.subTodos.length - 1 && (
+                        <div className="mx-2 flex items-center">
                           <div
-                            className={`text-2xl transition-all duration-500 ${
-                              isCompleted
-                                ? "scale-110 animate-bounce"
-                                : "scale-100 opacity-60"
-                            }`}
+                            className="h-0.5 w-8 transition-all duration-700"
                             style={{
-                              transform: isCompleted
-                                ? "scale(1.2)"
-                                : "scale(1)",
-                              filter: isCompleted
-                                ? `drop-shadow(0 0 10px ${todoData.type === "ROUTINE" ? "rgba(255, 179, 71, 0.5)" : "rgba(76, 175, 80, 0.5)"})`
-                                : "none",
+                              backgroundImage: lineActive
+                                ? todoData.type === "ROUTINE"
+                                  ? "linear-gradient(90deg, #fb923c, #fdba74)"
+                                  : "linear-gradient(90deg, #4caf50, #81c784)"
+                                : "repeating-linear-gradient(90deg, #d1d5db 0px, #d1d5db 4px, transparent 4px, transparent 8px)",
+                              backgroundSize: lineActive
+                                ? "100% 100%"
+                                : "8px 100%",
                             }}
-                          >
-                            {isCompleted ? (
-                              <FaCheckCircle
-                                style={{
-                                  color:
-                                    todoData.type === "ROUTINE"
-                                      ? "#FFB347"
-                                      : "#4CAF50",
-                                }}
-                              />
-                            ) : isActive ? (
-                              <FaCircle
-                                style={{
-                                  color: "#D1D5DB",
-                                  opacity: 0.5,
-                                }}
-                              />
-                            ) : (
-                              <FaCircle
-                                style={{ color: "#D1D5DB", opacity: 0.5 }}
-                              />
-                            )}
-                          </div>
-
-                          {index < todoData.subTodos.length - 1 && (
-                            <div className="mx-2 flex items-center">
-                              <div
-                                className="h-0.5 w-8 transition-all duration-700"
-                                style={{
-                                  backgroundImage: lineActive
-                                    ? todoData.type === "ROUTINE"
-                                      ? "linear-gradient(90deg, #fb923c, #fdba74)"
-                                      : "linear-gradient(90deg, #4caf50, #81c784)"
-                                    : "repeating-linear-gradient(90deg, #d1d5db 0px, #d1d5db 4px, transparent 4px, transparent 8px)",
-                                  backgroundSize: lineActive
-                                    ? "100% 100%"
-                                    : "8px 100%",
-                                }}
-                              />
-                            </div>
-                          )}
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
-                </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {todoData.isCompleted && (
+                <div className="py-2 text-center">
+                  <p className="text-lg font-medium text-black">
+                    🎉 완료했어요! 🌟
+                  </p>
+                </div>
               )}
             </div>
           </div>

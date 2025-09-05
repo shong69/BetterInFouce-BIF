@@ -129,6 +129,12 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
     }
   }
 
+  function handleNotificationKeyDown(event, notification) {
+    if (event.key === "Enter" || event.key === " ") {
+      handleNotificationClick(notification);
+    }
+  }
+
   function getRelativeTime(dateString) {
     const now = new Date();
     const date = new Date(dateString);
@@ -220,7 +226,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
         <div className="flex min-h-0 flex-1 flex-col space-y-3 text-left">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium">알림 히스토리</h3>
+              <h3 className="text-xs font-medium">알림 히스토리</h3>
               <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600">
                 {stats.total}개
               </span>
@@ -229,14 +235,14 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
               <div className="flex items-center gap-1">
                 <button
                   onClick={markAllAsRead}
-                  className="bg-secondary flex items-center gap-1 rounded px-2 py-1 text-xs text-white hover:bg-blue-600"
+                  className="bg-secondary text-tiny flex items-center gap-1 rounded px-2 py-1 text-white hover:bg-blue-600"
                 >
                   <IoCheckmarkDoneOutline size={10} />
                   전체 읽음
                 </button>
                 <button
                   onClick={clearAllNotifications}
-                  className="bg-warning flex items-center gap-1 rounded px-2 py-1 text-xs text-white hover:bg-red-600"
+                  className="bg-warning text-tiny flex items-center gap-1 rounded px-2 py-1 text-white hover:bg-red-600"
                 >
                   <IoTrashOutline size={10} />
                   전체 삭제
@@ -256,14 +262,17 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
               </div>
             ) : (
               notifications.map((notification) => (
-                <button
+                <div
                   key={notification.id}
+                  role="button"
+                  tabIndex={0}
                   className={`w-full cursor-pointer rounded-lg border p-2 text-left transition-colors hover:bg-gray-100 ${
                     notification.read
                       ? "border-gray-100 bg-gray-50"
                       : "border-gray-300 bg-white shadow-sm"
                   }`}
                   onClick={() => handleNotificationClick(notification)}
+                  onKeyDown={(e) => handleNotificationKeyDown(e, notification)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -292,7 +301,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
                       </button>
                     </div>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>
