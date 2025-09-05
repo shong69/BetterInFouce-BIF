@@ -72,7 +72,7 @@ public class TodoUpdatePageResponse {
                 .notificationTime(todo.getNotificationTime())
                 .isCompleted(isCompleted)
                 .subTodos(subTodoInfos)
-                .currentStep(todo.getType() == TodoTypes.ROUTINE ? 0 : todo.getCurrentStep())
+                .currentStep(todo.getCurrentStep())
                 .build();
     }
 
@@ -122,7 +122,7 @@ public class TodoUpdatePageResponse {
                 .notificationTime(todo.getNotificationTime())
                 .isCompleted(isCompleted)
                 .subTodos(subTodoInfos)
-                .currentStep(todo.getType() == TodoTypes.ROUTINE ? 0 : todo.getCurrentStep())
+                .currentStep(todo.getCurrentStep())
                 .build();
     }
 

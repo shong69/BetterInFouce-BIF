@@ -6,6 +6,7 @@ import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.todo.dto.request.AiTodoCreateRequest;
 import com.sage.bif.todo.dto.request.SubTodoCompletionUpdateRequest;
 import com.sage.bif.todo.dto.request.SubTodoUpdateRequest;
+import com.sage.bif.todo.dto.request.TodoCompletionRequest;
 import com.sage.bif.todo.dto.request.TodoUpdateRequest;
 import com.sage.bif.todo.dto.response.TodoListResponse;
 import com.sage.bif.todo.dto.response.TodoUpdatePageResponse;
@@ -131,34 +132,20 @@ public class TodoController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{todoId}/complete")
-    @Operation(summary = "할 일 완료 상태 변경")
-    public ResponseEntity<TodoListResponse> completeTodo(
+    @PatchMapping("/{todoId}/completion")
+    @Operation(summary = "할 일 완료/미완료 상태 변경")
+    public ResponseEntity<TodoListResponse> updateTodoCompletion(
             @PathVariable Long todoId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
-            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
-        }
-        Long bifId = customUserDetails.getBifId();
-        LocalDate completionDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
-        TodoListResponse response = todoService.completeTodo(bifId, todoId, completionDate);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/{todoId}/uncomplete")
-    @Operation(summary = "할 일 미완료 상태 변경")
-    public ResponseEntity<TodoListResponse> uncompleteTodo(
-            @PathVariable Long todoId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Valid @RequestBody TodoCompletionRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
             throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
         }
         Long bifId = customUserDetails.getBifId();
         LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
-        TodoListResponse response = todoService.uncompleteTodo(bifId, todoId, targetDate);
+
+        TodoListResponse response = todoService.updateTodoCompletion(bifId, todoId, targetDate, request.getIsCompleted());
 
         return ResponseEntity.ok(response);
     }

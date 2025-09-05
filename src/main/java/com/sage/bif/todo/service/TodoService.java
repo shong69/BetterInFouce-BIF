@@ -22,13 +22,7 @@ public interface TodoService {
 
     boolean deleteTodo(Long bifId, Long todoId);
 
-    TodoListResponse completeTodo(Long bifId, Long todoId);
-
-    TodoListResponse completeTodo(Long bifId, Long todoId, LocalDate completionDate);
-
-    TodoListResponse uncompleteTodo(Long bifId, Long todoId);
-
-    TodoListResponse uncompleteTodo(Long bifId, Long todoId, LocalDate targetDate);
+    TodoListResponse updateTodoCompletion(Long bifId, Long todoId, LocalDate completionDate, boolean isCompleted);
 
     void updateCurrentStep(Long bifId, Long todoId, int newStep);
 
