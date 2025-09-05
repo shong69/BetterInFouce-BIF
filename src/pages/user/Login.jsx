@@ -1,9 +1,26 @@
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Logo from "@components/ui/LoginLogo";
 import Footer from "@components/common/Footer";
+import ErrorPageManager from "@pages/errors/ErrorPage";
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState(null);
+
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError({
+        errorCode: "401",
+        message: "로그인 중 문제가 발생했습니다.",
+        details: "다시 시도해주세요.",
+      });
+    }
+  }, [searchParams]);
 
   function handleGoogleLogin() {
     window.location.href = `${API_BASE_URL}/api/oauth2/authorization/google`;
@@ -13,6 +30,17 @@ export default function Login() {
   }
   function handleNaverLogin() {
     window.location.href = `${API_BASE_URL}/api/oauth2/authorization/naver`;
+  }
+
+  if (error) {
+    return (
+      <ErrorPageManager
+        errorCode={error.errorCode}
+        message={error.message}
+        details={error.details}
+        buttonType="home"
+      />
+    );
   }
 
   return (
