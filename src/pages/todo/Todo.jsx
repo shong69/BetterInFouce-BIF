@@ -24,9 +24,10 @@ function EmptyTodoState() {
 
 export default function Todo() {
   const navigate = useNavigate();
-  const [routines, setRoutines] = useState([]);
-  const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { selectedDate, setSelectedDate, routines, tasks, setTodos } =
+    useTodoStore();
 
   const [searchParams] = useSearchParams();
   const [activeTab] = useState(() => {
@@ -38,7 +39,6 @@ export default function Todo() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const { showError } = useToastStore();
-  const { selectedDate, setSelectedDate } = useTodoStore();
   const { user } = useUserStore();
 
   function getWeekStart(date) {
@@ -92,13 +92,7 @@ export default function Todo() {
       setIsLoading(true);
       try {
         const data = await getTodos(selectedDate);
-
-        const routinesData =
-          data.filter((todo) => todo.type === "ROUTINE") || [];
-        const tasksData = data.filter((todo) => todo.type === "TASK") || [];
-
-        setTasks(tasksData);
-        setRoutines(routinesData);
+        setTodos(data);
       } catch {
         showError("할 일을 불러오는데 실패했습니다.");
       } finally {
@@ -107,7 +101,7 @@ export default function Todo() {
     }
 
     fetchTodoList();
-  }, [selectedDate, showError]);
+  }, [selectedDate, setTodos, showError]);
 
   useEffect(() => {
     const selectedWeekStart = getWeekStart(new Date(selectedDate));
