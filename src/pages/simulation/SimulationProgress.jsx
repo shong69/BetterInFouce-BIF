@@ -20,9 +20,9 @@ function ProgressBar({ progress = 0, label = "진행도" }) {
           {Math.round(progress)}%
         </span>
       </div>
-      <div className="bg-secondary/20 h-1 rounded-full">
+      <div className="bg-primary/20 h-1 rounded-full">
         <div
-          className="bg-secondary h-1 rounded-full transition-all duration-300"
+          className="bg-primary h-1 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -53,6 +53,9 @@ export default function SimulationProgress() {
 
   const [isTypingFeedback, setIsTypingFeedback] = useState(false);
   const [currentFeedbackMessage, setCurrentFeedbackMessage] = useState("");
+  const [displayedFeedbackTexts, setDisplayedFeedbackTexts] = useState({});
+  const [typingBubbleId, setTypingBubbleId] = useState(null);
+  const [showChoices, setShowChoices] = useState(false);
 
   useEffect(
     function () {
@@ -127,38 +130,80 @@ export default function SimulationProgress() {
   );
 
   useEffect(() => {
-    if (isTypingFeedback) {
-      let index = 0;
+    if (isTypingFeedback && currentFeedbackMessage && typingBubbleId) {
+      setDisplayedFeedbackTexts((prev) => ({ ...prev, [typingBubbleId]: "" }));
 
+      let index = 0;
       const interval = setInterval(() => {
         if (index < currentFeedbackMessage.length) {
+          setDisplayedFeedbackTexts((prev) => ({
+            ...prev,
+            [typingBubbleId]: currentFeedbackMessage.slice(0, index + 1),
+          }));
           index++;
         } else {
           setIsTypingFeedback(false);
+          setTypingBubbleId(null);
           clearInterval(interval);
         }
       }, 50);
 
       return () => clearInterval(interval);
     }
-  }, [isTypingFeedback, currentFeedbackMessage]);
+  }, [isTypingFeedback, currentFeedbackMessage, typingBubbleId]);
 
   useEffect(
     function () {
-      if (conversationRef.current) {
-        conversationRef.current.scrollTop =
-          conversationRef.current.scrollHeight;
+      const scrollToTabBar = () => {
+        const tabBar = document.querySelector(
+          '[class*="rounded-full border border-gray-200/50 bg-white/90"]',
+        );
+        if (tabBar) {
+          const tabBarRect = tabBar.getBoundingClientRect();
+          const scrollTop = window.scrollY + tabBarRect.top - 20;
+          window.scrollTo({
+            top: scrollTop,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      if (isTypingFeedback) {
+        const interval = setInterval(scrollToTabBar, 300);
+        return () => clearInterval(interval);
+      } else {
+        setTimeout(scrollToTabBar, 200);
       }
     },
-    [conversationHistory],
+    [conversationHistory, isTypingFeedback],
   );
+
+  useEffect(() => {
+    if (choicesRef.current && selectedOption === null) {
+      const tabBar = document.querySelector(
+        '[class*="rounded-full border border-gray-200/50 bg-white/90"]',
+      );
+      if (tabBar) {
+        const tabBarRect = tabBar.getBoundingClientRect();
+        const scrollTop = window.scrollY + tabBarRect.top - 20;
+        window.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [shuffledChoices, selectedOption]);
 
   useEffect(
     function () {
       if (simulation && simulation.steps && simulation.steps[currentStep]) {
-        const currentChoices = simulation.steps[currentStep].choices || [];
-        const shuffled = shuffleChoices(currentChoices);
-        setShuffledChoices(shuffled);
+        setShowChoices(false);
+        setTimeout(() => {
+          const currentChoices = simulation.steps[currentStep].choices || [];
+          const shuffled = shuffleChoices(currentChoices);
+          setShuffledChoices(shuffled);
+          setShowChoices(true);
+        }, 100);
       }
     },
     [currentStep, simulation],
@@ -222,6 +267,7 @@ export default function SimulationProgress() {
     if (selectedOption !== null) return;
 
     setSelectedOption(optionIndex);
+    setShowChoices(false);
 
     const selectedChoice = shuffledChoices[optionIndex];
     const selectedOptionText = selectedChoice
@@ -277,18 +323,24 @@ export default function SimulationProgress() {
         }
       }
 
+      const bubbleId = `feedback-${currentStep}-${Date.now()}`;
       const feedbackMessageObj = {
         type: "feedback",
         message: feedbackMessage,
         feedbackType: feedbackType,
         step: currentStep,
+        id: bubbleId,
       };
 
-      setConversationHistory(function (prev) {
-        return [...prev, feedbackMessageObj];
-      });
       setCurrentFeedbackMessage(feedbackMessage);
+      setTypingBubbleId(bubbleId);
       setIsTypingFeedback(true);
+
+      setTimeout(() => {
+        setConversationHistory(function (prev) {
+          return [...prev, feedbackMessageObj];
+        });
+      }, 50);
     }, 1400);
   }
 
@@ -301,6 +353,7 @@ export default function SimulationProgress() {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       setSelectedOption(null);
+      setShowChoices(false);
 
       const nextStepData = simulation.steps[nextStep];
       const opponentMessage = {
@@ -401,6 +454,19 @@ export default function SimulationProgress() {
     }
   }
 
+  function getCategoryVoice(category) {
+    switch (category) {
+      case "업무":
+        return "ko-KR-Chirp3-HD-Algieba";
+      case "사회":
+        return "ko-KR-Chirp3-HD-Vindemiatrix";
+      case "일상":
+        return "ko-KR-Chirp3-HD-Sulafat";
+      default:
+        return "ko-KR-Chirp3-HD-Algieba";
+    }
+  }
+
   function splitMessageIntoSentences(message) {
     const sentences = [];
     let currentSentence = "";
@@ -465,8 +531,8 @@ export default function SimulationProgress() {
     <>
       <Header showTodoButton={false} />
 
-      <main className="w-full max-w-full flex-1 px-5 pt-8 pb-32">
-        <div className="sticky top-20 z-10 mb-4 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+      <main className="w-full pt-8 pb-26">
+        <div className="fixed top-25 right-4 left-4 z-10 mx-auto mb-4 max-w-4xl rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isCardExpanded && (
@@ -511,140 +577,164 @@ export default function SimulationProgress() {
           <ProgressBar progress={progress} />
         </div>
 
-        <div className="mb-6 space-y-4" ref={conversationRef}>
-          {conversationHistory.map(function (item) {
-            return (
-              <div
-                key={`${item.type}-${item.step}-${Date.now()}-${Math.random()}`}
-                className={`flex ${item.type === "user" ? "justify-end" : "justify-start"}`}
-              >
-                {item.type === "opponent" && item.message && (
-                  <div className="flex max-w-[85%] items-start gap-2">
-                    <img
-                      src={getCategoryImage(simulation.category)}
-                      alt={`${simulation.category} 캐릭터`}
-                      className="h-10 w-10 flex-shrink-0 object-cover object-top"
-                    />
-                    <div className="flex flex-col gap-2">
-                      {splitMessageIntoSentences(item.message).map(
-                        (sentence) => (
-                          <div
-                            key={`sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
-                            className="flex items-start gap-2"
-                          >
-                            <div className="rounded-2xl rounded-tl-md bg-white px-3 py-2 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
-                              <span className="text-sm font-medium text-gray-800">
+        <div className="mx-auto w-full max-w-4xl px-4 pt-24">
+          <div className="mb-6 space-y-4" ref={conversationRef}>
+            {conversationHistory.map(function (item, index) {
+              const nextItem = conversationHistory[index + 1];
+              const shouldAddSpacing =
+                (item.type === "feedback" &&
+                  nextItem &&
+                  nextItem.type === "opponent") ||
+                (item.type === "opponent" &&
+                  nextItem &&
+                  nextItem.type === "feedback");
+
+              return (
+                <div
+                  key={`${item.type}-${item.step}-${Date.now()}-${Math.random()}`}
+                  className={`flex ${item.type === "user" ? "justify-end" : "justify-start"} ${shouldAddSpacing ? "mb-10" : ""}`}
+                >
+                  {item.type === "opponent" && item.message && (
+                    <div className="flex max-w-[85%] items-start gap-2">
+                      <img
+                        src={getCategoryImage(simulation.category)}
+                        alt={`${simulation.category} 캐릭터`}
+                        className="h-10 w-10 flex-shrink-0 object-cover object-top"
+                      />
+                      <div className="flex flex-col gap-2">
+                        {splitMessageIntoSentences(item.message).map(
+                          (sentence) => (
+                            <div
+                              key={`sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
+                              className="flex items-start gap-2"
+                            >
+                              <div className="rounded-2xl rounded-tl-md bg-white px-3 py-2 shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {sentence.trim()}
+                                </span>
+                              </div>
+                              <button
+                                className={`cursor-pointer transition-colors ${
+                                  isPlayingGlobal
+                                    ? "cursor-not-allowed text-blue-500"
+                                    : "text-gray-400 hover:text-gray-600"
+                                }`}
+                                onClick={function () {
+                                  if (!isPlayingGlobal) {
+                                    handleTTSPlay(
+                                      sentence.trim(),
+                                      getCategoryVoice(simulation.category),
+                                    );
+                                  }
+                                }}
+                                onKeyDown={function (event) {
+                                  if (
+                                    (event.key === "Enter" ||
+                                      event.key === " ") &&
+                                    !isPlayingGlobal
+                                  ) {
+                                    handleTTSPlay(
+                                      sentence.trim(),
+                                      getCategoryVoice(simulation.category),
+                                    );
+                                  }
+                                }}
+                                title={
+                                  isPlayingGlobal
+                                    ? "재생 중입니다..."
+                                    : "음성 재생"
+                                }
+                                disabled={isPlayingGlobal}
+                              >
+                                {isPlayingGlobal ? "🔈" : "🔊"}
+                              </button>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {item.type === "user" && item.message && (
+                    <div className="flex max-w-[80%] justify-end">
+                      <div className="flex flex-col gap-2">
+                        {splitMessageIntoSentences(item.message).map(
+                          (sentence) => (
+                            <div
+                              key={`user-sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
+                              className="rounded-2xl rounded-tr-md bg-white px-3 py-2 text-black shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
+                            >
+                              <span className="text-sm font-medium text-black">
                                 {sentence.trim()}
                               </span>
                             </div>
-                            <button
-                              className={`cursor-pointer transition-colors ${
-                                isPlayingGlobal
-                                  ? "cursor-not-allowed text-blue-500"
-                                  : "text-gray-400 hover:text-gray-600"
-                              }`}
-                              onClick={function () {
-                                if (!isPlayingGlobal) {
-                                  handleTTSPlay(
-                                    sentence.trim(),
-                                    "ko-KR-Chirp3-HD-Aoede",
-                                  );
-                                }
-                              }}
-                              onKeyDown={function (event) {
-                                if (
-                                  (event.key === "Enter" ||
-                                    event.key === " ") &&
-                                  !isPlayingGlobal
-                                ) {
-                                  handleTTSPlay(
-                                    sentence.trim(),
-                                    "ko-KR-Chirp3-HD-Aoede",
-                                  );
-                                }
-                              }}
-                              title={
-                                isPlayingGlobal
-                                  ? "재생 중입니다..."
-                                  : "음성 재생"
-                              }
-                              disabled={isPlayingGlobal}
-                            >
-                              {isPlayingGlobal ? "🔈" : "🔊"}
-                            </button>
-                          </div>
-                        ),
-                      )}
+                          ),
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {item.type === "user" && item.message && (
-                  <div className="flex max-w-[80%] justify-end">
-                    <div className="flex flex-col gap-2">
-                      {splitMessageIntoSentences(item.message).map(
-                        (sentence) => (
-                          <div
-                            key={`user-sentence-${item.step}-${sentence.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, "")}`}
-                            className="rounded-2xl rounded-tr-md bg-white px-3 py-2 text-black shadow-[0px_1px_8px_0px_rgba(0,0,0,0.25)]"
-                          >
-                            <span className="text-sm font-medium text-black">
-                              {sentence.trim()}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {item.type === "feedback" && (
-                  <Bubble
-                    message={item.message}
-                    onNextStep={handleNextStep}
-                    isLastStep={currentStep === simulation.steps.length - 1}
-                    isHidden={hiddenFeedbackButtons.has(item.step)}
-                    onPlayTTS={(message, voice) =>
-                      handleTTSPlay(message, voice)
-                    }
-                    isPlaying={isPlayingGlobal}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {selectedOption === null && (
-          <div ref={choicesRef}>
-            <div className="mb-4 text-center text-sm text-gray-600">
-              상황에 알맞은 답변을 선택해주세요!
-            </div>
-            <div className="space-y-3">
-              {shuffledChoices.length > 0 ? (
-                shuffledChoices.map(function (choice, index) {
-                  return (
-                    <button
-                      key={`choice-${currentStep}-${choice.choiceText || choice}-${Date.now()}`}
-                      className="w-full rounded-xl border-1 border-gray-300 bg-[#343434] p-2 text-center text-sm text-[#ffffff] shadow-sm"
-                      onClick={function () {
-                        handleOptionSelect(index);
-                      }}
-                    >
-                      {typeof choice === "string"
-                        ? choice
-                        : choice.choiceText || "선택지"}
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="py-8 text-center text-gray-500">
-                  선택지가 없습니다.
+                  {item.type === "feedback" && (
+                    <Bubble
+                      message={
+                        item.id && displayedFeedbackTexts[item.id] !== undefined
+                          ? displayedFeedbackTexts[item.id]
+                          : item.message
+                      }
+                      onNextStep={handleNextStep}
+                      isLastStep={currentStep === simulation.steps.length - 1}
+                      isHidden={hiddenFeedbackButtons.has(item.step)}
+                      onPlayTTS={(message, voice) =>
+                        handleTTSPlay(message, voice)
+                      }
+                      isPlaying={isPlayingGlobal}
+                      showNextButton={
+                        !(isTypingFeedback && item.id === typingBubbleId)
+                      }
+                    />
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
-        )}
+
+          {selectedOption === null &&
+            showChoices &&
+            simulation &&
+            simulation.steps &&
+            simulation.steps[currentStep] && (
+              <div ref={choicesRef}>
+                <div className="mb-4 text-center text-sm text-gray-600">
+                  상황에 알맞은 답변을 선택해주세요!
+                </div>
+                <div className="space-y-3">
+                  {shuffledChoices.length > 0 ? (
+                    shuffledChoices.map(function (choice, index) {
+                      const choiceId =
+                        choice.id || choice.choiceId || `choice-${index}`;
+                      return (
+                        <button
+                          key={`${currentStep}-${choiceId}`}
+                          className="w-full rounded-xl border-1 border-gray-300 bg-[#343434] p-2 text-center text-sm text-[#ffffff] shadow-sm"
+                          onClick={function () {
+                            handleOptionSelect(index);
+                          }}
+                        >
+                          {typeof choice === "string"
+                            ? choice
+                            : choice.choiceText || "선택지"}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      선택지가 없습니다.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+        </div>
       </main>
 
       {showFinal && (
@@ -700,7 +790,7 @@ export default function SimulationProgress() {
             </div>
             <div className="mt-6 flex justify-center">
               <button
-                className="text-sb w-20 rounded-full bg-[#343434] px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#7db800]"
+                className="text-sb w-20 rounded-full bg-[#343434] px-4 py-1.5 font-medium text-white transition-colors"
                 onClick={handleBackToMain}
               >
                 확인

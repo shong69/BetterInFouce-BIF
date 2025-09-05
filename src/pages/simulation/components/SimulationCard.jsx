@@ -39,15 +39,13 @@ export default function SimulationCard({
         <div className="flex h-full items-center justify-between">
           <div className="flex flex-1 items-center">
             <h3 className="text-[13px] font-extrabold text-black">{title}</h3>
-            {isThumbsUp && (
-              <div className="ml-2 flex items-center">
-                <span className="text-primary/80 bg-primary/10 rounded-full px-2 py-0.5 text-xs font-medium">
-                  추천
-                </span>
-              </div>
-            )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
+            {isThumbsUp && (
+              <span className="text-primary/80 bg-primary/10 rounded-full px-2 py-0.5 text-xs font-medium">
+                추천
+              </span>
+            )}
             {showThumbsUpButton && (
               <button
                 onClick={handleThumbsUpClick}
