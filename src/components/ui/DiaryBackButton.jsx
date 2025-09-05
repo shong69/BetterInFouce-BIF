@@ -1,14 +1,14 @@
 import { HiChevronLeft } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 
-export default function BackButton({ title = "뒤로가기", onClick }) {
+export default function DiaryBackButton({ title = "뒤로가기", onBackClick }) {
   const navigate = useNavigate();
 
   function handleClick() {
-    if (onClick) {
-      onClick();
+    if (onBackClick) {
+      onBackClick();
     } else {
-      navigate(-1);
+      navigate("/diaries");
     }
   }
 

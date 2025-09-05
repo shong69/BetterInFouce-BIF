@@ -48,6 +48,7 @@ export default function Diary() {
 
     let consecutiveDays = 0;
     const currentDate = new Date();
+    let checkedToday = false;
 
     while (true) {
       const year = currentDate.getFullYear();
@@ -57,10 +58,15 @@ export default function Diary() {
 
       if (monthlyData[dateString]) {
         consecutiveDays++;
-        currentDate.setDate(currentDate.getDate() - 1);
       } else {
-        break;
+        if (!checkedToday) {
+          checkedToday = true;
+        } else {
+          break;
+        }
       }
+
+      currentDate.setDate(currentDate.getDate() - 1);
     }
 
     return consecutiveDays;

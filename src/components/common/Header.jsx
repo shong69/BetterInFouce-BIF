@@ -7,11 +7,13 @@ import { useUserStore, useNotificationStore } from "@stores";
 import { useState, useEffect } from "react";
 import NotificationSettingsModal from "@components/notifications/NotificationSettingsModal";
 import BackButton from "@components/ui/BackButton";
+import DiaryBackButton from "@components/ui/DiaryBackButton";
 import { formatDateToDisplay } from "@utils/dateUtils";
 
 export default function Header({
   showTodoButton = false,
   rightActions = null,
+  onBackClick = null,
 }) {
   const { user } = useUserStore();
   const location = useLocation();
@@ -70,6 +72,11 @@ export default function Header({
     return mainPages.includes(path);
   };
 
+  const isDiarySubPage = () => {
+    const path = location.pathname;
+    return path.startsWith("/diaries/") && path !== "/diaries";
+  };
+
   const handleCreateTodo = () => {
     navigate("/todo/new");
   };
@@ -123,6 +130,8 @@ export default function Header({
                 <p className="text-sm">{formatDateToDisplay(today)}</p>
                 <p className="text-lg font-semibold">{dayOfWeek}요일</p>
               </div>
+            ) : isDiarySubPage() ? (
+              <DiaryBackButton title="뒤로가기" onBackClick={onBackClick} />
             ) : (
               <BackButton title="뒤로가기" />
             )}
