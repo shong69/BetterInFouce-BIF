@@ -93,6 +93,22 @@ public class BifServiceImpl implements BifService {
             Bif bif = bifOpt.get();
             Long bifId = bif.getBifId();
 
+            var guardians = guardianRepository.findByBif_BifId(bifId);
+
+            if(!guardians.isEmpty()) {
+                for(var guardian: guardians) {
+                    UserWithdrawalEvent guardianEvent = new UserWithdrawalEvent(
+                            this,
+                            guardian.getSocialLogin().getSocialId(),
+                            bifId,
+                            JwtTokenProvider.UserRole.GUARDIAN,
+                            LocalDateTime.now()
+                    );
+                    eventPublisher.publishEvent(guardianEvent);
+                }
+                guardianRepository.deleteAll(guardians);
+            }
+
             bifRepository.delete(bif);
 
             UserWithdrawalEvent event = new UserWithdrawalEvent(
