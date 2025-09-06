@@ -40,11 +40,11 @@ public class TodoListResponse {
                             .subTodoId(subTodo.getSubTodoId())
                             .title(subTodo.getTitle())
                             .sortOrder(subTodo.getSortOrder())
-                            .isCompleted(subTodo.getIsCompleted())
+                            .isCompleted(todo.getType() != TodoTypes.ROUTINE && subTodo.getIsCompleted())
                             .build())
                     .collect(Collectors.toList());
 
-            hasOrder = subTodoInfos.stream().anyMatch(subTodo -> subTodo.getSortOrder() > 0);
+            hasOrder = !subTodoInfos.isEmpty() && subTodoInfos.stream().allMatch(subTodo -> subTodo.getSortOrder() > 0);
         }
 
         boolean isCompleted = todo.getType() == TodoTypes.ROUTINE

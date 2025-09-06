@@ -1,4 +1,4 @@
-package com.sage.bif.stats.dto.response;
+package com.sage.bif.stats.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,7 @@ public class GuardianStatsResponse {
 
     private String bifNickname;
     private String advice;
+    private String guardianJoinDate;
     private List<StatsResponse.EmotionRatio> emotionRatio;
     private List<StatsResponse.MonthlyChange> monthlyChange;
 

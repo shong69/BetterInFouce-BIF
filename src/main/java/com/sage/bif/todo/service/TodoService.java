@@ -16,13 +16,13 @@ public interface TodoService {
 
     TodoUpdatePageResponse getTodoDetail(Long bifId, Long todoId);
 
-    TodoListResponse updateTodo(Long bifId, Long todoId, TodoUpdateRequest request);
+    TodoUpdatePageResponse getTodoDetail(Long bifId, Long todoId, LocalDate viewDate);
+
+    TodoUpdatePageResponse updateTodo(Long bifId, Long todoId, TodoUpdateRequest request);
 
     boolean deleteTodo(Long bifId, Long todoId);
 
-    TodoListResponse completeTodo(Long bifId, Long todoId);
-
-    TodoListResponse uncompleteTodo(Long bifId, Long todoId);
+    TodoListResponse updateTodoCompletion(Long bifId, Long todoId, LocalDate completionDate, boolean isCompleted);
 
     void updateCurrentStep(Long bifId, Long todoId, int newStep);
 

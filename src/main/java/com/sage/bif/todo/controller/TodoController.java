@@ -2,19 +2,20 @@ package com.sage.bif.todo.controller;
 
 import com.sage.bif.common.dto.ApiResponse;
 import com.sage.bif.common.dto.CustomUserDetails;
+import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.todo.dto.request.AiTodoCreateRequest;
 import com.sage.bif.todo.dto.request.SubTodoCompletionUpdateRequest;
 import com.sage.bif.todo.dto.request.SubTodoUpdateRequest;
+import com.sage.bif.todo.dto.request.TodoCompletionRequest;
 import com.sage.bif.todo.dto.request.TodoUpdateRequest;
 import com.sage.bif.todo.dto.response.TodoListResponse;
 import com.sage.bif.todo.dto.response.TodoUpdatePageResponse;
-import com.sage.bif.todo.service.SubTodoService;
-import com.sage.bif.todo.service.TodoService;
-import com.sage.bif.user.repository.GuardianRepository;
-import com.sage.bif.common.jwt.JwtTokenProvider;
 import com.sage.bif.todo.exception.GuardianAccessDeniedException;
 import com.sage.bif.todo.exception.GuardianConnectionNotFoundException;
 import com.sage.bif.todo.exception.UnsupportedUserRoleException;
+import com.sage.bif.todo.service.SubTodoService;
+import com.sage.bif.todo.service.TodoService;
+import com.sage.bif.user.repository.GuardianRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,7 @@ public class TodoController {
     private static final String OPERATION_CREATE = "CREATE";
     private static final String OPERATION_DELETE = "DELETE";
     private static final String OPERATION_COMPLETE = "COMPLETE";
+    private static final String TIMEZONE_ASIA_SEOUL = "Asia/Seoul";
 
     private final TodoService todoService;
     private final SubTodoService subTodoService;
@@ -55,7 +57,9 @@ public class TodoController {
             @Valid @RequestBody AiTodoCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        validateGuardianAccess(userDetails, OPERATION_CREATE);
+        if (userDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 생성할 수 없습니다.");
+        }
         Long bifId = userDetails.getBifId();
         TodoListResponse response = todoService.createTodoByAi(bifId, request);
 
@@ -69,7 +73,7 @@ public class TodoController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long bifId = getBifIdForUser(customUserDetails);
-        LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of("Asia/Seoul"));
+        LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
 
         List<TodoListResponse> response = todoService.getTodoList(bifId, targetDate);
 
@@ -80,10 +84,12 @@ public class TodoController {
     @Operation(summary = "상세 할 일 목록 조회")
     public ResponseEntity<TodoUpdatePageResponse> getTodoDetail(
             @PathVariable Long todoId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long bifId = getBifIdForUser(customUserDetails);
+        LocalDate viewDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
 
-        TodoUpdatePageResponse response = todoService.getTodoDetail(bifId, todoId);
+        TodoUpdatePageResponse response = todoService.getTodoDetail(bifId, todoId, viewDate);
 
         return ResponseEntity.ok(response);
     }
@@ -102,12 +108,12 @@ public class TodoController {
 
     @PutMapping("/{todoId}")
     @Operation(summary = "할 일 목록 수정")
-    public ResponseEntity<TodoListResponse> updateTodo(
+    public ResponseEntity<TodoUpdatePageResponse> updateTodo(
             @PathVariable Long todoId,
             @Valid @RequestBody TodoUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long bifId = getBifIdForUser(customUserDetails);
-        TodoListResponse response = todoService.updateTodo(bifId, todoId, request);
+        TodoUpdatePageResponse response = todoService.updateTodo(bifId, todoId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -117,33 +123,29 @@ public class TodoController {
     public ResponseEntity<Void> deleteTodo(
             @PathVariable Long todoId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_DELETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 삭제할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
         todoService.deleteTodo(bifId, todoId);
 
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{todoId}/complete")
-    @Operation(summary = "할 일 완료 상태 변경")
-    public ResponseEntity<TodoListResponse> completeTodo(
+    @PatchMapping("/{todoId}/completion")
+    @Operation(summary = "할 일 완료/미완료 상태 변경")
+    public ResponseEntity<TodoListResponse> updateTodoCompletion(
             @PathVariable Long todoId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Valid @RequestBody TodoCompletionRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
-        TodoListResponse response = todoService.completeTodo(bifId, todoId);
+        LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of(TIMEZONE_ASIA_SEOUL));
 
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/{todoId}/uncomplete")
-    @Operation(summary = "할 일 미완료 상태 변경")
-    public ResponseEntity<TodoListResponse> uncompleteTodo(
-            @PathVariable Long todoId,
-            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
-        Long bifId = customUserDetails.getBifId();
-        TodoListResponse response = todoService.uncompleteTodo(bifId, todoId);
+        TodoListResponse response = todoService.updateTodoCompletion(bifId, todoId, targetDate, request.getIsCompleted());
 
         return ResponseEntity.ok(response);
     }
@@ -154,10 +156,18 @@ public class TodoController {
             @PathVariable Long todoId,
             @PathVariable Long subTodoId,
             @Valid @RequestBody SubTodoCompletionUpdateRequest request,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        validateGuardianAccess(customUserDetails, OPERATION_COMPLETE);
+        if (customUserDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN) {
+            throw new GuardianAccessDeniedException("Guardian은 할 일을 완료/미완료할 수 없습니다.");
+        }
         Long bifId = customUserDetails.getBifId();
-        subTodoService.updateSubTodoCompletionStatus(bifId, todoId, subTodoId, request.getIsCompleted());
+
+        if (date != null) {
+            subTodoService.updateSubTodoCompletionStatus(bifId, todoId, subTodoId, request.getIsCompleted(), date);
+        } else {
+            subTodoService.updateSubTodoCompletionStatus(bifId, todoId, subTodoId, request.getIsCompleted());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -175,12 +185,6 @@ public class TodoController {
         return ResponseEntity.noContent().build();
     }
 
-    @Getter
-    @Setter
-    public static class UpdateStepRequest {
-        private int step;
-    }
-
     private Long getBifIdForUser(CustomUserDetails userDetails) {
         if (userDetails.getRole() == JwtTokenProvider.UserRole.BIF) {
             return userDetails.getBifId();
@@ -192,17 +196,10 @@ public class TodoController {
         throw new UnsupportedUserRoleException("지원하지 않는 사용자 역할입니다.");
     }
 
-    private void validateGuardianAccess(CustomUserDetails userDetails, String operation) {
-        if (userDetails.getRole() == JwtTokenProvider.UserRole.GUARDIAN &&
-            (OPERATION_CREATE.equals(operation) || OPERATION_DELETE.equals(operation) || OPERATION_COMPLETE.equals(operation))) {
-            String operationName = switch (operation) {
-                case OPERATION_CREATE -> "생성";
-                case OPERATION_DELETE -> "삭제";
-                case OPERATION_COMPLETE -> "완료/미완료";
-                default -> operation;
-            };
-            throw new GuardianAccessDeniedException("Guardian은 할 일을 " + operationName + "할 수 없습니다.");
-        }
+    @Getter
+    @Setter
+    public static class UpdateStepRequest {
+        private int step;
     }
 
 }

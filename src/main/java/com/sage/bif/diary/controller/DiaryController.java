@@ -12,14 +12,22 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/diaries")
 @RequiredArgsConstructor
@@ -31,6 +39,13 @@ public class DiaryController {
     private static final String SUCCESS_FIELD = "success";
     private static final String ERROR_FIELD = "error";
     private static final String ERROR_TYPE_FIELD = "errorType";
+    private final RestTemplate restTemplate;
+
+    @Value("${spring.ai.azure.speech-service.api-key:}")
+    private String apiKey;
+
+    @Value("${spring.ai.azure.speech-service.endpoint:}")
+    private String endpoint;
 
     @GetMapping("/monthly-summary")
     @Operation(summary="월간 요약 조회", description = "감정일기 월간 요약을 조회합니다. 감정을 선택해 일기를 작성할 수 있습니다.")
@@ -76,6 +91,31 @@ public class DiaryController {
             @PathVariable String diaryId) {
         diaryService.deleteDiary(userDetails.getBifId(), diaryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/stt/token")
+    @Operation(summary="stt 토큰 발급", description = "일기 작성 시 stt 기능을 위한 임시 토큰을 발급합니다.")
+    public ResponseEntity<Map<String, String>> getSttToken(){
+        try {
+            String subscriptionKey=apiKey;
+            String region=endpoint.split("\\.")[0].replace("https://","");
+            String tokenUrl = endpoint + "sts/v1.0/issueToken";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Ocp-Apim-Subscription-Key",subscriptionKey);
+
+            HttpEntity<String> entity= new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, entity, String.class);
+
+            Map<String, String> result = new HashMap<>();
+            result.put("token",response.getBody());
+            result.put("region",region);
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("STT 오류 발생:{}",e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
     }
 
 }

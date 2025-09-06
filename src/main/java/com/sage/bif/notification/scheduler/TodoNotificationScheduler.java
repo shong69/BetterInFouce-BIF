@@ -5,6 +5,8 @@ import com.sage.bif.todo.entity.Todo;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.TodoTypes;
 import com.sage.bif.todo.repository.TodoRepository;
+import com.sage.bif.user.entity.Bif;
+import com.sage.bif.user.repository.GuardianRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,13 +25,12 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class TodoNotificationScheduler {
 
-    private static final int NOTIFICATION_TIME_RANGE_MINUTES = 1;
-    private static final int ROUTINE_TIME_TOLERANCE_MINUTES = 1;
     private final TodoRepository todoRepository;
     private final NotificationFacadeService notificationFacadeService;
+    private final GuardianRepository guardianRepository;
 
     @Scheduled(cron = "0 * * * * *")
-    @Transactional(readOnly = true)
+    @Transactional
     public void checkAndSendTodoNotifications() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         LocalDate today = now.toLocalDate();
@@ -64,13 +65,13 @@ public class TodoNotificationScheduler {
 
     private void processNotification(Todo todo, LocalDateTime now) {
         try {
+            updateNotificationStatusSafely(todo, now);
+
             CompletableFuture.runAsync(() -> sendNotificationAsync(todo))
                     .exceptionally(throwable -> {
                         log.error("알림 전송 비동기 처리 실패: todoId={}", todo.getTodoId(), throwable);
                         return null;
                     });
-
-            updateNotificationStatusSafely(todo, now);
 
             log.info("할 일 알림 전송 완료: todoId={}, bifId={}, title={}",
                     todo.getTodoId(), todo.getBifUser().getBifId(), todo.getTitle());
@@ -109,10 +110,17 @@ public class TodoNotificationScheduler {
     }
 
     private boolean shouldSendNotification(Todo todo, LocalDateTime currentDateTime) {
+        Bif bifUser = todo.getBifUser();
+
+        if (bifUser != null && isUserActualGuardian(bifUser)) {
+            log.debug("Guardian 사용자이므로 알림을 보내지 않습니다: bifId={}", bifUser.getBifId());
+            return false;
+        }
+
         if (!isBasicValidationPassed(todo)) {
             if (log.isDebugEnabled()) {
-                log.debug("기본 검증 실패: todoId={}, enabled={}, completed={}, deleted={}, dueTime={}", 
-                        todo.getTodoId(), todo.getNotificationEnabled(), todo.getIsCompleted(), 
+                log.debug("기본 검증 실패: todoId={}, enabled={}, completed={}, deleted={}, dueTime={}",
+                        todo.getTodoId(), todo.getNotificationEnabled(), todo.getIsCompleted(),
                         todo.getIsDeleted(), todo.getDueTime());
             }
             return false;
@@ -137,7 +145,7 @@ public class TodoNotificationScheduler {
 
         boolean inRange = isInNotificationTimeRange(currentDateTime, notificationDateTime);
         if (!inRange && log.isDebugEnabled()) {
-            log.debug("알림 시간 범위 밖: todoId={}, 현재시간={}, 알림시간={}", 
+            log.debug("알림 시간 범위 밖: todoId={}, 현재시간={}, 알림시간={}",
                     todo.getTodoId(), currentDateTime, notificationDateTime);
         }
 
@@ -145,10 +153,10 @@ public class TodoNotificationScheduler {
     }
 
     private boolean isBasicValidationPassed(Todo todo) {
-        return todo.getNotificationEnabled() && 
-               !todo.getIsCompleted() && 
-               !todo.getIsDeleted() && 
-               todo.getDueTime() != null;
+        return todo.getNotificationEnabled() &&
+                !todo.getIsCompleted() &&
+                !todo.getIsDeleted() &&
+                todo.getDueTime() != null;
     }
 
     private LocalDateTime calculateNotificationDateTime(Todo todo, LocalDateTime currentDateTime) {
@@ -170,8 +178,7 @@ public class TodoNotificationScheduler {
     }
 
     private boolean isInNotificationTimeRange(LocalDateTime currentDateTime, LocalDateTime notificationDateTime) {
-        return currentDateTime.isAfter(notificationDateTime.minusMinutes(NOTIFICATION_TIME_RANGE_MINUTES)) &&
-                currentDateTime.isBefore(notificationDateTime.plusMinutes(NOTIFICATION_TIME_RANGE_MINUTES));
+        return currentDateTime.withSecond(0).withNano(0).equals(notificationDateTime.withSecond(0).withNano(0));
     }
 
     private boolean hasRecentNotificationSent(Todo todo, LocalDateTime scheduledNotificationTime) {
@@ -181,19 +188,12 @@ public class TodoNotificationScheduler {
 
         LocalDateTime lastSent = todo.getLastNotificationSentAt();
 
-        if (todo.getType() == TodoTypes.ROUTINE) {
-            return lastSent.toLocalDate().equals(scheduledNotificationTime.toLocalDate()) &&
-                    lastSent.getHour() == scheduledNotificationTime.getHour() &&
-                    Math.abs(lastSent.getMinute() - scheduledNotificationTime.getMinute()) <= ROUTINE_TIME_TOLERANCE_MINUTES;
-        }
-
-        return lastSent.isAfter(scheduledNotificationTime.minusMinutes(NOTIFICATION_TIME_RANGE_MINUTES)) &&
-                lastSent.isBefore(scheduledNotificationTime.plusMinutes(NOTIFICATION_TIME_RANGE_MINUTES));
+        return lastSent.isAfter(scheduledNotificationTime.minusMinutes(15));
     }
 
     private boolean isValidDayForRoutine(Todo todo, LocalDate date) {
         if (todo.getRepeatDays() == null || todo.getRepeatDays().isEmpty()) {
-            log.warn("루틴 할 일에 repeatDays가 설정되지 않음: todoId={}, title={}", 
+            log.warn("루틴 할 일에 repeatDays가 설정되지 않음: todoId={}, title={}",
                     todo.getTodoId(), todo.getTitle());
             return false;
         }
@@ -202,9 +202,9 @@ public class TodoNotificationScheduler {
         RepeatDays targetDay = convertToRepeatDay(dayOfWeek);
 
         boolean isValidDay = todo.getRepeatDays().contains(targetDay);
-        
+
         if (log.isDebugEnabled()) {
-            log.debug("루틴 요일 검증: todoId={}, 오늘={}, 설정된요일={}, 결과={}", 
+            log.debug("루틴 요일 검증: todoId={}, 오늘={}, 설정된요일={}, 결과={}",
                     todo.getTodoId(), targetDay, todo.getRepeatDays(), isValidDay);
         }
 
@@ -221,6 +221,13 @@ public class TodoNotificationScheduler {
             case SATURDAY -> RepeatDays.SATURDAY;
             case SUNDAY -> RepeatDays.SUNDAY;
         };
+    }
+
+    private boolean isUserActualGuardian(Bif bif) {
+        if (bif.getSocialLogin() == null) {
+            return false;
+        }
+        return guardianRepository.findBySocialLogin_SocialId(bif.getSocialLogin().getSocialId()).isPresent();
     }
 
 }

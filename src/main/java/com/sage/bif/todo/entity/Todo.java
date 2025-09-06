@@ -1,5 +1,6 @@
 package com.sage.bif.todo.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.sage.bif.todo.entity.enums.RepeatDays;
 import com.sage.bif.todo.entity.enums.RepeatFrequency;
 import com.sage.bif.todo.entity.enums.TodoTypes;
@@ -92,6 +93,7 @@ public class Todo {
 
     @OneToMany(mappedBy = "todo", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<SubTodo> subTodos = new ArrayList<>();
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", nullable = false)
