@@ -6,7 +6,7 @@ import com.sage.bif.user.event.model.UserWithdrawalEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +17,7 @@ public class SimulationUserWithdrawalListener {
 
     private final SimulationRecommendationRepository simulationRecommendationRepository;
 
-    @Async
+    @Order(3)
     @EventListener
     @Transactional
     public void handleUserWithdrawal(UserWithdrawalEvent event) {
