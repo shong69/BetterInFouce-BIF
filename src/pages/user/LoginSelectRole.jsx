@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore, useToastStore } from "@stores";
 
@@ -6,21 +6,31 @@ import Logo from "@components/ui/LoginLogo";
 import PrimaryButton from "@components/ui/PrimaryButton";
 import SecondaryButton from "@components/ui/SecondaryButton";
 import Footer from "@components/common/Footer";
+import ErrorPageManager from "@pages/errors/ErrorPage";
 
 export default function LoginSelectRole() {
   const { registrationInfo, registerBif } = useUserStore();
   const { showError } = useToastStore();
   const navigate = useNavigate();
+  const [pageError, setPageError] = useState(null);
 
   useEffect(() => {
     if (!registrationInfo) {
-      navigate("/login");
+      setPageError({
+        errorCode: "401",
+        message: "세션 정보가 만료되었습니다.",
+        details: "다시 로그인해주세요.",
+      });
     }
-  }, [registrationInfo, navigate]);
+  }, [registrationInfo]);
 
   async function handleBifSelect() {
     if (!registrationInfo) {
-      navigate("/login");
+      setPageError({
+        errorCode: "401",
+        message: "세션 정보가 만료되었습니다.",
+        details: "다시 로그인해주세요.",
+      });
       return;
     }
     try {
@@ -32,10 +42,25 @@ export default function LoginSelectRole() {
       if (result.success) {
         navigate("/");
       } else {
-        showError("회원가입에 실패했습니다.");
+        if (
+          result.error?.includes("SERVER_ERROR") ||
+          result.error?.includes("500")
+        ) {
+          setPageError({
+            errorCode: "500",
+            message: "서버 오류가 발생했습니다.",
+            details: "잠시 후 다시 시도해주세요.",
+          });
+        } else {
+          showError("회원가입에 실패했습니다.");
+        }
       }
     } catch {
-      showError("네트워크 오류가 발생했습니다.");
+      setPageError({
+        errorCode: "503",
+        message: "네트워크 연결에 문제가 발생했습니다.",
+        details: "인터넷 연결을 확인하고 다시 시도해주세요.",
+      });
     }
   }
 
@@ -45,6 +70,17 @@ export default function LoginSelectRole() {
 
   if (!registrationInfo) {
     return null;
+  }
+
+  if (pageError) {
+    return (
+      <ErrorPageManager
+        errorCode={pageError.errorCode}
+        message={pageError.message}
+        details={pageError.details}
+        buttonType="home"
+      />
+    );
   }
 
   return (

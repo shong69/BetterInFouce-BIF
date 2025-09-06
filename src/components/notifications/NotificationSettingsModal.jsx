@@ -129,6 +129,12 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
     }
   }
 
+  function handleNotificationKeyDown(event, notification) {
+    if (event.key === "Enter" || event.key === " ") {
+      handleNotificationClick(notification);
+    }
+  }
+
   function getRelativeTime(dateString) {
     const now = new Date();
     const date = new Date(dateString);
@@ -256,14 +262,17 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
               </div>
             ) : (
               notifications.map((notification) => (
-                <button
+                <div
                   key={notification.id}
+                  role="button"
+                  tabIndex={0}
                   className={`w-full cursor-pointer rounded-lg border p-2 text-left transition-colors hover:bg-gray-100 ${
                     notification.read
                       ? "border-gray-100 bg-gray-50"
                       : "border-gray-300 bg-white shadow-sm"
                   }`}
                   onClick={() => handleNotificationClick(notification)}
+                  onKeyDown={(e) => handleNotificationKeyDown(e, notification)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -292,7 +301,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
                       </button>
                     </div>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>
@@ -300,7 +309,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
 
         <button
           onClick={onClose}
-          className="bg-primary hover:bg-secondary mt-4 w-full rounded-lg py-2 text-white"
+          className="bg-primary hover:bg-secondary mt-4 w-full rounded-3xl py-2 text-white"
         >
           닫기
         </button>

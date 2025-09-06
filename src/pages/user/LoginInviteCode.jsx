@@ -5,6 +5,7 @@ import { useUserStore } from "@stores";
 import Logo from "@components/ui/LoginLogo";
 import PrimaryButton from "@components/ui/PrimaryButton";
 import Footer from "@components/common/Footer";
+import ErrorPageManager from "@pages/errors/ErrorPage";
 
 export default function LoginInviteCode() {
   const { registrationInfo, registerGuardian } = useUserStore();
@@ -12,12 +13,17 @@ export default function LoginInviteCode() {
   const [inviteCode, setInviteCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pageError, setPageError] = useState(null);
 
   useEffect(() => {
     if (!registrationInfo) {
-      navigate("/login");
+      setPageError({
+        errorCode: "401",
+        message: "세션 정보가 만료되었습니다.",
+        details: "다시 로그인해주세요.",
+      });
     }
-  }, [registrationInfo, navigate]);
+  }, [registrationInfo]);
 
   function handleCodeChange(index, value) {
     const lastChar = value.slice(-1);
@@ -78,8 +84,11 @@ export default function LoginInviteCode() {
     }
 
     if (!registrationInfo) {
-      setError("세션 정보가 없습니다. 다시 로그인해주세요.");
-      navigate("/login");
+      setPageError({
+        errorCode: "401",
+        message: "세션 정보가 만료되었습니다.",
+        details: "다시 로그인해주세요.",
+      });
       return;
     }
 
@@ -96,13 +105,39 @@ export default function LoginInviteCode() {
       if (result.success) {
         navigate("/");
       } else {
-        setError("초대코드가 올바르지 않습니다.");
+        if (
+          result.error?.includes("SERVER_ERROR") ||
+          result.error?.includes("500")
+        ) {
+          setPageError({
+            errorCode: "500",
+            message: "서버 오류가 발생했습니다.",
+            details: "잠시 후 다시 시도해주세요.",
+          });
+        } else {
+          setError("초대코드가 올바르지 않습니다.");
+        }
       }
     } catch {
-      setError("네트워크 오류가 발생했습니다.");
+      setPageError({
+        errorCode: "503",
+        message: "네트워크 연결에 문제가 발생했습니다.",
+        details: "인터넷 연결을 확인하고 다시 시도해주세요.",
+      });
     } finally {
       setLoading(false);
     }
+  }
+
+  if (pageError) {
+    return (
+      <ErrorPageManager
+        errorCode={pageError.errorCode}
+        message={pageError.message}
+        details={pageError.details}
+        buttonType="home"
+      />
+    );
   }
 
   const isCodeComplete = inviteCode.every((digit) => digit !== "");

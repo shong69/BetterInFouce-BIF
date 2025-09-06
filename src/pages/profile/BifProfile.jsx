@@ -28,8 +28,9 @@ import TabBar from "@components/common/TabBar";
 import LoadingSpinner from "@components/ui/LoadingSpinner";
 import BaseButton from "@components/ui/BaseButton";
 import Modal from "@components/ui/Modal";
+import BadgeModal from "@components/ui/BadgeModal";
 
-import { IoPerson, IoStatsChart, IoPencil, IoLogOut } from "react-icons/io5";
+import { IoPerson, IoStatsChart, IoLogOut } from "react-icons/io5";
 
 import turtleImage from "@assets/logo2.png";
 
@@ -76,11 +77,13 @@ export default function BifProfile() {
   const monthlyChartRef = useRef(null);
 
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [activeTab, setActiveTab] = useState("nickname");
   const [newNickname, setNewNickname] = useState("");
   const [withdrawNickname, setWithdrawNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+  const [nicknameValidation, setNicknameValidation] = useState("");
 
   const handleLoadUserStats = useCallback(async () => {
     try {
@@ -131,15 +134,26 @@ export default function BifProfile() {
   }
 
   function createKeywordChartData(topKeywords) {
-    const limitedKeywords = topKeywords.slice(0, 5);
+    const placeholdersNeeded = Math.max(0, 5 - topKeywords.length);
+    const placeholders = Array.from({ length: placeholdersNeeded }).map(() => ({
+      keyword: "",
+      count: 0,
+    }));
+
+    const filled = topKeywords.slice(0, 5).concat(placeholders).slice(0, 5);
+
+    const colors = filled.map((item, idx) =>
+      item.keyword ? KEYWORD_COLORS[idx] : "#E5E7EB",
+    );
+
     return {
-      labels: limitedKeywords.map((item) => item.keyword),
+      labels: filled.map((item) => (item.keyword ? item.keyword : " ")),
       datasets: [
         {
           label: "사용 횟수",
-          data: limitedKeywords.map((item) => item.count),
-          backgroundColor: KEYWORD_COLORS,
-          borderColor: KEYWORD_COLORS,
+          data: filled.map((item) => item.count),
+          backgroundColor: colors,
+          borderColor: colors,
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
@@ -276,10 +290,38 @@ export default function BifProfile() {
     setWithdrawError("");
   }
 
+  function handleOpenBadgeModal() {
+    setShowBadgeModal(true);
+  }
+
+  function handleCloseBadgeModal() {
+    setShowBadgeModal(false);
+  }
+
+  function validateNickname(nickname) {
+    if (!nickname.trim()) {
+      return "";
+    }
+    if (nickname.includes(" ")) {
+      return "띄어쓰기는 사용할 수 없습니다.";
+    }
+    if (nickname.length < 2) {
+      return "닉네임은 2자 이상 입력해주세요.";
+    }
+    if (nickname.length > 10) {
+      return "닉네임은 10자 이하로 입력해주세요.";
+    }
+    if (!/^[가-힣a-zA-Z0-9]+$/.test(nickname)) {
+      return "닉네임은 한글, 영문, 숫자만 사용 가능합니다.";
+    }
+    return "";
+  }
+
   function handleTabChange(tabType) {
     setActiveTab(tabType);
     setNicknameError("");
     setWithdrawError("");
+    setNicknameValidation("");
   }
 
   async function handleNicknameChange() {
@@ -364,44 +406,70 @@ export default function BifProfile() {
   return (
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
-        <Header />
+        <Header
+          onBadgeClick={handleOpenBadgeModal}
+          onEditProfileClick={handleOpenUserInfoModal}
+        />
         <div className="flex-1">
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="mb-6 rounded-lg p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-800">마이페이지</h2>
-
-                <button
-                  onClick={handleOpenUserInfoModal}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-800"
-                >
-                  <IoPencil className="h-4 w-4" />
-                  <span>회원정보 수정</span>
-                </button>
-              </div>
-
               <div className="rounded-lg border-1 border-gray-300 bg-white p-4 shadow-sm">
-                <div className="flex flex-col space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                      <IoPerson className="h-5 w-5 text-gray-600" />
-                    </div>
-
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center space-x-1 rounded bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-400"
-                    >
-                      <IoLogOut className="h-4 w-4" />
-                      <span>로그아웃</span>
-                    </button>
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-shrink-0 flex-col items-center">
+                    {stats?.totalDiaryCount >= 1 && (
+                      <div className="flex h-12 w-12 items-center justify-center">
+                        <span className="text-2xl">
+                          {stats.totalDiaryCount >= 500
+                            ? "👑"
+                            : stats.totalDiaryCount >= 100
+                              ? "💝"
+                              : stats.totalDiaryCount >= 50
+                                ? "🎭"
+                                : stats.totalDiaryCount >= 20
+                                  ? "📚"
+                                  : stats.totalDiaryCount >= 5
+                                    ? "📝"
+                                    : "🌱"}
+                        </span>
+                      </div>
+                    )}
+                    {(!stats?.totalDiaryCount || stats.totalDiaryCount < 1) && (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
+                        <IoPerson className="h-6 w-6 text-gray-600" />
+                      </div>
+                    )}
+                    {stats?.totalDiaryCount >= 1 && (
+                      <span className="mt-1 text-center text-xs font-medium text-gray-600">
+                        {stats.totalDiaryCount >= 500
+                          ? "감정 마스터"
+                          : stats.totalDiaryCount >= 100
+                            ? "마음의 기록가"
+                            : stats.totalDiaryCount >= 50
+                              ? "감정 탐험가"
+                              : stats.totalDiaryCount >= 20
+                                ? "꾸준한 기록자"
+                                : stats.totalDiaryCount >= 5
+                                  ? "일기 초보"
+                                  : "첫 걸음"}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="min-w-0">
-                    <h3 className="truncate text-lg font-bold text-gray-800">
-                      {stats?.nickname || user?.nickname || "BIF"} 님
-                    </h3>
-                    <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4">
-                      <p className="text-sm whitespace-nowrap text-gray-600">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-800">
+                        {stats?.nickname || user?.nickname || "BIF"} 님
+                      </h3>
+                      <button
+                        onClick={handleLogout}
+                        className="border-gray flex items-center space-x-1 rounded border bg-gray-100 px-3 py-2 text-sm text-gray-800"
+                      >
+                        <IoLogOut className="h-4 w-4" />
+                        <span>로그아웃</span>
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">
                         가입일:{" "}
                         {(() => {
                           if (stats?.joinDate) {
@@ -434,7 +502,7 @@ export default function BifProfile() {
                           }
                         })()}
                       </p>
-                      <p className="text-sm whitespace-nowrap text-gray-600">
+                      <p className="text-sm text-gray-600">
                         작성한 일기: {stats?.totalDiaryCount || 0}개
                       </p>
                     </div>
@@ -565,7 +633,35 @@ export default function BifProfile() {
 
           <TabBar />
 
-          <Modal isOpen={showUserInfoModal} onClose={handleCloseUserInfoModal}>
+          <BadgeModal
+            isOpen={showBadgeModal}
+            onClose={handleCloseBadgeModal}
+            totalDiaryCount={stats?.totalDiaryCount || 0}
+          />
+
+          <Modal
+            isOpen={showUserInfoModal}
+            onClose={handleCloseUserInfoModal}
+            primaryButtonText={
+              activeTab === "nickname"
+                ? "변경"
+                : activeTab === "withdraw"
+                  ? "탈퇴"
+                  : null
+            }
+            secondaryButtonText={activeTab === "auth" ? null : "취소"}
+            primaryButtonColor={
+              activeTab === "withdraw" ? "bg-red-500" : "bg-secondary"
+            }
+            onPrimaryClick={
+              activeTab === "nickname"
+                ? handleNicknameChange
+                : activeTab === "withdraw"
+                  ? handleWithdraw
+                  : null
+            }
+            onSecondaryClick={handleCloseUserInfoModal}
+          >
             <div className="mx-auto w-full max-w-md">
               <h2 className="mb-6 text-center text-xl font-bold">
                 회원정보 수정
@@ -606,55 +702,52 @@ export default function BifProfile() {
 
               <div className="space-y-4">
                 {activeTab === "nickname" && (
-                  <div>
+                  <div className="pt-1">
                     <input
                       type="text"
                       value={newNickname}
-                      onChange={(e) => setNewNickname(e.target.value)}
+                      onChange={(e) => {
+                        setNewNickname(e.target.value);
+                        setNicknameValidation(validateNickname(e.target.value));
+                      }}
                       placeholder="새로운 닉네임을 입력해주세요."
                       className="mt-6.5 mb-4 w-full rounded-lg border-1 border-gray-300 p-3 text-sm shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
                     />
 
-                    <p
-                      className={`text-warning mt-2 text-center text-sm ${nicknameError ? "visible" : "invisible"}`}
-                    >
-                      {nicknameError ? nicknameError : "i"}
-                    </p>
-
-                    <div className="mt-4 flex space-x-3">
-                      <BaseButton
-                        onClick={handleCloseUserInfoModal}
-                        title="취소"
-                        variant="secondary"
-                        className="flex-1"
-                      />
-                      <BaseButton
-                        onClick={handleNicknameChange}
-                        title="변경"
-                        variant="primary"
-                        className="flex-1"
-                      />
+                    <div className="flex h-6 items-center justify-center">
+                      {nicknameValidation && (
+                        <p className="text-center text-sm text-red-500">
+                          {nicknameValidation}
+                        </p>
+                      )}
+                      {!nicknameValidation && nicknameError && (
+                        <p className="text-center text-sm text-red-500">
+                          {nicknameError}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {activeTab === "auth" && (
                   <div className="text-center">
-                    <div className="mb-6 rounded-lg bg-gray-100 p-6">
+                    <div className="mb-5 rounded-lg bg-gray-100 p-5">
                       <p className="mb-2 text-sm text-gray-600">
                         보호자 연결용 인증번호
                       </p>
-                      <p className="text-2xl font-bold tracking-wider text-gray-800">
+                      <p className="text-xl font-bold tracking-wider text-gray-800">
                         {stats?.connectionCode ||
                           "인증번호를 불러올 수 없습니다"}
                       </p>
                     </div>
-                    <BaseButton
-                      onClick={handleAuthConfirm}
-                      title="확인"
-                      variant="primary"
-                      className="w-full"
-                    />
+                    <div className="mb-3">
+                      <BaseButton
+                        onClick={handleAuthConfirm}
+                        title="확인"
+                        variant="primary"
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -677,20 +770,6 @@ export default function BifProfile() {
                         {withdrawError}
                       </p>
                     )}
-                    <div className="mt-4 flex space-x-3">
-                      <BaseButton
-                        onClick={handleCloseUserInfoModal}
-                        title="취소"
-                        variant="secondary"
-                        className="flex-1"
-                      />
-                      <BaseButton
-                        onClick={handleWithdraw}
-                        title="탈퇴"
-                        variant="danger"
-                        className="flex-1"
-                      />
-                    </div>
                   </div>
                 )}
               </div>

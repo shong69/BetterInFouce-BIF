@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 export default function Modal({
   isOpen,
   onClose,
@@ -8,6 +10,24 @@ export default function Modal({
   onPrimaryClick,
   onSecondaryClick,
 }) {
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.top = `-${window.scrollY}px`;
+
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.top = "";
+        window.scrollTo(0, parseInt(document.body.style.top || "0") * -1);
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   function handleBackgroundClick(e) {
@@ -44,8 +64,8 @@ export default function Modal({
         }
       }}
     >
-      <div className="mx-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-6">{children}</div>
+      <div className="mx-4 max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white p-4 shadow-xl sm:mx-10 sm:max-w-md sm:p-6">
+        <div className="mb-4 sm:mb-6">{children}</div>
 
         {hasButtons && (
           <div className="flex justify-evenly space-x-15">

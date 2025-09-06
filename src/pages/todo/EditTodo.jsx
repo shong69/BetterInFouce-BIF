@@ -461,7 +461,9 @@ export default function EditTodo() {
       showSuccess("할 일이 수정되었습니다.");
       navigate(-1);
     } catch (error) {
-      if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
+      if (error?.response?.status === 401) {
+        showError("인증 오류가 발생했습니다. 다시 로그인해주세요.");
+      } else if (error?.response?.data?.code === "SUBTODO_COUNT_INSUFFICIENT") {
         showError(error.response.data.message);
       } else {
         const errorMessage =
@@ -740,7 +742,7 @@ export default function EditTodo() {
       </div>
 
       <div className="fixed right-0 bottom-4 left-0 px-4 pt-6">
-        <div className="max-full mx-auto px-2">
+        <div className="mx-auto max-w-4xl px-2">
           <PrimaryButton
             title="할 일 수정하기"
             onClick={handleSave}
