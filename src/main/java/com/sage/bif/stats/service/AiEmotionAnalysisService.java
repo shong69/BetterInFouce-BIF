@@ -173,15 +173,12 @@ public class AiEmotionAnalysisService {
             for (String keyword : keywords) {
                 String trimmed = keyword.trim();
                 if (!trimmed.isEmpty() && trimmed.length() <= 10) {
-                    // 더 엄격한 검증: 정확한 단어 매칭
                     boolean isValid = false;
                     
-                    // 1. 정확한 단어 매칭
                     if (lowerContent.contains(trimmed.toLowerCase())) {
                         isValid = true;
                     }
                     
-                    // 2. 부분 단어 매칭 (2글자 이상인 경우)
                     if (!isValid && trimmed.length() >= 2) {
                         String[] words = lowerContent.split("\\s+");
                         for (String word : words) {
