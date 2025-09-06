@@ -63,6 +63,51 @@ public class KeywordAccumulationService {
         }
     }
     
+    public void updateKeywordsWithNewContent(Long bifId, List<String> newKeywords, String diaryContent) {
+        try {
+            log.info("BIF ID {}의 키워드 누적 업데이트 시작 - 새 키워드: {}, 일기 내용: {}", bifId, newKeywords, diaryContent != null ? diaryContent.substring(0, Math.min(50, diaryContent.length())) : "null");
+            
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                final Map<String, Integer> currentKeywords = parseKeywordsFromStats(stats.getTopKeywords());
+                
+                final Map<String, Integer> updatedKeywords = mergeKeywordsWithValidation(currentKeywords, newKeywords, diaryContent);
+                
+                final List<String> top5Keywords = extractTop5Keywords(updatedKeywords);
+                
+                stats.setTopKeywords(objectMapper.writeValueAsString(updatedKeywords));
+                statsRepository.save(stats);
+                
+                log.info("BIF ID {}의 키워드 누적 업데이트 완료. Top5: {}", bifId, top5Keywords);
+            } else {
+                final Map<String, Integer> initialKeywords = new HashMap<>();
+                for (String keyword : newKeywords) {
+                    if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim()) && isKeywordInContent(keyword.trim(), diaryContent)) {
+                        initialKeywords.put(keyword.trim(), 1);
+                        log.info("새 키워드 추가: {}", keyword.trim());
+                    } else {
+                        log.warn("키워드 검증 실패 - 키워드: {}, 일기 내용: {}", keyword, diaryContent != null ? diaryContent.substring(0, Math.min(50, diaryContent.length())) : "null");
+                    }
+                }
+                
+                final Stats newStats = Stats.builder()
+                        .bifId(bifId)
+                        .yearMonth(currentYearMonth)
+                        .topKeywords(objectMapper.writeValueAsString(initialKeywords))
+                        .build();
+                
+                statsRepository.save(newStats);
+                log.info("BIF ID {}의 새로운 통계 및 키워드 생성 완료", bifId);
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 누적 업데이트 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+    
     public void initializeKeywords(Long bifId, Map<String, Integer> initialKeywords) {
         try {
             log.info("BIF ID {}의 키워드 초기화 시작 - 초기 키워드: {}", bifId, initialKeywords);
@@ -128,6 +173,53 @@ public class KeywordAccumulationService {
         return mergedKeywords;
     }
     
+    private Map<String, Integer> mergeKeywordsWithValidation(Map<String, Integer> existingKeywords, List<String> newKeywords, String diaryContent) {
+        final Map<String, Integer> mergedKeywords = new HashMap<>(existingKeywords);
+        
+        final Set<String> uniqueNewKeywords = new HashSet<>();
+        for (String keyword : newKeywords) {
+            if (keyword != null && !keyword.trim().isEmpty() && isValidKeyword(keyword.trim()) && isKeywordInContent(keyword.trim(), diaryContent)) {
+                uniqueNewKeywords.add(keyword.trim());
+                log.info("키워드 검증 통과: {}", keyword.trim());
+            } else {
+                log.warn("키워드 검증 실패 - 키워드: {}, 일기 내용: {}", keyword, diaryContent != null ? diaryContent.substring(0, Math.min(50, diaryContent.length())) : "null");
+            }
+        }
+        
+        for (String normalizedKeyword : uniqueNewKeywords) {
+            mergedKeywords.merge(normalizedKeyword, 1, Integer::sum);
+            log.info("키워드 '{}' 누적: {}회", normalizedKeyword, mergedKeywords.get(normalizedKeyword));
+        }
+        
+        return mergedKeywords;
+    }
+    
+    private boolean isKeywordInContent(String keyword, String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return false;
+        }
+        
+        String lowerContent = content.toLowerCase();
+        String lowerKeyword = keyword.toLowerCase();
+        
+        // 1. 정확한 단어 매칭
+        if (lowerContent.contains(lowerKeyword)) {
+            return true;
+        }
+        
+        // 2. 부분 단어 매칭 (2글자 이상인 경우)
+        if (keyword.length() >= 2) {
+            String[] words = lowerContent.split("\\s+");
+            for (String word : words) {
+                if (word.contains(lowerKeyword) || lowerKeyword.contains(word)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
     private boolean isValidKeyword(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return false;
@@ -149,6 +241,11 @@ public class KeywordAccumulationService {
             "도구", "장비", "기계", "컴퓨터", "스마트폰", "태블릿", "프로그램", "시스템"
         };
         
+        // 사람 이름 패턴 검사 (한글 이름, 영문 이름 등)
+        if (isPersonName(trimmedKeyword)) {
+            return false;
+        }
+        
         for (String category : invalidCategories) {
             if (trimmedKeyword.contains(category)) {
                 return false;
@@ -166,6 +263,50 @@ public class KeywordAccumulationService {
         }
         
         return true;
+    }
+    
+    private boolean isPersonName(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        String trimmed = keyword.trim();
+        
+        // 한글 이름 패턴 (2-4글자, 성+이름)
+        if (trimmed.matches("^[가-힣]{2,4}$")) {
+            // 일반적인 성씨와 이름 조합인지 확인
+            String[] commonSurnames = {
+                "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "전", "고"
+            };
+            
+            for (String surname : commonSurnames) {
+                if (trimmed.startsWith(surname)) {
+                    return true;
+                }
+            }
+        }
+        
+        // 영문 이름 패턴 (대소문자 조합, 2-20글자)
+        if (trimmed.matches("^[A-Za-z]{2,20}$")) {
+            // 첫 글자가 대문자이고 나머지가 소문자인 경우 (이름 패턴)
+            if (Character.isUpperCase(trimmed.charAt(0)) && 
+                trimmed.substring(1).chars().allMatch(Character::isLowerCase)) {
+                return true;
+            }
+        }
+ 
+        String[] commonNames = {
+            "민수", "지영", "현우", "서연", "준호", "미영", "성민", "예진", "동현", "수진",
+            "John", "Jane", "Mike", "Sarah", "David", "Lisa", "Tom", "Amy", "Chris", "Emma"
+        };
+        
+        for (String name : commonNames) {
+            if (trimmed.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private List<String> extractTop5Keywords(Map<String, Integer> keywordCounts) {
@@ -207,6 +348,27 @@ public class KeywordAccumulationService {
     private LocalDateTime getCurrentYearMonth() {
         final LocalDateTime now = LocalDateTime.now();
         return LocalDateTime.of(now.getYear(), now.getMonth(), 1, 0, 0, 0);
+    }
+    
+    public void resetKeywords(Long bifId) {
+        try {
+            log.info("BIF ID {}의 키워드 데이터 초기화 시작", bifId);
+            
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                stats.setTopKeywords("{}");
+                statsRepository.save(stats);
+                log.info("BIF ID {}의 키워드 데이터 초기화 완료", bifId);
+            } else {
+                log.info("BIF ID {}의 키워드 데이터가 없음", bifId);
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 데이터 초기화 중 오류 발생 - bifId: {}", bifId, e);
+        }
     }
 
 }
