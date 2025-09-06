@@ -22,4 +22,8 @@ public interface SubTodoCompletionRepository extends JpaRepository<SubTodoComple
 
     void deleteBySubTodo_SubTodoIdAndCompletionDate(Long subTodoId, LocalDate completionDate);
 
+    @Modifying
+    @Query("DELETE FROM SubTodoCompletion sc WHERE sc.subTodo.todo.bifUser.bifId = :bifId")
+    int deleteBySubTodo_Todo_BifUser_BifId(@Param("bifId") Long bifId);
+
 }
