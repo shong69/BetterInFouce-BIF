@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
-import { IoClose, IoCheckmarkCircle, IoLockClosed } from "react-icons/io5";
+import BaseButton from "./PrimaryButton";
+import { IoCheckmarkCircle, IoLockClosed } from "react-icons/io5";
+import { IoMedal } from "react-icons/io5";
 
 const BADGE_DATA = [
   {
@@ -89,21 +91,18 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="mx-auto w-full max-w-xs sm:max-w-xl">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="mx-auto max-h-[70vh] w-full max-w-sm overflow-y-auto sm:max-w-md">
+        <div className="mb-3 flex flex-col items-center">
+          <div className="mb-1 flex justify-center">
+            <IoMedal size={40} className="text-secondary" />
+          </div>
           <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
             나의 뱃지
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
-          >
-            <IoClose className="h-5 w-5" />
-          </button>
         </div>
 
         {currentBadge && (
-          <div className="mb-4 rounded-lg bg-gradient-to-r from-green-50 to-blue-50 p-3 sm:mb-6 sm:p-4">
+          <div className="mb-2 rounded-lg border border-gray-300 bg-gray-50 p-2 sm:mb-3 sm:p-3">
             <div className="flex items-center space-x-3">
               <div className="text-xl sm:text-3xl">{currentBadge.icon}</div>
               <div className="min-w-0 flex-1">
@@ -122,7 +121,7 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
         )}
 
         {nextBadge && (
-          <div className="mb-4 rounded-lg bg-gray-50 p-3 sm:mb-6 sm:p-4">
+          <div className="mb-2 rounded-lg border border-gray-300 bg-gray-50 p-2 sm:mb-3 sm:p-3">
             <div className="flex items-center space-x-3">
               <div className="text-xl opacity-50 sm:text-3xl">
                 {nextBadge.icon}
@@ -153,13 +152,13 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
+        <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
           {BADGE_DATA.map((badge) => {
             const isEarned = totalDiaryCount >= badge.requirement;
             return (
               <div
                 key={badge.id}
-                className={`relative rounded-lg border-2 p-2 transition-all sm:p-4 ${
+                className={`relative rounded-lg border-2 p-2 transition-all sm:p-3 ${
                   isEarned
                     ? "border-green-200 bg-gradient-to-br from-green-50 to-green-100"
                     : "border-gray-200 bg-gray-50"
@@ -178,7 +177,7 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
                     {badge.icon}
                   </div>
                   <h3
-                    className={`mt-1 text-xs font-semibold sm:mt-2 sm:text-sm ${
+                    className={`mt-1 text-sm font-semibold sm:mt-2 sm:text-base ${
                       isEarned ? "text-gray-800" : "text-gray-500"
                     }`}
                   >
@@ -201,6 +200,10 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-4">
+          <BaseButton onClick={onClose} title="닫기" variant="primary" />
         </div>
       </div>
     </Modal>

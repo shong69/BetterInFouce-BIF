@@ -122,7 +122,6 @@ export default function GuardianProfile() {
   return (
     <>
       <div className="flex min-h-screen flex-col font-['Pretendard']">
-
         <Header onBadgeClick={handleOpenBadgeModal} />
         <div
           className="flex-1"
@@ -131,7 +130,6 @@ export default function GuardianProfile() {
               "linear-gradient(180deg, #DCF3A7 0%, #FBFFDA 36%, #F7F7F7 99%)",
           }}
         >
-
           <div className="mx-auto max-w-4xl p-2 sm:p-4">
             <div className="mb-6 rounded-lg p-4">
               <div className="mb-4 flex items-center justify-between" />
@@ -140,8 +138,8 @@ export default function GuardianProfile() {
                 <div className="flex items-center space-x-4">
                   <div className="flex flex-shrink-0 flex-col items-center">
                     {stats?.totalDiaryCount >= 1 && (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 shadow-lg">
-                        <span className="text-lg">
+                      <div className="flex h-12 w-12 items-center justify-center">
+                        <span className="text-2xl">
                           {stats.totalDiaryCount >= 200
                             ? "👑"
                             : stats.totalDiaryCount >= 100

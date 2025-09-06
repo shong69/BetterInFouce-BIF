@@ -91,6 +91,10 @@ export default function DiaryView() {
     setShowDeleteModal(false);
   };
 
+  const handleBackClick = () => {
+    navigate("/diaries");
+  };
+
   const generateWarningMessage = (categories) => {
     if (!categories || categories.length === 0) {
       return "부적절한 내용이 감지되었습니다.\n\n건강한 마음가짐을 위해 다른 관점에서 생각해보세요.";
@@ -238,7 +242,7 @@ export default function DiaryView() {
   if (!currentDiary) {
     return (
       <>
-        <Header showTodoButton={false} />
+        <Header showTodoButton={false} onBackClick={handleBackClick} />
         <div className="mx-auto max-w-2xl p-4 sm:p-4" />
         <TabBar />
       </>
@@ -247,7 +251,7 @@ export default function DiaryView() {
 
   return (
     <div className="min-h-screen">
-      <Header showTodoButton={false} />
+      <Header showTodoButton={false} onBackClick={handleBackClick} />
       <div className="mx-auto max-w-2xl p-4 pt-0 sm:p-4">
         <div className="mb-2 flex items-end justify-between">
           <div className="mx-4 text-sm font-semibold">
@@ -255,7 +259,7 @@ export default function DiaryView() {
           </div>
           <div className="mr-4 flex items-center">
             <div
-              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] ${getEmotionInfo(currentDiary.emotion).bgColor}`}
+              className={`mr-2 rounded-full px-3 py-1 text-xs text-[#333333] shadow-xs ${getEmotionInfo(currentDiary.emotion).bgColor}`}
             >
               {getEmotionInfo(currentDiary.emotion).name}
             </div>
