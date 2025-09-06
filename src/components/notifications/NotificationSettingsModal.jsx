@@ -309,7 +309,7 @@ export default function NotificationSettingsModal({ isOpen, onClose }) {
 
         <button
           onClick={onClose}
-          className="bg-primary hover:bg-secondary mt-4 w-full rounded-lg py-2 text-white"
+          className="bg-primary hover:bg-secondary mt-4 w-full rounded-3xl py-2 text-white"
         >
           닫기
         </button>

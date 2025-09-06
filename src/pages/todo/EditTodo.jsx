@@ -742,7 +742,7 @@ export default function EditTodo() {
       </div>
 
       <div className="fixed right-0 bottom-4 left-0 px-4 pt-6">
-        <div className="max-full mx-auto px-2">
+        <div className="mx-auto max-w-4xl px-2">
           <PrimaryButton
             title="할 일 수정하기"
             onClick={handleSave}
