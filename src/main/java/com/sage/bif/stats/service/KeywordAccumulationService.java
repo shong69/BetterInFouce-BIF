@@ -202,12 +202,10 @@ public class KeywordAccumulationService {
         String lowerContent = content.toLowerCase();
         String lowerKeyword = keyword.toLowerCase();
         
-        // 1. 정확한 단어 매칭
         if (lowerContent.contains(lowerKeyword)) {
             return true;
         }
         
-        // 2. 부분 단어 매칭 (2글자 이상인 경우)
         if (keyword.length() >= 2) {
             String[] words = lowerContent.split("\\s+");
             for (String word : words) {
@@ -241,7 +239,6 @@ public class KeywordAccumulationService {
             "도구", "장비", "기계", "컴퓨터", "스마트폰", "태블릿", "프로그램", "시스템"
         };
         
-        // 사람 이름 패턴 검사 (한글 이름, 영문 이름 등)
         if (isPersonName(trimmedKeyword)) {
             return false;
         }
@@ -272,9 +269,7 @@ public class KeywordAccumulationService {
         
         String trimmed = keyword.trim();
         
-        // 한글 이름 패턴 (2-4글자, 성+이름)
         if (trimmed.matches("^[가-힣]{2,4}$")) {
-            // 일반적인 성씨와 이름 조합인지 확인
             String[] commonSurnames = {
                 "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "전", "고"
             };
@@ -286,10 +281,8 @@ public class KeywordAccumulationService {
             }
         }
         
-        // 영문 이름 패턴 (대소문자 조합, 2-20글자)
         if (trimmed.matches("^[A-Za-z]{2,20}$")) {
-            // 첫 글자가 대문자이고 나머지가 소문자인 경우 (이름 패턴)
-            if (Character.isUpperCase(trimmed.charAt(0)) && 
+            if (Character.isUpperCase(trimmed.charAt(0)) &&
                 trimmed.substring(1).chars().allMatch(Character::isLowerCase)) {
                 return true;
             }
