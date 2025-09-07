@@ -91,7 +91,17 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="mx-auto max-h-[70vh] w-full max-w-sm overflow-y-auto sm:max-w-md">
+      <div
+        className="mx-auto max-h-[70vh] w-full max-w-sm overflow-x-hidden overflow-y-auto sm:max-w-md"
+        style={{
+          touchAction: "pan-y",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          position: "relative",
+          width: "100%",
+          maxWidth: "100%",
+        }}
+      >
         <div className="mb-3 flex flex-col items-center">
           <div className="mb-1 flex justify-center">
             <IoMedal size={40} className="text-secondary" />
