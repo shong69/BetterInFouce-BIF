@@ -148,6 +148,7 @@ public class AiEmotionAnalysisService {
                 "3. 개인의 일상 활동 (운동, 독서, 요리, 산책, 영화감상, 음악감상 등)\n" +
                 "4. 개인적 상황과 환경 (생일, 기념일, 휴가, 병원, 학교, 집 등)\n\n" +
                 "제외 기준:\n" +
+                "- 개인정보 관련 (사람 이름, 실명, 별명, 닉네임 등)\n" +
                 "- 기술/개발 관련 용어 (깃허브, 코드, 프로그래밍, 개발, 프로젝트, 버그 등)\n" +
                 "- 업무/학업 관련 용어 (회의, 업무, 과제, 시험, 발표, 보고서 등)\n" +
                 "- 일반적/추상적 단어 (오늘, 하루, 시간, 생각, 느낌, 일상, 그냥, 정말 등)\n" +
@@ -163,6 +164,8 @@ public class AiEmotionAnalysisService {
             AiRequest request = new AiRequest(prompt);
             String response = aiClient.generate(request, AiSettings.STATS_KEYWORD_EXTRACTION).getContent();
             
+            log.info("AI 키워드 추출 원본 응답: {}", response);
+            
             String[] keywords = response.split(",");
             List<String> extractedKeywords = new java.util.ArrayList<>();
             String lowerContent = content.toLowerCase();
@@ -170,11 +173,27 @@ public class AiEmotionAnalysisService {
             for (String keyword : keywords) {
                 String trimmed = keyword.trim();
                 if (!trimmed.isEmpty() && trimmed.length() <= 10) {
+                    boolean isValid = false;
+                    
                     if (lowerContent.contains(trimmed.toLowerCase())) {
+                        isValid = true;
+                    }
+                    
+                    if (!isValid && trimmed.length() >= 2) {
+                        String[] words = lowerContent.split("\\s+");
+                        for (String word : words) {
+                            if (word.contains(trimmed.toLowerCase()) || trimmed.toLowerCase().contains(word)) {
+                                isValid = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (isValid) {
                         extractedKeywords.add(trimmed);
-                        log.info("키워드 검증 통과: {}", trimmed);
+                        log.info("키워드 검증 통과: {} (일기 내용: {})", trimmed, content.substring(0, Math.min(100, content.length())));
                     } else {
-                        log.warn("키워드 검증 실패 - 일기 내용에 없음: {}", trimmed);
+                        log.warn("키워드 검증 실패 - 일기 내용에 없음: {} (일기 내용: {})", trimmed, content.substring(0, Math.min(100, content.length())));
                     }
                 }
             }
