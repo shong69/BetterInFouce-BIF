@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "@components/common/Header";
 import TabBar from "@components/common/TabBar";
@@ -9,7 +9,7 @@ import { useDiaryStore } from "@stores/diaryStore";
 import { useToastStore } from "@stores/toastStore";
 import { getEmotionInfo } from "@utils/emotionUtils";
 import { formatDate } from "@utils/dateUtils";
-import useSpeechRecorder from "@components/ui/SpeechRecorder";
+import { getSttToken, speechRecognitionService } from "@services/diaryService";
 import { HiArrowLeft, HiPencilAlt } from "react-icons/hi";
 
 export default function DiaryEdit() {
@@ -18,17 +18,13 @@ export default function DiaryEdit() {
   const location = useLocation();
 
   const [content, setContent] = useState("");
+  const [interimText, setInterimText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
 
-  const handleTextRecognized = (text) => {
-    setContent((prev) => prev + (prev ? " " : "") + text);
-  };
-
-  const { isRecording, interimText, toggleRecording } =
-    useSpeechRecorder(handleTextRecognized);
-
+  const recognizerRef = useRef(null);
   const { updateDiary, fetchDiary } = useDiaryStore();
   const { showSuccess, showError } = useToastStore();
 
@@ -51,62 +47,130 @@ export default function DiaryEdit() {
       };
       loadDiary();
     }
-  }, [id, location.state, fetchDiary, showError, navigate]);
+  }, [id, location.state, fetchDiary, navigate, showError]);
+
+  const stopRecognizerIfExists = () => {
+    if (recognizerRef.current) {
+      speechRecognitionService.stopRecognition(recognizerRef.current);
+      speechRecognitionService.closeRecognizer(recognizerRef.current);
+      recognizerRef.current = null;
+      setIsRecording(false);
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      stopRecognizerIfExists();
+
+      const { token, region } = await getSttToken();
+      const recognizer = await speechRecognitionService.createRecognizer(
+        token,
+        region,
+      );
+      recognizerRef.current = recognizer;
+
+      const callbacks = {
+        onRecognizing: (text) => setInterimText(text),
+        onRecognized: (text) => {
+          const cleanedText = text.replace(/\.$/, "").trim();
+          setContent((prev) => (prev ? `${prev} ${cleanedText}` : cleanedText));
+          setInterimText("");
+        },
+        onCanceled: async (reason, errorDetails) => {
+          if (errorDetails && errorDetails.includes("authorization")) {
+            showSuccess("토큰을 갱신하고 있습니다...");
+            await handleTokenExpiredAndRestart();
+          } else if (errorDetails) {
+            showError(`음성 인식 오류: ${errorDetails}`);
+            setIsRecording(false);
+          } else {
+            setIsRecording(false);
+          }
+        },
+        onError: (error) => {
+          showError(error.message || "음성 인식 오류가 발생했습니다.");
+          setIsRecording(false);
+        },
+      };
+
+      speechRecognitionService.setupRecognizer(recognizer, callbacks);
+      speechRecognitionService.startRecognition(
+        recognizer,
+        () => {
+          setIsRecording(true);
+          showSuccess("음성 인식을 시작합니다.");
+        },
+        () => {
+          showError("음성 인식 시작에 실패했습니다.");
+          setIsRecording(false);
+        },
+      );
+    } catch {
+      showError("마이크를 사용할 수 없습니다. 권한과 장치를 확인해주세요.");
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (recognizerRef.current) {
+      speechRecognitionService.stopRecognition(
+        recognizerRef.current,
+        () => {
+          speechRecognitionService.closeRecognizer(recognizerRef.current);
+          recognizerRef.current = null;
+          setIsRecording(false);
+          showSuccess("음성 인식이 중단되었습니다.");
+        },
+        () => {
+          showError("음성 인식 중단에 실패했습니다.");
+          setIsRecording(false);
+        },
+      );
+    }
+  };
+
+  const handleTokenExpiredAndRestart = async () => {
+    stopRecognizerIfExists();
+    await handleStartRecording();
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      handleStopRecording();
+    } else {
+      await handleStartRecording();
+    }
+  };
 
   useEffect(() => {
-    const hasUnsavedChanges =
-      (content.trim() && content !== originalContent) ||
-      (interimText && interimText.trim().length > 0);
-
-    if (!hasUnsavedChanges) {
-      return;
-    }
-
-    function handleBeforeUnload(event) {
-      event.preventDefault();
-      event.returnValue =
-        "수정 중인 일기가 있습니다. 나가시면 저장되지 않습니다.";
-      return event.returnValue;
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [content, originalContent, interimText]);
-
-  const handleExitConfirm = () => {
-    setShowExitModal(false);
-    navigate(`/diaries/${id}`);
-  };
-
-  const handleExitCancel = () => {
-    setShowExitModal(false);
-  };
+    return () => stopRecognizerIfExists();
+  }, []);
 
   const handleBackClick = () => {
-    const hasUnsavedChanges =
-      (content && content.trim() && content !== originalContent) ||
-      (interimText && interimText.trim().length > 0);
-
-    if (hasUnsavedChanges) {
+    const hasUnsavedChanges = content.trim() && content !== originalContent;
+    if (hasUnsavedChanges || (interimText && interimText.trim().length > 0)) {
       setShowExitModal(true);
     } else {
       navigate(-1);
     }
   };
 
-  const handleSave = async () => {
+  const handleExitConfirm = () => {
+    setShowExitModal(false);
+    navigate(`/diaries/${id}`);
+  };
+
+  const handleExitCancel = () => setShowExitModal(false);
+
+  const handleSave = () => {
     if (!content.trim()) {
       showError("일기 내용을 입력해주세요.");
       return;
     }
-
     if (content.trim() === originalContent.trim()) {
       showError("수정할 내용이 없습니다.");
       return;
     }
-
     setShowSaveModal(true);
   };
 
@@ -116,26 +180,12 @@ export default function DiaryEdit() {
       showSuccess("일기가 성공적으로 수정되었습니다!");
       setShowSaveModal(false);
       navigate(`/diaries/${id}`);
-    } catch (error) {
-      if (error.response && error.response.data) {
-        showError("일기 수정에 실패했습니다.");
-      }
+    } catch {
+      showError("일기 수정에 실패했습니다.");
     }
   };
 
-  const handleSaveCancel = () => {
-    setShowSaveModal(false);
-  };
-
-  if (!location.state?.diaryData && !content) {
-    return (
-      <>
-        <Header showTodoButton={false} onBackClick={handleBackClick} />
-        <div className="mx-auto max-w-2xl p-4 sm:p-4" />
-        <TabBar />
-      </>
-    );
-  }
+  const handleSaveCancel = () => setShowSaveModal(false);
 
   const diaryData = location.state?.diaryData || {
     content,
@@ -164,13 +214,12 @@ export default function DiaryEdit() {
             />
           </div>
         </div>
+
         <div className="mb-10 px-2 sm:mb-10 sm:px-0">
           <textarea
             id="diary-content"
             value={content + (interimText ? ` ${interimText}` : "")}
-            onChange={(e) => {
-              setContent(e.target.value);
-            }}
+            onChange={(e) => setContent(e.target.value)}
             placeholder="오늘 하루는 어땠나요?"
             className="text-medium h-[50vh] w-full resize-none rounded-xl border border-gray-300 p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:h-[60vh] sm:p-4 sm:text-base"
           />
