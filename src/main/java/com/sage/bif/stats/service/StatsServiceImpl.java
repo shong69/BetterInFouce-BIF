@@ -71,7 +71,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         try {
             log.info("BIF ID {}의 월별 통계 조회 시작", bifId);
             
-            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
 
             if (existingStats.isEmpty()) {
@@ -143,7 +143,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
         log.info("BIF ID {}의 키워드 기반 통계 업데이트 시작", bifId);
         
         try {
-            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+        final LocalDateTime currentYearMonth = getCurrentYearMonth();
             final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
             
             if (existingStats.isPresent()) {
@@ -155,7 +155,7 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
                 final AiEmotionAnalysisService.EmotionAnalysisResult analysis = aiEmotionAnalysisService.analyzeEmotionFromText(diaryContent);
                 stats.setAiEmotionScore(analysis.getEmotionScore());
                 
-                keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords());
+                keywordAccumulationService.updateKeywordsWithNewContent(bifId, analysis.getKeywords(), diaryContent);
                 
                 stats.setEmotionStatisticsText(generateStatisticsText(emotionCounts));
                 stats.setGuardianAdviceText(generateGuardianAdvice(emotionCounts));
@@ -1206,9 +1206,31 @@ public class StatsServiceImpl implements StatsService, ApplicationContextAware {
             } else {
                 log.info("통계 데이터가 없음");
             }
-            
+
         } catch (Exception e) {
             log.error("키워드 정리 중 오류 발생 - bifId: {}", bifId, e);
+        }
+    }
+    
+    @Override
+    public void resetKeywords(Long bifId) {
+        try {
+            log.info("BIF ID {}의 키워드 데이터 초기화 시작", bifId);
+            
+            final LocalDateTime currentYearMonth = getCurrentYearMonth();
+            final Optional<Stats> existingStats = statsRepository.findFirstByBifIdAndYearMonthOrderByCreatedAtDesc(bifId, currentYearMonth);
+            
+            if (existingStats.isPresent()) {
+                final Stats stats = existingStats.get();
+                stats.setTopKeywords("{}");
+                statsRepository.save(stats);
+                log.info("BIF ID {}의 키워드 데이터 초기화 완료", bifId);
+            } else {
+                log.info("BIF ID {}의 키워드 데이터가 없음", bifId);
+            }
+            
+        } catch (Exception e) {
+            log.error("키워드 데이터 초기화 중 오류 발생 - bifId: {}", bifId, e);
         }
     }
     

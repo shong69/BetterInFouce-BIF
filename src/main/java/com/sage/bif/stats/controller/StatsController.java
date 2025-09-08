@@ -204,6 +204,33 @@ public class StatsController {
         }
     }
 
+    @PostMapping("/reset-keywords/{bifId}")
+    @Operation(summary = "키워드 데이터 초기화", description = "BIF 사용자의 키워드 데이터를 초기화합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "키워드 초기화 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public ResponseEntity<ApiResponse<String>> resetKeywords(
+            @AuthenticationPrincipal final UserDetails userDetails,
+            @PathVariable final Long bifId) {
+
+        try {
+            final CustomUserDetails customUserDetails = validateAuthentication(userDetails);
+            validateBifRole(customUserDetails);
+
+            statsService.resetKeywords(bifId);
+            return ResponseEntity.ok(ApiResponse.success("키워드 데이터가 성공적으로 초기화되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("키워드 초기화 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("키워드 초기화 중 오류가 발생했습니다."));
+        }
+    }
+
     @PostMapping("/debug-keywords/{bifId}")
     @Operation(summary = "키워드 디버깅", description = "BIF 사용자의 키워드 관련 디버깅 정보를 조회합니다.")
     @ApiResponses(value = {
