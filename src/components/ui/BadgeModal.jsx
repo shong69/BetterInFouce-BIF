@@ -26,7 +26,7 @@ const BADGE_DATA = [
     name: "꾸준한 기록자",
     description: "20개의 일기 작성",
     icon: "📚",
-    requirement: 10,
+    requirement: 20,
     color: "from-purple-400 to-purple-600",
   },
   {
@@ -34,7 +34,7 @@ const BADGE_DATA = [
     name: "감정 탐험가",
     description: "50개의 일기 작성",
     icon: "🎭",
-    requirement: 20,
+    requirement: 50,
     color: "from-pink-400 to-pink-600",
   },
   {
@@ -42,7 +42,7 @@ const BADGE_DATA = [
     name: "마음의 기록가",
     description: "100개의 일기 작성",
     icon: "💝",
-    requirement: 50,
+    requirement: 100,
     color: "from-red-400 to-red-600",
   },
   {
@@ -50,7 +50,7 @@ const BADGE_DATA = [
     name: "감정 마스터",
     description: "200개의 일기 작성",
     icon: "👑",
-    requirement: 100,
+    requirement: 200,
     color: "from-yellow-400 to-yellow-600",
   },
 ];
