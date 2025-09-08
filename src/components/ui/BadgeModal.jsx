@@ -26,7 +26,7 @@ const BADGE_DATA = [
     name: "꾸준한 기록자",
     description: "20개의 일기 작성",
     icon: "📚",
-    requirement: 10,
+    requirement: 20,
     color: "from-purple-400 to-purple-600",
   },
   {
@@ -34,7 +34,7 @@ const BADGE_DATA = [
     name: "감정 탐험가",
     description: "50개의 일기 작성",
     icon: "🎭",
-    requirement: 20,
+    requirement: 50,
     color: "from-pink-400 to-pink-600",
   },
   {
@@ -42,7 +42,7 @@ const BADGE_DATA = [
     name: "마음의 기록가",
     description: "100개의 일기 작성",
     icon: "💝",
-    requirement: 50,
+    requirement: 100,
     color: "from-red-400 to-red-600",
   },
   {
@@ -50,7 +50,7 @@ const BADGE_DATA = [
     name: "감정 마스터",
     description: "200개의 일기 작성",
     icon: "👑",
-    requirement: 100,
+    requirement: 200,
     color: "from-yellow-400 to-yellow-600",
   },
 ];
@@ -91,7 +91,17 @@ export default function BadgeModal({ isOpen, onClose, totalDiaryCount }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="mx-auto max-h-[70vh] w-full max-w-sm overflow-y-auto sm:max-w-md">
+      <div
+        className="mx-auto max-h-[70vh] w-full max-w-sm overflow-x-hidden overflow-y-auto sm:max-w-md"
+        style={{
+          touchAction: "pan-y",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          position: "relative",
+          width: "100%",
+          maxWidth: "100%",
+        }}
+      >
         <div className="mb-3 flex flex-col items-center">
           <div className="mb-1 flex justify-center">
             <IoMedal size={40} className="text-secondary" />
