@@ -25,6 +25,7 @@ export default function DiaryEdit() {
   const [originalContent, setOriginalContent] = useState("");
 
   const recognizerRef = useRef(null);
+
   const { updateDiary, fetchDiary } = useDiaryStore();
   const { showSuccess, showError } = useToastStore();
 
