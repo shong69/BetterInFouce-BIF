@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.sage.bif.common.exception.BaseException;
 import com.sage.bif.common.exception.ErrorCode;
-import com.sage.bif.common.service.RedisService;
+// import com.sage.bif.common.service.RedisService;
 import com.sage.bif.diary.dto.request.DiaryRequest;
 import com.sage.bif.diary.dto.request.MonthlySummaryRequest;
 import com.sage.bif.diary.dto.response.DiaryResponse;
@@ -47,14 +47,16 @@ public class DiaryServiceImpl implements DiaryService {
     private final AiFeedbackRepository aiFeedbackRepository;
     private final BifRepository bifRepository;
     private final ObjectMapper objectMapper;
-    private final RedisService redisService;
+    // private final RedisService redisService;
     private final AiFeedbackService aiFeedbackService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public MonthlySummaryResponse getMonthlySummary(Long bifId, MonthlySummaryRequest request) {
+        // Redis 캐시 로직을 주석 처리하고 직접 DB에서 조회
+        /*
         MonthlySummaryResponse response=null;
-        String cacheKey = String.format("monthly_summary:%d:%d:%d", 
+        String cacheKey = String.format("monthly_summary:%d:%d:%d",
         bifId, request.getYear(), request.getMonth());
 
         Optional<Object> cached = redisService.get(cacheKey);
@@ -80,6 +82,11 @@ public class DiaryServiceImpl implements DiaryService {
             }
 
         }
+        */
+
+        // DB에서 직접 조회
+        MonthlySummaryResponse response = getMonthlySummaryFromDatabase(bifId, request);
+
         boolean canWriteToday = diaryRepository.existsByUserIdAndDate(bifId,LocalDate.now())==0;
         response.setCanWriteToday(canWriteToday);
         return response;

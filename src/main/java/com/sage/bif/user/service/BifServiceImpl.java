@@ -109,8 +109,6 @@ public class BifServiceImpl implements BifService {
                 guardianRepository.deleteAll(guardians);
             }
 
-            bifRepository.delete(bif);
-
             UserWithdrawalEvent event = new UserWithdrawalEvent(
                     this,
                     socialId,
@@ -119,6 +117,8 @@ public class BifServiceImpl implements BifService {
                     LocalDateTime.now()
             );
             eventPublisher.publishEvent(event);
+
+            bifRepository.delete(bif);
         }
     }
 
