@@ -144,8 +144,6 @@ jobs:
             AZURE_MYSQL_DATABASE_NAME=${{ secrets.AZURE_MYSQL_DATABASE_NAME }}
             AZURE_MYSQL_USERNAME=${{ secrets.AZURE_MYSQL_USERNAME }}
             AZURE_MYSQL_PASSWORD=${{ secrets.AZURE_MYSQL_PASSWORD }}
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
             BACKEND_URL=${{ secrets.BACKEND_URL }}
             BACKEND_PORT=${{ secrets.BACKEND_PORT }}
             GOOGLE_TTS_API_KEY=${{ secrets.GOOGLE_TTS_API_KEY }}
