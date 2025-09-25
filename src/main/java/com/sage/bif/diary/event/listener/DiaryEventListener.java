@@ -4,7 +4,7 @@ import com.sage.bif.diary.event.model.DiaryCreatedEvent;
 import com.sage.bif.diary.event.model.DiaryUpdatedEvent;
 import com.sage.bif.diary.event.model.DiaryDeletedEvent;
 import com.sage.bif.stats.event.model.StatsUpdateEvent;
-import com.sage.bif.common.service.RedisService;
+// import com.sage.bif.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,7 +19,7 @@ import java.time.LocalDate;
 public class DiaryEventListener {
 
     private final ApplicationEventPublisher eventPublisher;
-    private final RedisService redisService;
+    // private final RedisService redisService;
 
     @EventListener
     public void handleDiaryCreated(DiaryCreatedEvent event) {
@@ -27,7 +27,7 @@ public class DiaryEventListener {
                 event.getDiaryId(), event.getBifId(), event.getContent().length());
 
         try {
-            invalidateAllDiaryCache(event.getBifId());
+            // invalidateAllDiaryCache(event.getBifId()); // Redis 캐시 무효화 주석 처리
 
             publishStatsEvent(event.getBifId(), "DIARY_CREATED", "일기 생성으로 인한 통계 업데이트");
 
@@ -42,7 +42,7 @@ public class DiaryEventListener {
                 event.getDiary().getId(), event.getDiary().getUser().getBifId(), event.getDiary().getContent().length());
 
         try {
-            invalidateAllDiaryCache(event.getDiary().getUser().getBifId());
+            // invalidateAllDiaryCache(event.getDiary().getUser().getBifId()); // Redis 캐시 무효화 주석 처리
 
             if (!event.getPreviousContent().equals(event.getDiary().getContent())) {
                 log.info("Diary content changed significantly for diary: {}", event.getDiary().getId());
@@ -61,7 +61,7 @@ public class DiaryEventListener {
                 event.getDiaryId(), event.getUserId(), event.getEmotion());
 
         try {
-            invalidateAllDiaryCache(event.getUserId());
+            // invalidateAllDiaryCache(event.getUserId()); // Redis 캐시 무효화 주석 처리
 
             publishStatsEvent(event.getUserId(), "DIARY_DELETED", "일기 삭제로 인한 통계 업데이트");
 
@@ -71,6 +71,8 @@ public class DiaryEventListener {
     }
 
 
+    // redis 관련 로직 주석 처리
+    /*
     private void invalidateAllDiaryCache(Long userId) {
         try {
             String currentYear = String.valueOf(LocalDate.now().getYear());
@@ -84,6 +86,7 @@ public class DiaryEventListener {
             log.error("Failed to invalidate diary cache for user {}: {}", userId, e.getMessage());
         }
     }
+    */
 
 
     private void publishStatsEvent(Long userId, String updateType, String updateReason) {
