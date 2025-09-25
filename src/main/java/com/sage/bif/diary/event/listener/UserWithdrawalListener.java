@@ -1,6 +1,6 @@
 package com.sage.bif.diary.event.listener;
 
-import com.sage.bif.common.service.RedisService;
+// import com.sage.bif.common.service.RedisService;
 import com.sage.bif.diary.entity.Diary;
 import com.sage.bif.diary.repository.AiFeedbackRepository;
 import com.sage.bif.diary.repository.DiaryRepository;
@@ -21,7 +21,7 @@ public class UserWithdrawalListener {
 
     private final DiaryRepository diaryRepository;
     private final AiFeedbackRepository aiFeedbackRepository;
-    private final RedisService redisService;
+    // private final RedisService redisService;
 
 
     @Order(2)
@@ -65,7 +65,7 @@ public class UserWithdrawalListener {
             diaryRepository.deleteAll(diaries);
             log.info("사용자 diary 일괄 삭제 완료 - UserId: {}, 삭제된 diary 수: {}", bifId, diaries.size());
 
-            clearUserDiaryCache(bifId);
+            // clearUserDiaryCache(bifId); // Redis 캐시 삭제 로직 주석 처리
 
         } catch (Exception e) {
             log.error("사용자 diary 데이터 삭제 중 오류 발생 - UserId: {}, Error: {}", bifId, e.getMessage(), e);
@@ -73,6 +73,8 @@ public class UserWithdrawalListener {
         }
     }
 
+    // Redis 캐시 삭제 로직 주석 처리
+    /*
     private void clearUserDiaryCache(Long bifId) {
         try {
             String cachePattern = "monthly_summary:" + bifId + ":*";
@@ -83,5 +85,6 @@ public class UserWithdrawalListener {
             log.error("사용자 diary 캐시 삭제 중 오류 발생 - UserId: {}, Error: {}", bifId, e.getMessage(), e);
         }
     }
+    */
 
 }
