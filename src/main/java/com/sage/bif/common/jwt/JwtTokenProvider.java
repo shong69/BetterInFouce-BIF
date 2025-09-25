@@ -62,16 +62,32 @@ public final class JwtTokenProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(String providerUniqueId) {
+    public String generateRefreshToken(UserRole role, Long bifId, String nickname,
+                                       String provider, String providerUniqueId, Long socialId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
                 .subject(providerUniqueId)
+                .claim("type", "refresh") // 토큰 타입 구분
+                .claim(USER_ROLE, role.name())
+                .claim(BIF_ID, bifId)
+                .claim(NICKNAME, nickname)
+                .claim(PROVIDER, provider)
+                .claim(SOCIAL_ID, socialId)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = getClaimsFromToken(token);
+            return "refresh".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String generateTempRegistrationToken(Long socialId, String email, String provider, String providerUniqueId) {

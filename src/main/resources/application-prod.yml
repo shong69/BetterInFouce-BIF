@@ -27,12 +27,12 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         use_sql_comments: false
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      ssl:
-        enabled: false
+#  data:
+#    redis:
+#      host: ${REDIS_HOST}
+#      port: ${REDIS_PORT}
+#      ssl:
+#        enabled: false
 
   security:
     user:
@@ -121,7 +121,7 @@ management:
     health:
       show-details: never
   health:
-    redis:
-      enabled: true
+#    redis:
+#      enabled: true
     db:
       enabled: true

@@ -86,9 +86,13 @@ public class UserController {
                     socialLogin.getSocialId()
             );
 
-            String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
-            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+//            String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
+//            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
+//            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(
+                    JwtTokenProvider.UserRole.BIF, bif.getBifId(), bif.getNickname(),
+                    socialLogin.getProvider().name(), socialLogin.getProviderUniqueId(),
+                    socialLogin.getSocialId());
 
             String authenticatedUserToken = jwtTokenProvider.generateAuthenticatedUserToken(
                     socialLogin.getSocialId(),
@@ -148,9 +152,13 @@ public class UserController {
                     socialLogin.getSocialId()
             );
 
-            String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
-            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+//            String refreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
+//            LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
+//            socialLoginService.saveRefreshToken(request.getSocialId(), refreshToken, refreshTokenExpiresAt);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(
+                    JwtTokenProvider.UserRole.GUARDIAN, guardian.getBif().getBifId(), guardian.getNickname(),
+                    socialLogin.getProvider().name(), socialLogin.getProviderUniqueId(),
+                    socialLogin.getSocialId());
 
             String authenticatedUserToken = jwtTokenProvider.generateAuthenticatedUserToken(
                     socialLogin.getSocialId(),
@@ -242,7 +250,9 @@ public class UserController {
 
             Long socialId = socialLoginOpt.get().getSocialId();
 
-            if (!socialLoginService.validateRefreshToken(socialId, refreshToken)) {
+//            if (!socialLoginService.validateRefreshToken(socialId, refreshToken)) {
+            if (!jwtTokenProvider.isRefreshToken(refreshToken) ||
+                    !"SUCCESS".equals(jwtTokenProvider.validateToken(refreshToken))) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Refresh Token이 유효하지 않습니다.", "AUTH_TOKEN_INVALID"));
             }
@@ -537,9 +547,13 @@ public class UserController {
                 socialLogin.getSocialId()
         );
 
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-        socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
-                LocalDateTime.now().plusDays(7));
+//        String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
+//        socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
+//                LocalDateTime.now().plusDays(7));
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(
+                JwtTokenProvider.UserRole.BIF, bif.getBifId(), bif.getNickname(),
+                socialLogin.getProvider().name(), socialLogin.getProviderUniqueId(),
+                socialLogin.getSocialId());
 
         setRefreshTokenCookie(response, newRefreshToken);
 
@@ -564,9 +578,13 @@ public class UserController {
                 socialLogin.getSocialId()
         );
 
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
-        socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
-                LocalDateTime.now().plusDays(7));
+//        String newRefreshToken = jwtTokenProvider.generateRefreshToken(socialLogin.getProviderUniqueId());
+//        socialLoginService.saveRefreshToken(socialLogin.getSocialId(), newRefreshToken,
+//                LocalDateTime.now().plusDays(7));
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(
+                JwtTokenProvider.UserRole.GUARDIAN, guardian.getBif().getBifId(), guardian.getNickname(),
+                socialLogin.getProvider().name(), socialLogin.getProviderUniqueId(),
+                socialLogin.getSocialId());
 
         setRefreshTokenCookie(response, newRefreshToken);
 
