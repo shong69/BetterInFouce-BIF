@@ -117,9 +117,11 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 "BIF", bifId, nickname
         );
 
-        String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
-        socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(
+                JwtTokenProvider.UserRole.BIF, bifId, nickname,
+                registrationId, providerUniqueId, socialId);
+//        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
+//        socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setSecureCookie(response, AUTHENTICATED_USER_TOKEN_NAME, authenticatedUserToken, TEMP_TOKEN_MAX_AGE);
         setRefreshTokenCookie(response, refreshToken);
@@ -146,9 +148,11 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 "GUARDIAN", bifId, nickname
         );
 
-        String refreshToken = jwtTokenProvider.generateRefreshToken(providerUniqueId);
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
-        socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(
+                JwtTokenProvider.UserRole.GUARDIAN, bifId, nickname,
+                registrationId, providerUniqueId, socialId);
+//        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
+//        socialLoginService.saveRefreshToken(socialId, refreshToken, refreshTokenExpiresAt);
 
         setSecureCookie(response, AUTHENTICATED_USER_TOKEN_NAME, authenticatedUserToken, TEMP_TOKEN_MAX_AGE);
         setRefreshTokenCookie(response, refreshToken);
