@@ -29,7 +29,7 @@ public class TodoNotificationScheduler {
     private final NotificationFacadeService notificationFacadeService;
     private final GuardianRepository guardianRepository;
 
-    @Scheduled(cron = "0 * * * * *")
+//    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void checkAndSendTodoNotifications() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
