@@ -63,7 +63,7 @@ public class LoginLogServiceImpl implements LoginLogService {
         return userLoginLogsRepository.deleteExpiredLogs(now);
     }
 
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 0 2 1 * ?")
     @Transactional
     public void scheduledCleanup() {
         log.info("=== 자동 로그 정리 시작 ===");

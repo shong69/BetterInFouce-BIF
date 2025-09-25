@@ -5,22 +5,24 @@ import com.sage.bif.common.exception.ErrorCode;
 import com.sage.bif.user.entity.SocialLogin;
 import com.sage.bif.user.repository.SocialLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+//import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class SocialLoginServiceImpl implements SocialLoginService {
 
     private final SocialLoginRepository socialLoginRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+//    private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String REDIS_TOKEN = "refresh_token:";
+//    private static final String REDIS_TOKEN = "refresh_token:";
+    private final ConcurrentHashMap<Long, String> refreshTokenStore = new ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -55,34 +57,38 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     @Transactional
     public void saveRefreshToken(Long socialId, String refreshToken, LocalDateTime expiresAt) {
 
-        try {
-            String redisKey = REDIS_TOKEN + socialId;
-            Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
-
-            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
-        } catch (Exception e) {
-            throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
-        }
+//        try {
+//            String redisKey = REDIS_TOKEN + socialId;
+//            Duration expiration = Duration.between(LocalDateTime.now(), expiresAt);
+//
+//            redisTemplate.opsForValue().set(redisKey, refreshToken, expiration);
+//        } catch (Exception e) {
+//            throw new BaseException(ErrorCode.COMMON_CACHE_ACCESS_FAILED, e);
+//        }
+        refreshTokenStore.put(socialId, refreshToken);
     }
 
     @Override
     @Transactional
     public void deleteRefreshTokenFromRedis(Long socialId) {
-
-        String redisKey = REDIS_TOKEN + socialId;
-        redisTemplate.delete(redisKey);
+//
+//        String redisKey = REDIS_TOKEN + socialId;
+//        redisTemplate.delete(redisKey);
+        refreshTokenStore.remove(socialId);
     }
 
     @Override
     public boolean validateRefreshToken(Long socialId, String refreshToken) {
-
-        String redisKey = REDIS_TOKEN + socialId;
-        String storedToken = redisTemplate.opsForValue().get(redisKey);
-
-        if (storedToken == null) {
-            return false;
-        }
-        return storedToken.equals(refreshToken);
+//
+//        String redisKey = REDIS_TOKEN + socialId;
+//        String storedToken = redisTemplate.opsForValue().get(redisKey);
+//
+//        if (storedToken == null) {
+//            return false;
+//        }
+//        return storedToken.equals(refreshToken);
+        String storedToken = refreshTokenStore.get(socialId);
+        return storedToken != null && storedToken.equals(refreshToken);
     }
 
     @Transactional

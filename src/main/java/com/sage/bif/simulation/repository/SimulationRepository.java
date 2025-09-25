@@ -2,7 +2,7 @@ package com.sage.bif.simulation.repository;
 
 import com.sage.bif.simulation.entity.Simulation;
 
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
