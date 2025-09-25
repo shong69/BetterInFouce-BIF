@@ -42,7 +42,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
 //    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-//    implementation 'com.github.shin285:KOMORAN:3.3.9'
 
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     implementation 'nl.martijndwars:web-push:5.1.1'
