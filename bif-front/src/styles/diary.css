@@ -1,0 +1,84 @@
+.fc-theme-standard .fc-scrollgrid td,
+.fc-theme-standard .fc-scrollgrid th {
+  border: none !important;
+}
+
+.fc-daygrid-day-events {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+@keyframes star-move {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(10px, -10px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-15px, 15px);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(20px, 5px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+}
+
+@keyframes star-move-reverse {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(30px, 30px);
+    opacity: 0.6;
+  }
+}
+
+.starry-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: transparent;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0.3;
+  box-shadow:
+    20px 30px #ef4444,
+    40px 10px #61ff59,
+    60px 90px #ffffff,
+    80px 120px #ffd1dc,
+    260px 18px #ffe500,
+    280px 60px #f7e6ff,
+    310px 110px #ffc107,
+    330px 28px #ffe500,
+    90px 50px #ef4444,
+    790px 50px #61ff59,
+    490px 90px #c5f0ff,
+    600px 30px #ef4444,
+    680px 70px #c5f0ff,
+    640px 100px #ffffff,
+    730px 130px #ffffff;
+  will-change: transform, opacity;
+  animation: star-move 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.starry-bg:hover::before {
+  animation-name: star-move-reverse;
+  animation-duration: 2s;
+  filter: brightness(1.5);
+}
