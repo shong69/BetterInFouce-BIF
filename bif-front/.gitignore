@@ -1,0 +1,128 @@
+# =======================================
+# Dependencies & Build Tools
+# =======================================
+# Dependency directories
+node_modules/
+
+# Package manager cache and lock files
+.npm/
+.yarn/
+yarn.lock
+.pnpm-store/
+.pnp.*
+
+# Build output
+dist/
+dist-ssr/
+build/
+out/
+
+# Vite cache
+.vite/
+
+# =======================================
+# Development Tools Cache
+# =======================================
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# =======================================
+# Environment & Sensitive Files
+# =======================================
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local settings
+*.local
+
+# =======================================
+# Logs & Reports
+# =======================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test coverage reports
+coverage/
+
+# =======================================
+# Editor-specific files
+# =======================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+
+# Other editors
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime*
+
+# =======================================
+# OS-specific files
+# =======================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+*.icloud
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# =======================================
+# Miscellaneous Development Files
+# =======================================
+# Backups and other artifacts
+**/*.backup.*
+**/*.back.*
+bower_components/
+psd/
+thumb/
+sketch/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
