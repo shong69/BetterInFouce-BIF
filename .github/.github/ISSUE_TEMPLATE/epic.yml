@@ -1,0 +1,54 @@
+---
+name: "🚀 Epic"
+description: "대규모 기능 개발을 위한 Epic 이슈입니다."
+title: "🚀 [Epic] "
+labels: [epic]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "🎯 에픽 설명 (Description)"
+      description: "이 Epic을 통해 달성하고자 하는 목표와 사용자 가치는 무엇인가요?"
+      placeholder: "예시) 사용자는 소셜 계정을 통해 간편하게 서비스에 가입하고 로그인할 수 있다."
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-tasks
+    attributes:
+      label: "✅ 하위 이슈들 (Related Tasks)"
+      description: "이 Epic을 완료하기 위해 필요한 Task들을 체크리스트로 나열해주세요. (생성 후 각 Task 이슈 번호로 연결)"
+      value: |
+        - [ ] #이슈번호 - 이슈 제목
+        - [ ] #이슈번호 - 이슈 제목
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "🏁 완료 기준 (Acceptance Criteria)"
+      description: "Epic 전체가 완료되었다고 판단할 수 있는 기준을 명시해주세요."
+      placeholder: |
+        - [ ] 구글, 카카오, 네이버 소셜 로그인이 모두 정상적으로 동작한다.
+        - [ ] 회원가입 시 BIF와 보호자를 구분하여 처리할 수 있다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: "🗓️ 예상 일정 (Timeline)"
+      description: "Epic 완료 예상 일정을 적어주세요."
+      placeholder: "예시) 2025-08-01 ~ 2025-08-15"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: "📎 참고 사항 (Notes)"
+      description: "추가적으로 고려해야 할 사항이나 기술적인 제약 조건이 있다면 작성해주세요."
+    validations:
+      required: false
+---

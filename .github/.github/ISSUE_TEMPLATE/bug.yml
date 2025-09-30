@@ -1,0 +1,66 @@
+---
+name: "🐛 Bug Report"
+description: "서비스에서 발생한 버그를 리포트합니다."
+title: "🐛 [Bug] "
+labels: bug
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: "🐛 버그 설명 (Bug Description)"
+      description: "버그에 대한 명확하고 간결한 설명을 작성해주세요."
+      placeholder: "예시) 회원가입 버튼을 클릭하면 500 에러가 발생합니다."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: "🔢 재현 단계 (Steps to Reproduce)"
+      description: "버그를 재현할 수 있는 순서를 구체적으로 작성해주세요."
+      value: |
+        1. '...' 페이지로 이동
+        2. '....' 버튼 클릭
+        3. '....' 까지 스크롤
+        4. 에러 확인
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: "✅ 예상 동작 (Expected Behavior)"
+      description: "원래라면 어떻게 동작해야 했는지 명확하고 간결하게 설명해주세요."
+      placeholder: "예시) 회원가입이 완료되고 메인 페이지로 이동해야 합니다."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: "💥 실제 동작 (Actual Behavior)"
+      description: "실제로 어떤 일이 일어났는지 명확하고 간결하게 설명해주세요."
+      placeholder: "예시) 'Internal Server Error' 라는 메시지가 표시됩니다."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "💻 환경 (Environment)"
+      description: "버그가 발생한 환경을 알려주세요."
+      value: |
+        - **OS:**
+        - **Browser:**
+        - **Version:**
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "📎 추가 정보 (Additional Context)"
+      description: "스크린샷, 에러 로그, 관련 영상 등 문제 해결에 도움이 될 만한 추가 정보가 있다면 여기에 첨부해주세요."
+    validations:
+      required: false
+---
