@@ -1,0 +1,127 @@
+server:
+  port: ${BACKEND_PORT}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+spring:
+  datasource:
+    url: jdbc:mysql://${AZURE_MYSQL_SERVER_NAME}.mysql.database.azure.com:3306/${AZURE_MYSQL_DATABASE_NAME}?useSSL=true&requireSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${AZURE_MYSQL_USERNAME}
+    password: ${AZURE_MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO}
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        use_sql_comments: false
+
+#  data:
+#    redis:
+#      host: ${REDIS_HOST}
+#      port: ${REDIS_PORT}
+#      ssl:
+#        enabled: false
+
+  security:
+    user:
+      name: ${SPRING_SECURITY_USER_NAME}
+      password: ${SPRING_SECURITY_USER_PASSWORD}
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${BACKEND_URL}/api/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            scope: account_email
+            client-authentication-method: client_secret_post
+          naver:
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
+            redirect-uri: ${BACKEND_URL}/api/login/oauth2/code/naver
+            authorization-grant-type: authorization_code
+            scope: email
+            client-authentication-method: client_secret_post
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${BACKEND_URL}/api/login/oauth2/code/google
+            authorization-grant-type: authorization_code
+            scope: email
+            client-authentication-method: client_secret_post
+
+  ai:
+    azure:
+      openai:
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        api-key: ${AZURE_OPENAI_API_KEY}
+        resource-name: ${AZURE_OPENAI_RESOURCE_NAME}
+        deployment:
+          name: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      content-safety:
+        endpoint: ${AZURE_CONTENT_SAFETY_ENDPOINT}
+        api-key: ${AZURE_CONTENT_SAFETY_API_KEY}
+      speech-service:
+        endpoint: ${AZURE_OPENAI_SPEECH_SERVICE_ENDPOINT}
+        api-key: ${AZURE_OPENAI_SPEECH_SERVICE_API_KEY}
+logging:
+  level:
+    root: WARN
+    com.sage.bif: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/bif-prod.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 90
+      total-size-cap: 5GB
+      file-name-pattern: logs/bif-prod-%d{yyyy-MM-dd}.%i.log
+
+jwt:
+  secret: ${JWT_SECRET}
+
+app:
+  frontend:
+    url: ${FRONTEND_URL}
+
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
+
+springdoc:
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+#    redis:
+#      enabled: true
+    db:
+      enabled: true
